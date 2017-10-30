@@ -6,7 +6,9 @@ from mujoco_py import load_model_from_path, MjSim, MjViewer
 # from mujoco_py.modder import TextureModder
 import os
 
-model = load_model_from_path("robots/fetch/main.xml")
+# model = load_model_from_path("robots/sawyer/main.xml")
+model = load_model_from_path("robots/sawyer/sawyer_urdf.xml")
+print(model)
 sim = MjSim(model)
 
 viewer = MjViewer(sim)
