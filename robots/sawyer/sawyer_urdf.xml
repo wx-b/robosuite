@@ -1,7 +1,17 @@
 <?xml version="1.0" ?>
 <robot name="sawyer">
   <mujoco>
-     <compiler meshdir="meshes/" balanceinertia="true" discardvisual="false"/>
+    <compiler meshdir="meshes/" balanceinertia="true" discardvisual="false"/>
+    <!-- These actuators define what we can control - these are just the joint angles. -->
+    <actuator>
+      <position ctrllimited="true" ctrlrange="-3.0503 3.0503" joint="right_j0" kp="50.0" name="right_j0"></position>
+      <position ctrllimited="true" ctrlrange="-3.8095 2.2736" joint="right_j1" kp="30.0" name="right_j1"></position>
+      <position ctrllimited="true" ctrlrange="-3.0426 3.0426" joint="right_j2" kp="20.0" name="right_j2"></position>
+      <position ctrllimited="true" ctrlrange="-3.0439 3.0439" joint="right_j3" kp="15.0" name="right_j3"></position>
+      <position ctrllimited="true" ctrlrange="-2.9761 2.9761" joint="right_j4" kp="10.0" name="right_j4"></position>
+      <position ctrllimited="true" ctrlrange="-2.9761 2.9761" joint="right_j5" kp="5.0" name="right_j5"></position>
+      <position ctrllimited="true" ctrlrange="-4.7124 4.7124" joint="right_j6" kp="2.0" name="right_j6"></position>
+    </actuator>
   </mujoco>
 
   <material name="black">
