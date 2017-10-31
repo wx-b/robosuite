@@ -10,6 +10,7 @@
       <position ctrllimited="true" ctrlrange="-2.9761 2.9761" joint="right_j5" kp="5.0" name="right_j5"></position>
       <position ctrllimited="true" ctrlrange="-4.7124 4.7124" joint="right_j6" kp="2.0" name="right_j6"></position>
     </actuator>
+
     <asset>
         <mesh name="pedestal" file="pedestal.stl" />
         <mesh name="base" file="base.stl" />
@@ -21,8 +22,28 @@
         <mesh name="l4" file="l4.stl" />
         <mesh name="l5" file="l5.stl" />
         <mesh name="l6" file="l6.stl" />
+        <texture type="skybox" builtin="gradient" rgb1=".9 .9 1." rgb2=".2 .3 .4" width="256" height="256"/>
+        <texture name="texplane" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2"  width="512" height="512"/>
+        <material name="floorplane" reflectance="0.5" texture="texplane" texrepeat="1 1" texuniform="true"/>
     </asset>
     <worldbody>
+
+        <geom name="floor" pos="0 0 -0.913" size="3 3 .125" type="plane" material="floorplane" condim="3"/>
+        <light directional='false' diffuse='.8 .8 .8' specular='0.3 0.3 0.3' pos='1 1 4.0' dir='0 -.15 -1'/>
+        <light directional='false' diffuse='.8 .8 .8' specular='0.3 0.3 0.3' pos='-3. -3. 4.0' dir='0 -.15 -1'/>
+
+        <camera name="camera1" mode="fixed" pos="2.5 0 1.8" quat="0.653 0.271 0.271 0.653"/>
+        <!-- <camera name="birdview_camera" mode="fixed" pos="0 0 3" /> -->
+
+        <!-- <body name='sphere' pos='1 -0.5 0'>
+          <geom name='sphere' type='sphere' size='.05 .075' rgba='.4 1 .4 1'/>
+        </body>
+
+        <body name='box' pos='1 0.5 0'>
+          <geom name='box' type='box' size='.06 .06 .06' rgba='1 .4 .4 1' condim='1' euler='.2 0 0'/>
+          <site name='cube_center' pos='.03 .03 .03' type='sphere' group='4' size='.02 .02 .02'/>
+        </body> -->
+
         <body name="base" pos="0 0 0">
             <inertial pos="0 0 0" mass="0" diaginertia="0 0 0" />
             <body name="controller_box" pos="0 0 0">
