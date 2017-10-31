@@ -4,15 +4,15 @@ Displays robot fetch at a disco party.
 """
 
 from mujoco_py import load_model_from_path, MjSim, MjViewer
-# from mujoco_py.modder import TextureModder
 import os
 
-model = load_model_from_path("robots/sawyer/sawyer_urdf1.xml")
-print(model)
+# model = load_model_from_path("robots/sawyer/main.xml")
+model = load_model_from_path("robots/sawyer/sawyer_urdf.xml")
 sim = MjSim(model)
 
 viewer = MjViewer(sim)
-# modder = TextureModder(sim)
+viewer.vopt.geomgroup[0] = 0
+viewer.vopt.geomgroup[1] = 1
 
 sim_state = sim.get_state()
 
@@ -30,6 +30,5 @@ while True:
         viewer.render()
 
     if os.getenv('TESTING') is not None:
-        break
 
 
