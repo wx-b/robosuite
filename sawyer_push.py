@@ -8,18 +8,18 @@ from mujoco_py.generated import const
 import numpy as np
 import os
 
-model = load_model_from_path("robots/sawyer/arena.xml")
+model = load_model_from_path("robots/sawyer/arena_2.xml")
 
 # import pdb; pdb.set_trace()
 
 sim = MjSim(model)
 
 viewer = MjViewer(sim)
-viewer.vopt.geomgroup[0] = 0
-viewer.vopt.geomgroup[1] = 1
+# viewer.vopt.geomgroup[0] = 0
+# viewer.vopt.geomgroup[1] = 1
 
 viewer.cam.fixedcamid = 0
-viewer.cam.type = const.CAMERA_FIXED
+# viewer.cam.type = const.CAMERA_FIXED
 viewer.cam.azimuth = 179.7749999999999
 viewer.cam.distance = 3.825077470729921
 viewer.cam.elevation = -21.824999999999992
@@ -36,7 +36,7 @@ while True:
 
     for i in range(500):
         sim.data.ctrl[:] = np.random.rand(7) * 3
-        print(sim.data.ctrl[:])
+        # print(sim.data.ctrl[:])
 
         sim.step()
         viewer.render()
