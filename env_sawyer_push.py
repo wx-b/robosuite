@@ -106,9 +106,11 @@ class SaywerPushEnv(object):
         self.viewer.render()
 
     def _check_lose(self):
+        return False
         return abs(self._object_x) > 0.3 or abs(self._object_y) > 0.3
 
     def _check_win(self):
+        return False
         return np.linalg.norm([self._object_x - self._target_x, self._object_y - self._target_y], 2) < 0.05
 
 
@@ -192,8 +194,13 @@ print('Initial Obs: {}'.format(obs))
 while True:
     obs = env._reset()
     # print(obs)
+    action = np.random.rand(7) * 2
     for i in range(2000):
-        obs, reward, done, info = env._step(np.random.rand(7) * 3)
+        if i % 500 == 499:
+            action = np.random.rand(7) * 2 - 1
+        obs, reward, done, info = env._step(action)
+        # 
+        # obs, reward, done, info = env._step([0,-1,0,0,0,0,2])
         # print(obs, reward, done, info)
         env._render()
         if done:

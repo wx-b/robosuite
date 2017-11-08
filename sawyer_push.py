@@ -35,7 +35,7 @@ while True:
     sim.set_state(sim_state)
 
     for i in range(500):
-        sim.data.ctrl[:] = np.random.rand(7) * 3
+        #sim.data.ctrl[:] = np.random.rand(7) * 3
         # print(sim.data.ctrl[:])
 
         sim.step()

@@ -2,13 +2,15 @@
 	<compiler angle="radian" meshdir="meshes/"/>
 	<size nconmax="100" njmax="500"/>
 	<actuator>
-		<position ctrllimited="true" ctrlrange="-3.0503 3.0503" joint="right_j0" kp="50.0" name="right_j0"/>
-		<position ctrllimited="true" ctrlrange="-3.8095 2.2736" joint="right_j1" kp="30.0" name="right_j1"/>
-		<position ctrllimited="true" ctrlrange="-3.0426 3.0426" joint="right_j2" kp="20.0" name="right_j2"/>
-		<position ctrllimited="true" ctrlrange="-3.0439 3.0439" joint="right_j3" kp="15.0" name="right_j3"/>
-		<position ctrllimited="true" ctrlrange="-2.9761 2.9761" joint="right_j4" kp="10.0" name="right_j4"/>
-		<position ctrllimited="true" ctrlrange="-2.9761 2.9761" joint="right_j5" kp="5.0" name="right_j5"/>
-		<position ctrllimited="true" ctrlrange="-4.7124 4.7124" joint="right_j6" kp="2.0" name="right_j6"/>
+		<!-- Mujoco does not have velocity limit in actuator :( -->
+		<position ctrllimited="true" ctrlrange="-3.0503 3.0503" joint="right_j0" kp="1" name="right_j0"/>
+		<!-- TODO: kp and gear -->
+		<position ctrllimited="true" ctrlrange="-3.8095 2.2736" joint="right_j1" kp="7000" name="right_j1" forcelimited="true" forcerange="-8000 8000"/>
+		<position ctrllimited="true" ctrlrange="-3.0426 3.0426" joint="right_j2" kp="1000" name="right_j2" forcelimited="true" forcerange="-500 500"/>
+		<position ctrllimited="true" ctrlrange="-3.0439 3.0439" joint="right_j3" kp="1000" name="right_j3" forcelimited="true" forcerange="-500 500"/>
+		<position ctrllimited="true" ctrlrange="-2.9761 2.9761" joint="right_j4" kp="100" name="right_j4" forcelimited="true" forcerange="-8 8"/>
+		<position ctrllimited="true" ctrlrange="-2.9761 2.9761" joint="right_j5" kp="10" name="right_j5" forcelimited="true" forcerange="-8 8"/>
+		<position ctrllimited="true" ctrlrange="-4.7124 4.7124" joint="right_j6" kp="2" name="right_j6" forcelimited="true" forcerange="-8 8"/>
 	</actuator>
 	<asset>
 		<mesh file="pedestal.stl" name="pedestal"/>
@@ -27,16 +29,16 @@
 	</asset>
 	<worldbody>
 		<geom condim="3" material="floorplane" name="floor" pos="0 0 -0.913" size="3 3 .125" type="plane"/>
-		<body name="table" pos="0.5 0 -0.6">
+		<!-- <body name="table" pos="0.5 0 -0.6">
 			<geom pos="0 0 0" size="0.4 0.4 0.4" type="box"/>
-			<body name="target" pos="0 0 0.5">
+			
+		</body> -->
+
+		<body name="target" pos="0 0 0.5">
 				<geom pos="0 0 0" size="0.1" type="sphere" rgba="0 1 0 1" conaffinity="0" contype="0"/>
 				<joint type="slide" pos="0 0 0" axis="1 0 0" name="target_x"/>
 				<joint type="slide" pos="0 0 0" axis="0 1 0" name="target_y"/>
-			</body>
 		</body>
-
-		
 		<body name="object" pos="0.5 0 -0.1">
 			<geom pos="0 0 0" size="0.1" type="sphere" rgba="1 0 0 1"/>
 			<joint type="free" name="object_free_joint"/>
@@ -114,7 +116,7 @@
 									</body>
 									<body name="right_l5" pos="0 0.031 0.275" quat="0.707107 -0.707107 0 0">
 										<inertial diaginertia="0.00474131 0.00422857 0.00190672" mass="1.5625" pos="0.0061133 -0.023697 0.076416" quat="0.404076 0.9135 0.0473125 0.00158335"/>
-										<joint axis="0 0 1" limited="true" name="right_j5" pos="0 0 0" range="-2.9761 2.9761"/>
+										<joint axis="0 0 1" limited="true" name="right_j5" pos="0 0 0" range="-2.9761 2.9761" damping="0.2"/>
 										<geom conaffinity="0" contype="0" group="1" mesh="l5" rgba="0.5 0.1 0.1 1" type="mesh"/>
 										<geom pos="0 0 0.1" rgba="0.5 0.1 0.1 1" size="0.06"/>
 										<body name="right_hand_camera" pos="0.039552 -0.033 0.0695" quat="0.707107 0 0.707107 0">
@@ -125,7 +127,7 @@
 										</body>
 										<body name="right_l6" pos="0 -0.11 0.1053" quat="0.0616248 0.06163 -0.704416 0.704416">
 											<inertial diaginertia="0.000360258 0.000311068 0.000214974" mass="0.3292" pos="-8.0726e-06 0.0085838 -0.0049566" quat="0.479044 0.515636 -0.513069 0.491322"/>
-											<joint axis="0 0 1" limited="true" name="right_j6" pos="0 0 0" range="-4.7124 4.7124"/>
+											<joint axis="0 0 1" limited="true" name="right_j6" pos="0 0 0" range="-4.7124 4.7124" damping="0.1"/>
 											<geom conaffinity="0" contype="0" group="1" mesh="l6" rgba="0.5 0.1 0.1 1" type="mesh"/>
 											<geom pos="0 0.015 -0.01" rgba="0.5 0.1 0.1 1" size="0.055 0.025" type="cylinder"/>
 											<body name="right_hand" pos="0 0 0.0245" quat="0.707107 0 0 0.707107">
