@@ -10,6 +10,8 @@
 		<position ctrllimited="true" ctrlrange="-2.9761 2.9761" joint="right_j4" kp="100" name="right_j4" forcelimited="true" forcerange="-8 8"/>
 		<position ctrllimited="true" ctrlrange="-2.9761 2.9761" joint="right_j5" kp="10" name="right_j5" forcelimited="true" forcerange="-8 8"/>
 		<position ctrllimited="true" ctrlrange="-4.7124 4.7124" joint="right_j6" kp="2" name="right_j6" forcelimited="true" forcerange="-8 8"/>
+		<position ctrllimited="true" ctrlrange="0 0.020833" joint="r_gripper_r_finger_joint" kp="10000" name="r_gripper_r_finger_joint" forcelimited="true" forcerange="-20 20"/>
+		<position ctrllimited="true" ctrlrange="-0.020833 0" joint="r_gripper_l_finger_joint" kp="10000" name="r_gripper_l_finger_joint" forcelimited="true" forcerange="-20 20"/>
 	</actuator>
 	<asset>
 		<mesh file="pedestal.stl" name="pedestal"/>
@@ -109,9 +111,36 @@
 											<geom conaffinity="0" contype="0" group="1" mesh="l6" rgba="0.5 0.1 0.1 1" type="mesh"/>
 											<geom pos="0 0.015 -0.01" rgba="0.5 0.1 0.1 1" size="0.055 0.025" type="cylinder"/>
 											<body name="right_hand" pos="0 0 0.0245" quat="0.707107 0 0 0.707107">
-												<inertial diaginertia="1e-08 1e-08 1e-08" mass="1e-08" pos="1e-08 1e-08 1e-08" quat="0.820473 0.339851 -0.17592 0.424708"/>
-												<geom pos="0 0 0.02" size="0.035 0.015" type="cylinder"/>
+											<inertial pos="1e-08 1e-08 1e-08" mass="1e-08" diaginertia="1e-08 1e-08 1e-08" />
+											<geom size="0.035 0.015" pos="0 0 0.02" type="cylinder" />
+											<body name="right_gripper_base" pos="0 0 0.025">
+												<inertial pos="0 0 0" quat="-0.5 0.5 0.5 0.5" mass="0.3" diaginertia="3e-08 2e-08 2e-08" />
+												<geom size="0.029 0.05" quat="0 0 0.707107 0.707107" type="cylinder" />
+												<body name="right_gripper" pos="0 0 0.095">
+													<inertial pos="0 0 0" mass="0.0001" diaginertia="0 0 0" />
+												</body>
+												<body name="r_gripper_l_finger" pos="0 -0.0015 0.02">
+													<inertial pos="0 0 0" quat="0 0 0 -1" mass="0.02" diaginertia="0.01 0.01 0.01" />
+													<joint name="r_gripper_l_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" limited="true" range="0 0.020833" damping="0.7"/>
+													<geom size="0.005 0.00675 0.0375" pos="0 0.01725 0.04" quat="0 0 0 -1" type="box" />
+													<geom size="0.005 0.025 0.0085" pos="-0.005 -0.003 0.0083" quat="0 0 0 -1" type="box" />
+													<body name="r_gripper_l_finger_tip" pos="0 0.01725 0.075">
+														<inertial pos="0 0 0" quat="0 0 0 1" mass="0.01" diaginertia="0.01 0.01 0.01" />
+														<geom size="0.004 0.004 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="box" />
+													</body>
+												</body>
+												<body name="r_gripper_r_finger" pos="0 0.0015 0.02">
+													<inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.01 0.01" />
+													<joint name="r_gripper_r_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" limited="true" range="-0.020833 0" damping="0.7"/>
+													<geom size="0.005 0.00675 0.0375" pos="0 -0.01725 0.04" type="box" />
+													<geom size="0.005 0.025 0.0085" pos="0.005 0.003 0.0083" type="box" />
+													<body name="r_gripper_r_finger_tip" pos="0 -0.01725 0.075">
+														<inertial pos="0 0 0" mass="0.01" diaginertia="0.01 0.01 0.01" />
+														<geom size="0.004 0.004 0.0185" pos="0 0.0045 -0.015" type="box" />
+													</body>
+												</body>
 											</body>
+										</body>
 										</body>
 									</body>
 									<body name="right_l4_2" pos="0 0 0">

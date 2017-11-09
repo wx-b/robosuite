@@ -200,10 +200,10 @@ print('Initial Obs: {}'.format(obs))
 while True:
     obs = env._reset()
     # print(obs)
-    action = np.random.rand(7) * 2
+    action = np.random.rand(9) * 2
     for i in range(2000):
         if i % 500 == 499:
-            action = np.random.rand(7) * 2 - 1
+            action = np.random.rand(9) * 2
         obs, reward, done, info = env._step(action)
         # 
         # obs, reward, done, info = env._step([0,-1,0,0,0,0,2])
