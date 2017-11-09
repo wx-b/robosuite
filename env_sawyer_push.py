@@ -5,6 +5,7 @@ Displays robot fetch at a disco party.
 
 from mujoco_py import load_model_from_path, MjSim, MjViewer
 from mujoco_py.generated import const
+from xml_manip import PuhserTask
 import numpy as np
 import os
 import sys
@@ -12,7 +13,7 @@ import time
 
 class SaywerPushEnv(object):
     def __init__(self):
-        self.model = load_model_from_path('robots/sawyer/arena_2.xml')
+        self.model = self._load_model()
         self._get_reference()
         self.sim = MjSim(self.model)
         self.viewer = MjViewer(self.sim)
@@ -20,15 +21,19 @@ class SaywerPushEnv(object):
         self.set_cam()
         self.done = False
 
+    def _load_model(self):
+        self.model_xml = PuhserTask(robot_xml='robots/sawyer/robot.xml', object_xml='robots/sawyer/pusher_task/pusher_object_box.xml')
+        return self.model_xml.get_model()
+        # return load_model_from_path('robots/sawyer/arena_2.xml')
+
     def _get_reference(self):
-        self._ref_object_pos_low, self._ref_object_pos_high = self.model.get_joint_qpos_addr('object_free_joint')
-        self._ref_object_vel_low, self._ref_object_vel_high = self.model.get_joint_qvel_addr('object_free_joint')
-        self._ref_target_x = self.model.get_joint_qpos_addr('target_x')
-        self._ref_target_y = self.model.get_joint_qpos_addr('target_y')
+        self._ref_object_pos_low, self._ref_object_pos_high = self.model.get_joint_qpos_addr('pusher_object_free_joint')
+        self._ref_object_vel_low, self._ref_object_vel_high = self.model.get_joint_qvel_addr('pusher_object_free_joint')
+        self._ref_target_x = self.model.get_joint_qpos_addr('pusher_target_x')
+        self._ref_target_y = self.model.get_joint_qpos_addr('pusher_target_y')
         # self._ref_target_z = self.model.get_joint_qpos_addr('target_z')
         self._ref_joint_pos_indexes = [self.model.get_joint_qpos_addr('right_j{}'.format(x)) for x in range(7)]
         self._ref_joint_vel_indexes = [self.model.get_joint_qvel_addr('right_j{}'.format(x)) for x in range(7)]
-
 
     def set_cam(self):
         self.viewer.cam.fixedcamid = 0
@@ -53,6 +58,7 @@ class SaywerPushEnv(object):
         self._target_y += self._target_y / abs(self._target_y) * 0.1
 
     def _step(self, action):
+        # import pdb; pdb.set_trace()
         reward = 0
         info = None
         if not self.done:
@@ -106,11 +112,11 @@ class SaywerPushEnv(object):
         self.viewer.render()
 
     def _check_lose(self):
-        return False
+        # return False
         return abs(self._object_x) > 0.3 or abs(self._object_y) > 0.3
 
     def _check_win(self):
-        return False
+        # return False
         return np.linalg.norm([self._object_x - self._target_x, self._object_y - self._target_y], 2) < 0.05
 
 
@@ -170,11 +176,11 @@ class SaywerPushEnv(object):
 
     @property
     def _object_pos(self):
-        return self.sim.data.get_body_xpos('object')
+        return self.sim.data.get_body_xpos('pusher_object')
 
     @property
     def _target_pos(self):
-        return self.sim.data.get_body_xpos('target')
+        return self.sim.data.get_body_xpos('pusher_target')
 
     @property
     def _right_hand_vel(self):
@@ -182,11 +188,11 @@ class SaywerPushEnv(object):
 
     @property
     def _object_vel(self):
-        return self.sim.data.get_body_xvelp('object')
+        return self.sim.data.get_body_xvelp('pusher_object')
 
     @property
     def _target_vel(self):
-        return self.sim.data.get_body_xvelp('target')
+        return self.sim.data.get_body_xvelp('pusher_target')
     
 env = SaywerPushEnv()
 obs = env._reset()

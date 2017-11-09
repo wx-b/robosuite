@@ -105,3 +105,5 @@ ENV/
 
 # mujoco-key
 mjkey.txt
+
+.surreal_temp_model.xml

@@ -1,0 +1,13 @@
+<mujoco model="base">
+	<compiler angle="radian" meshdir="meshes/"/>
+	<size nconmax="100" njmax="500"/>
+	
+	<asset>
+	</asset>
+
+	<actuator>
+	</actuator>
+	
+	<worldbody>
+	</worldbody>
+</mujoco>

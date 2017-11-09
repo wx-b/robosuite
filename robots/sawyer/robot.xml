@@ -1,10 +1,9 @@
 <mujoco model="sawyer">
-	<compiler angle="radian" meshdir="meshes/"/>
+	<compiler angle="radian"/>
 	<size nconmax="100" njmax="500"/>
 	<actuator>
 		<!-- Mujoco does not have velocity limit in actuator :( -->
 		<position ctrllimited="true" ctrlrange="-3.0503 3.0503" joint="right_j0" kp="1" name="right_j0"/>
-		<!-- TODO: kp and gear -->
 		<position ctrllimited="true" ctrlrange="-3.8095 2.2736" joint="right_j1" kp="7000" name="right_j1" forcelimited="true" forcerange="-8000 8000"/>
 		<position ctrllimited="true" ctrlrange="-3.0426 3.0426" joint="right_j2" kp="1000" name="right_j2" forcelimited="true" forcerange="-500 500"/>
 		<position ctrllimited="true" ctrlrange="-3.0439 3.0439" joint="right_j3" kp="1000" name="right_j3" forcelimited="true" forcerange="-500 500"/>
@@ -23,33 +22,8 @@
 		<mesh file="l4.stl" name="l4"/>
 		<mesh file="l5.stl" name="l5"/>
 		<mesh file="l6.stl" name="l6"/>
-		<texture builtin="gradient" height="256" rgb1=".9 .9 1." rgb2=".2 .3 .4" type="skybox" width="256"/>
-		<texture builtin="checker" height="512" name="texplane" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" type="2d" width="512"/>
-		<material name="floorplane" reflectance="0.5" texrepeat="1 1" texture="texplane" texuniform="true"/>
 	</asset>
 	<worldbody>
-		<geom condim="3" material="floorplane" name="floor" pos="0 0 -0.913" size="3 3 .125" type="plane"/>
-		<body name="table" pos="0.5 0 -0.6">
-			<geom pos="0 0 0" size="0.4 0.4 0.4" type="box"/>
-			<geom pos="0 0 0" size="0.399 0.399 0.399" type="box" conaffinity="0" contype="0" group="1" name="table_visual"/>
-			<body name="target" pos="0 0 0.5">
-				<geom pos="0 0 0" size="0.1" type="sphere" rgba="0 1 0 1" conaffinity="0" contype="0"/>
-				<!-- Visualization of object in group 1 -->
-				<geom pos="0 0 0" size="0.099" type="sphere" rgba="0 1 0 1" conaffinity="0" contype="0" group="1"/>
-				<joint type="slide" pos="0 0 0" axis="1 0 0" name="target_x"/>
-				<joint type="slide" pos="0 0 0" axis="0 1 0" name="target_y"/>
-			</body>	
-		</body>
-		<body name="object" pos="0.5 0 -0.1">
-			<geom pos="0 0 0" size="0.1" type="sphere" rgba="1 0 0 1"/>
-			<!-- Visualization of object in group 1 -->
-			<geom pos="0 0 0" size="0.099" type="sphere" rgba="1 0 0 1" group="1" conaffinity="0" contype="0"/>
-			<joint type="free" name="object_free_joint"/>
-		</body>	
-		
-		<light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="1 1 4.0" specular="0.3 0.3 0.3"/>
-		<light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="-3. -3. 4.0" specular="0.3 0.3 0.3"/>
-		<camera mode="fixed" name="camera1" pos="2.5 0 1.8" quat="0.653 0.271 0.271 0.653"/>
 		<body name="base" pos="0 0 0">
 			<inertial diaginertia="0 0 0" mass="0" pos="0 0 0"/>
 			<body name="controller_box" pos="0 0 0">
