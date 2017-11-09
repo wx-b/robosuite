@@ -11,6 +11,7 @@ def print_usage():
 if __name__ == '__main__':
 	if len(sys.argv) != 3:
 		print_usage()
+		exit(0)
 	input_file = sys.argv[1]
 	output_file = sys.argv[2]
 	input_folder = os.path.dirname(input_file)
