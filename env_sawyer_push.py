@@ -22,7 +22,11 @@ class SaywerPushEnv(object):
         self.done = False
 
     def _load_model(self):
+        ####
+        # Change files here to swap robots/objects
+        ####
         self.model_xml = PuhserTask(robot_xml='robots/sawyer/robot.xml', object_xml='robots/sawyer/pusher_task/pusher_object_box.xml')
+        # self.model_xml = PuhserTask(robot_xml='robots/sawyer/robot.xml', object_xml='robots/sawyer/pusher_task/pusher_object_default.xml')
         return self.model_xml.get_model()
         # return load_model_from_path('robots/sawyer/arena_2.xml')
 
