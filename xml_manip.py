@@ -136,7 +136,11 @@ class MujocoWorldBase(MujocoXML):
 
     def merge_asset(self, other):
         for asset in other.asset:
-            self.asset.append(asset)
+            asset_name = asset.get('name')
+            asset_type = asset.tag
+            # Avoids duplication
+            if self.asset.find('./{}[@name={}]'.format(asset_type, asset_name)) is None:
+                self.asset.append(asset)
 
 
 class PusherTask(MujocoWorldBase):
@@ -168,30 +172,36 @@ class PusherTask(MujocoWorldBase):
         pusher_target.set('pos', array_to_string(object_center_offset))
         self.worldbody.append(pusher_target)
 
-        # pusher_object = object_xml.worldbody.find("./body[@name='pusher_object']")
-        # if pusher_object is None:
-        #     print('Error: Malformed object file {}. Body "pusher_object" not found'.format(object_xml.file))
-        #     raise ValueError
-        # if pusher_object.find("./joint[@name='pusher_object_free_joint']") is None:
-        #     print('Error: Malformed object file {}. Joint "pusher_object_free_joint" not found'.format(object_xml.file))
-        #     raise ValueError
+class StackerTask(MujocoWorldBase):
+    def __init__(self, mujoco_robot, mujoco_objects):
+        super().__init__()
+        self.table_offset = np.array([0.5, 0, -0.2])
+        arena_xml = MujocoXML('robots/sawyer/pusher_task/pusher_task.xml')
+        self.merge(arena_xml)
+        self.merge_robot(mujoco_robot)
+        self.merge_objects(mujoco_objects)
 
-        # pusher_target_g0 = object_xml.worldbody.find("./geom[@name='pusher_target_g0']")
-        # pusher_target_g1 = object_xml.worldbody.find("./geom[@name='pusher_target_g1']")
-        # if pusher_target_g0 is None:
-        #     print('Error: Malformed object file {}. Geom "pusher_target_g0" not found'.format(object_xml.file))
-        # if pusher_target_g1 is None:
-        #     print('Error: Malformed object file {}. Geom "pusher_target_g1" not found'.format(object_xml.file))
-        
-        # Fix object offset
-        # pusher_object.set('pos', '0.5 0 -0.2')
-        # self.worldbody.append(pusher_object)
+    def merge_robot(self, mujoco_robot):
+        self.merge(mujoco_robot)
 
-        # pusher_target = self.worldbody.find(".//body[@name='pusher_target']")
-        # pusher_target.append(pusher_target_g0)
-        # pusher_target.append(pusher_target_g1)
+    def merge_object(self, mujoco_objects):
+        for i, mujoco_object in enumerate(mujoco_objects):
+            self.merge_asset(mujoco_object)
+            # Load object
+            stacker_object = mujoco_object.get_full()
+            stacker_object.set('name', 'pusher_object')
+            object_bottom_offset = mujoco_object.get_bottom_offset()
+            object_center_offset = self.table_offset - object_bottom_offset
+            stacker_object.set('pos', array_to_string(object_center_offset))
+            stacker_object.append(joint(name='pusher_object_free_joint', type='free'))
+            self.worldbody.append(pusher_object)
 
-        # Currently no assets or actuators from objects and targets
+            # Load target
+            stacker_target = mujoco_object.get_visual()
+            stacker_target.set('name', 'pusher_target')
+            stacker_target.set('pos', array_to_string(object_center_offset))
+            self.worldbody.append(pusher_target)
+
 
 if __name__ == '__main__':
     mujoco_robot = MujocoRobot('robots/sawyer/robot.xml')
