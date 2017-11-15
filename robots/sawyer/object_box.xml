@@ -1,0 +1,14 @@
+<!-- sample of a general object defined in mujoco -->
+<mujoco model="box">
+	<worldbody>
+		<body name="collision">
+			<geom pos="0 0 0" size="0.05 0.05 0.05" type="box" rgba="1 0 0 1"/>
+		</body>
+		<body name="visual">
+			<geom pos="0 0 0" size="0.05 0.05 0.05" type="box" rgba="1 0 0 1"  conaffinity="0" contype="0" group="1"/>
+			<geom pos="0 0 0" size="0.05 0.05 0.05" type="box" rgba="1 0 0 1"  conaffinity="0" contype="0" group="0"/>
+		</body>
+		<site pos="0 0 -0.05" name="bottom_site"/>
+		<site pos="0 0 0.05" name="top_site"/>
+	</worldbody>
+</mujoco>

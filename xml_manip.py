@@ -1,10 +1,22 @@
 import xml.etree.ElementTree as ET
 from mujoco_py import load_model_from_path, MjSim, MjViewer
 # import xml.etree.ElementTree.Element as Element
-from mujoco_py import load_model_from_path
 import os.path as path
 import os
+import copy
+import numpy as np
+import xml.dom.minidom
 
+def array_to_string(array):
+    return ' '.join(['{}'.format(x) for x in array])
+
+def string_to_array(string):
+    return np.array([float(x) for x in string.split(' ')])
+
+def joint(**kwargs):
+    element = ET.Element('joint', attrib=kwargs)
+    return element
+    
 class MujocoXML(object):
     def __init__(self, fname):
         self.file = fname
@@ -25,6 +37,7 @@ class MujocoXML(object):
         self.root.append(ele)
         return ele
 
+    # Default merge method
     def merge(self, other):
         if not isinstance(other, MujocoXML):
             print('Error: {} is not a MujocoXML instance.'.format(type(other)))
@@ -45,64 +58,148 @@ class MujocoXML(object):
         os.remove(tempfile)
         return model
 
-    def save_model(self, fname):
+    def save_model(self, fname, pretty=False):
+        
         with open(fname, 'w') as f:
-            f.write(ET.tostring(self.root, encoding='unicode'))
+            xml_str = ET.tostring(self.root, encoding='unicode')
+            if pretty:
+                # TODO: get a good pretty print library
+                parsed_xml = xml.dom.minidom.parseString(xml_str)
+                xml_str = parsed_xml.toprettyxml(newl='')
+            f.write(xml_str)
 
-class MujocoModelBase(MujocoXML):
+### Base class for all objects
+class MujocoObject(MujocoXML):
+    def __init__(self, fname):
+        super().__init__(fname)
+
+    def get_bottom_offset(self):
+        bottom_site = self.worldbody.find("./site[@name='bottom_site']")
+        return string_to_array(bottom_site.get('pos'))
+
+    def get_top_offset(self):
+        top_site = self.worldbody.find("./site[@name='top_site']")
+        return string_to_array(top_site.get('pos'))
+
+    # returns a copy, Returns xml body node
+    def get_collision(self):
+        collision = copy.deepcopy(self.worldbody.find("./body[@name='collision']"))
+        collision.attrib.pop('name')
+        return collision
+
+    # returns a copy, Returns xml body node
+    def get_visual(self):
+        visual = copy.deepcopy(self.worldbody.find("./body[@name='visual']"))
+        visual.attrib.pop('name')
+        return visual
+
+    # returns a copy, xml of collision plus visual
+    def get_full(self):
+        collision = self.get_collision()
+        visual = self.get_visual()
+        collision.append(visual)
+        return collision
+
+
+### Base class for all robots
+### Since we will only be having sawyer for a while, all sawyer methods are put in here.
+class MujocoRobot(MujocoXML):
+    def __init__(self, fname):
+        super().__init__(fname)
+        self.right_hand = self.worldbody.find(".//body[@name='right_hand']")
+        self.has_gripper = False
+        if self.right_hand is None:
+            print('Error: body with name "right_hand" not found.')
+            raise ValueError
+
+    def add_gripper(self, gripper):
+        if not isinstance(gripper, MujocoGripper):
+            print('Error: {} is not a MujocoGripper instance.'.format(type(other)))
+            raise TypeError
+        for actuator in gripper.actuator:
+            self.actuator.append(actuator)
+        for asset in gripper.asset:
+            self.asset.append(asset)
+        for body in gripper.worldbody:
+            self.right_hand.append(body)
+        self.has_gripper = True
+
+### Base class for grippers
+class MujocoGripper(MujocoXML):
+    def __init__(self, fname):
+        super().__init__(fname)
+
+### Base class to inherit all mujoco worlds from
+class MujocoWorldBase(MujocoXML):
     def __init__(self):
         super().__init__('robots/sawyer/base.xml')
-        self.components = []
 
-    def merge(self, other):
-        super().merge(other)
-        self.components.append(other.name)
+    def merge_asset(self, other):
+        for asset in other.asset:
+            self.asset.append(asset)
 
-class PuhserTask(MujocoModelBase):
-    def __init__(self, robot_xml, object_xml='robots/sawyer/pusher_task/pusher_object_default.xml'):
+
+class PusherTask(MujocoWorldBase):
+    def __init__(self, mujoco_robot, mujoco_object):
         super().__init__()
+        self.table_offset = np.array([0.5, 0, -0.2])
         arena_xml = MujocoXML('robots/sawyer/pusher_task/pusher_task.xml')
         self.merge(arena_xml)
-        if not isinstance(robot_xml, MujocoXML):
-            robot_xml = MujocoXML(robot_xml)
-        self.merge_robot(robot_xml)
-        if not isinstance(object_xml, MujocoXML):
-            object_xml = MujocoXML(object_xml)
-        self.merge_object(object_xml)
+        self.merge_robot(mujoco_robot)
+        self.merge_object(mujoco_object)
 
-    def merge_robot(self, robot_xml):
-        # re-center stuff, etc.
-        self.merge(robot_xml)
+    def merge_robot(self, mujoco_robot):
+        self.merge(mujoco_robot)
 
-    def merge_object(self, object_xml):
-        pusher_object = object_xml.worldbody.find("./body[@name='pusher_object']")
-        if pusher_object is None:
-            print('Error: Malformed object file {}. Body "pusher_object" not found'.format(object_xml.file))
-            raise ValueError
-        if pusher_object.find("./joint[@name='pusher_object_free_joint']") is None:
-            print('Error: Malformed object file {}. Joint "pusher_object_free_joint" not found'.format(object_xml.file))
-            raise ValueError
-
-        pusher_target_g0 = object_xml.worldbody.find("./geom[@name='pusher_target_g0']")
-        pusher_target_g1 = object_xml.worldbody.find("./geom[@name='pusher_target_g1']")
-        if pusher_target_g0 is None:
-            print('Error: Malformed object file {}. Geom "pusher_target_g0" not found'.format(object_xml.file))
-        if pusher_target_g1 is None:
-            print('Error: Malformed object file {}. Geom "pusher_target_g1" not found'.format(object_xml.file))
-        
-        # Fix object offset
-        pusher_object.set('pos', '0.5 0 -0.2')
+    def merge_object(self, mujoco_object):
+        self.merge_asset(mujoco_object)
+        # Load object
+        pusher_object = mujoco_object.get_full()
+        pusher_object.set('name', 'pusher_object')
+        object_bottom_offset = mujoco_object.get_bottom_offset()
+        object_center_offset = self.table_offset - object_bottom_offset
+        pusher_object.set('pos', array_to_string(object_center_offset))
+        pusher_object.append(joint(name='pusher_object_free_joint', type='free'))
         self.worldbody.append(pusher_object)
 
-        pusher_target = self.worldbody.find(".//body[@name='pusher_target']")
-        pusher_target.append(pusher_target_g0)
-        pusher_target.append(pusher_target_g1)
+        # Load target
+        pusher_target = mujoco_object.get_visual()
+        pusher_target.set('name', 'pusher_target')
+        pusher_target.set('pos', array_to_string(object_center_offset))
+        self.worldbody.append(pusher_target)
+
+        # pusher_object = object_xml.worldbody.find("./body[@name='pusher_object']")
+        # if pusher_object is None:
+        #     print('Error: Malformed object file {}. Body "pusher_object" not found'.format(object_xml.file))
+        #     raise ValueError
+        # if pusher_object.find("./joint[@name='pusher_object_free_joint']") is None:
+        #     print('Error: Malformed object file {}. Joint "pusher_object_free_joint" not found'.format(object_xml.file))
+        #     raise ValueError
+
+        # pusher_target_g0 = object_xml.worldbody.find("./geom[@name='pusher_target_g0']")
+        # pusher_target_g1 = object_xml.worldbody.find("./geom[@name='pusher_target_g1']")
+        # if pusher_target_g0 is None:
+        #     print('Error: Malformed object file {}. Geom "pusher_target_g0" not found'.format(object_xml.file))
+        # if pusher_target_g1 is None:
+        #     print('Error: Malformed object file {}. Geom "pusher_target_g1" not found'.format(object_xml.file))
+        
+        # Fix object offset
+        # pusher_object.set('pos', '0.5 0 -0.2')
+        # self.worldbody.append(pusher_object)
+
+        # pusher_target = self.worldbody.find(".//body[@name='pusher_target']")
+        # pusher_target.append(pusher_target_g0)
+        # pusher_target.append(pusher_target_g1)
 
         # Currently no assets or actuators from objects and targets
 
 if __name__ == '__main__':
-    task = PuhserTask('robots/sawyer/robot.xml', 'robots/sawyer/pusher_task/pusher_object_default.xml')
+    mujoco_robot = MujocoRobot('robots/sawyer/robot.xml')
+    mujoco_robot.add_gripper(MujocoGripper('robots/sawyer/gripper.xml'))
+    mujoco_object = MujocoObject('robots/sawyer/object_box.xml')
+    task = PusherTask(mujoco_robot, mujoco_object)
     model = task.get_model()
+    # task.save_model('sample_combined_model.xml')
     sim = MjSim(model)
     viewer = MjViewer(sim)
 

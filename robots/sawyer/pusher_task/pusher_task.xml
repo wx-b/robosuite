@@ -9,13 +9,13 @@
 		<body name="pusher_table" pos="0.5 0 -0.6">
 			<geom pos="0 0 0" size="0.4 0.4 0.4" type="box"/>
 			<geom pos="0 0 0" size="0.399 0.399 0.399" type="box" conaffinity="0" contype="0" group="1" name="pusher_table_visual"/>
-			<body name="pusher_target" pos="0 0 0.4">
-				<joint type="slide" pos="0 0 0" axis="1 0 0" name="pusher_target_x"/>
-				<joint type="slide" pos="0 0 0" axis="0 1 0" name="pusher_target_y"/>
+			<!-- <body name="pusher_target" pos="0 0 0.4"> -->
+				<!-- <joint type="slide" pos="0 0 0" axis="1 0 0" name="pusher_target_x"/> -->
+				<!-- <joint type="slide" pos="0 0 0" axis="0 1 0" name="pusher_target_y"/> -->
 				<!-- Python code imports target visualization -->
 				<!-- <geom name="pusher_target_g0" pos="0 0 0" size="0.1" type="sphere" rgba="0 1 0 1" conaffinity="0" contype="0"/>
 				<geom name="pusher_target_g1" pos="0 0 0" size="0.099" type="sphere" rgba="0 1 0 1" conaffinity="0" contype="0" group="1"/> -->
-			</body>	
+			<!-- </body>	 -->
 		</body>
 		<!-- Python code imports pusher object -->
 		<!-- <body name="pusher_object" pos="0.5 0 -0.1">
