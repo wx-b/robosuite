@@ -13,6 +13,11 @@ def array_to_string(array):
 def string_to_array(string):
     return np.array([float(x) for x in string.split(' ')])
 
+def set_alpha(node, alpha):
+    for child_node in node.findall('.//*[@rgba]'):
+        rgba_orig = string_to_array(child_node.get('rgba'))
+        child_node.set('rgba', array_to_string(list(rgba_orig[0:3]) + [alpha]))
+
 def joint(**kwargs):
     element = ET.Element('joint', attrib=kwargs)
     return element
@@ -168,6 +173,7 @@ class PusherTask(MujocoWorldBase):
 
         # Load target
         pusher_target = mujoco_object.get_visual()
+        set_alpha(pusher_target, 0.2)
         pusher_target.set('name', 'pusher_target')
         pusher_target.set('pos', array_to_string(object_center_offset))
         self.worldbody.append(pusher_target)
