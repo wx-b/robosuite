@@ -1,6 +1,5 @@
 import xml.etree.ElementTree as ET
 from mujoco_py import load_model_from_path, MjSim, MjViewer
-# import xml.etree.ElementTree.Element as Element
 import os.path as path
 import os
 import copy
@@ -73,10 +72,45 @@ class MujocoXML(object):
                 xml_str = parsed_xml.toprettyxml(newl='')
             f.write(xml_str)
 
+# We use Mujoco Objects to implement all objects that 
+# 1) may appear for multiple times in a task
+# 2) can be swapped between different tasks
+# Typical methods return copy so the caller can all joints/attributes as wanted
 ### Base class for all objects
-class MujocoObject(MujocoXML):
+class MujocoObject():
+    def __init__(self):
+        self.asset = ET.Element('asset')
+
+    def get_bottom_offset(self):
+        raise NotImplementedError
+        # return np.array([0, 0, -2])
+
+    def get_top_offset(self):
+        raise NotImplementedError
+        # return np.array([0, 0, 2])
+
+    def get_horizontal_radius(self):
+        raise NotImplementedError
+        # return 2
+
+    # returns a copy, Returns xml body node
+    def get_collision(self):
+        raise NotImplementedError
+    
+    # returns a copy, Returns xml body node
+    def get_visual(self):
+        raise NotImplementedError
+
+    # returns a copy, xml of collision plus visual
+    def get_full(self):
+        collision = self.get_collision()
+        visual = self.get_visual()
+        collision.append(visual)
+        return collision
+
+class MujocoXMLObject(MujocoXML, MujocoObject):
     def __init__(self, fname):
-        super().__init__(fname)
+        MujocoXML.__init__(self, fname)
 
     def get_bottom_offset(self):
         bottom_site = self.worldbody.find("./site[@name='bottom_site']")
@@ -85,6 +119,10 @@ class MujocoObject(MujocoXML):
     def get_top_offset(self):
         top_site = self.worldbody.find("./site[@name='top_site']")
         return string_to_array(top_site.get('pos'))
+
+    def get_horizontal_radius(self):
+        horizontal_radius_site = self.worldbody.find("./site[@name='horizontal_radius_site']")
+        return string_to_array(horizontal_radius_site.get('pos'))[0]
 
     # returns a copy, Returns xml body node
     def get_collision(self):
@@ -98,13 +136,58 @@ class MujocoObject(MujocoXML):
         visual.attrib.pop('name')
         return visual
 
-    # returns a copy, xml of collision plus visual
-    def get_full(self):
-        collision = self.get_collision()
-        visual = self.get_visual()
-        collision.append(visual)
-        return collision
+class MujocoGeneratedObject(MujocoObject):
+    def get_collision_attrib_template(self):
+        return {'pos': '0 0 0'}
 
+    def get_visual_attrib_template(self):
+        return {'conaffinity': "0", 'contype': "0"}
+
+class BoxObject(MujocoGeneratedObject):
+    # TODO: friction, etc
+    def __init__(self, size, rgba):
+        super().__init__()
+        self.size = np.array(size)
+        self.rgba = np.array(rgba)
+
+    def get_bottom_offset(self):
+        return np.array([0, 0, -1 * self.size[2]])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.size[2]])
+
+    def get_horizontal_radius(self):
+        return np.linalg.norm(self.size[0:2], 2)
+
+    # returns a copy, Returns xml body node
+    def get_collision(self):
+        body = ET.Element('body')
+        template = self.get_collision_attrib_template()
+        template['type'] = 'box'
+        template['rgba'] = array_to_string(self.rgba)
+        template['size'] = array_to_string(self.size)
+        body.append(ET.Element('geom', attrib=template))
+        return body
+    
+    # returns a copy, Returns xml body node
+    def get_visual(self):
+        body = ET.Element('body')
+        template = self.get_visual_attrib_template()
+        template['type'] = 'box'
+        template['rgba'] = array_to_string(self.rgba)
+        template['size'] = array_to_string(self.size * 0.99)
+        template['group'] = '0'
+        body.append(ET.Element('geom', attrib=template))
+        template_gp1 = copy.deepcopy(template)
+        template_gp1['group'] = '1'
+        body.append(ET.Element('geom', attrib=template_gp1))
+        return body
+
+class RandomBoxObject(BoxObject):
+    def __init__(self, size_max=[0.07, 0.07, 0.07], size_min=[0.03, 0.03, 0.03]):
+        size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(3)])
+        rgba = np.array([np.random.uniform(0, 1) for i in range(3)] + [1])
+        super().__init__(size, rgba)
 
 ### Base class for all robots
 ### Since we will only be having sawyer for a while, all sawyer methods are put in here.
@@ -152,7 +235,7 @@ class PusherTask(MujocoWorldBase):
     def __init__(self, mujoco_robot, mujoco_object):
         super().__init__()
         self.table_offset = np.array([0.5, 0, -0.2])
-        arena_xml = MujocoXML('robots/sawyer/pusher_task/pusher_task.xml')
+        arena_xml = MujocoXML('robots/sawyer/table_arena.xml')
         self.merge(arena_xml)
         self.merge_robot(mujoco_robot)
         self.merge_object(mujoco_object)
@@ -182,7 +265,8 @@ class StackerTask(MujocoWorldBase):
     def __init__(self, mujoco_robot, mujoco_objects):
         super().__init__()
         self.table_offset = np.array([0.5, 0, -0.2])
-        arena_xml = MujocoXML('robots/sawyer/pusher_task/pusher_task.xml')
+        self.object_metadata = []
+        arena_xml = MujocoXML('robots/sawyer/table_arena.xml')
         self.merge(arena_xml)
         self.merge_robot(mujoco_robot)
         self.merge_objects(mujoco_objects)
@@ -190,23 +274,37 @@ class StackerTask(MujocoWorldBase):
     def merge_robot(self, mujoco_robot):
         self.merge(mujoco_robot)
 
-    def merge_object(self, mujoco_objects):
+    def merge_objects(self, mujoco_objects):
         for i, mujoco_object in enumerate(mujoco_objects):
+            object_name = 'stacker_object_{}'.format(i)
+            joint_name = 'stacker_object_free_joint_{}'.format(i)
+            target_name = 'stacker_target_{}'.format(i)
+
             self.merge_asset(mujoco_object)
             # Load object
             stacker_object = mujoco_object.get_full()
-            stacker_object.set('name', 'pusher_object')
+            stacker_object.set('name', object_name)
             object_bottom_offset = mujoco_object.get_bottom_offset()
             object_center_offset = self.table_offset - object_bottom_offset
             stacker_object.set('pos', array_to_string(object_center_offset))
-            stacker_object.append(joint(name='pusher_object_free_joint', type='free'))
-            self.worldbody.append(pusher_object)
+            stacker_object.append(joint(name=joint_name, type='free'))
+            self.worldbody.append(stacker_object)
 
             # Load target
             stacker_target = mujoco_object.get_visual()
-            stacker_target.set('name', 'pusher_target')
+            stacker_target.set('name', target_name)
             stacker_target.set('pos', array_to_string(object_center_offset))
-            self.worldbody.append(pusher_target)
+            set_alpha(stacker_target, 0.2)
+            self.worldbody.append(stacker_target)
+
+            self.object_metadata.append({
+                'object_name': object_name,
+                'target_name': target_name,
+                'joint_name': joint_name,
+                'object_bottom_offset': mujoco_object.get_bottom_offset(),
+                'object_top_offset': mujoco_object.get_top_offset(),
+                'object_horizontal_radius': mujoco_object.get_horizontal_radius(),
+                })
 
 
 if __name__ == '__main__':

@@ -10,5 +10,6 @@
 		</body>
 		<site pos="0 0 -0.05" name="bottom_site"/>
 		<site pos="0 0 0.05" name="top_site"/>
+		<site pos="0.071 0 0" name="horizontal_radius_site"/>
 	</worldbody>
 </mujoco>

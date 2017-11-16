@@ -1,6 +1,6 @@
 <mujoco model="base">
 	<compiler angle="radian" meshdir="meshes/"/>
-	<size nconmax="100" njmax="500"/>
+	<size nconmax="200" njmax="1000"/>
 	
 	<asset>
 	</asset>
