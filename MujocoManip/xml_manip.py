@@ -6,6 +6,16 @@ import copy
 import numpy as np
 import xml.dom.minidom
 
+def xml_path_completion(xml_path):
+    """
+    Takes in a local xml path and returns a full path. 
+    """
+    if xml_path.startswith("/"):
+        full_path = xml_path
+    else:
+        full_path = os.path.join(os.path.dirname(__file__), xml_path)
+    return full_path
+
 def array_to_string(array):
     return ' '.join(['{}'.format(x) for x in array])
 
@@ -220,7 +230,7 @@ class MujocoGripper(MujocoXML):
 ### Base class to inherit all mujoco worlds from
 class MujocoWorldBase(MujocoXML):
     def __init__(self):
-        super().__init__('robots/sawyer/base.xml')
+        super().__init__(xml_path_completion('robots/sawyer/base.xml'))
 
     def merge_asset(self, other):
         for asset in other.asset:
@@ -235,7 +245,7 @@ class PusherTask(MujocoWorldBase):
     def __init__(self, mujoco_robot, mujoco_object):
         super().__init__()
         self.table_offset = np.array([0.5, 0, -0.2])
-        arena_xml = MujocoXML('robots/sawyer/table_arena.xml')
+        arena_xml = MujocoXML(xml_path_completion('robots/sawyer/table_arena.xml'))
         self.merge(arena_xml)
         self.merge_robot(mujoco_robot)
         self.merge_object(mujoco_object)
@@ -266,7 +276,7 @@ class StackerTask(MujocoWorldBase):
         super().__init__()
         self.table_offset = np.array([0.5, 0, -0.2])
         self.object_metadata = []
-        arena_xml = MujocoXML('robots/sawyer/table_arena.xml')
+        arena_xml = MujocoXML(xml_path_completion('robots/sawyer/table_arena.xml'))
         self.merge(arena_xml)
         self.merge_robot(mujoco_robot)
         self.merge_objects(mujoco_objects)
@@ -308,9 +318,9 @@ class StackerTask(MujocoWorldBase):
 
 
 if __name__ == '__main__':
-    mujoco_robot = MujocoRobot('robots/sawyer/robot.xml')
-    mujoco_robot.add_gripper(MujocoGripper('robots/sawyer/gripper.xml'))
-    mujoco_object = MujocoObject('robots/sawyer/object_box.xml')
+    mujoco_robot = MujocoRobot(xml_path_completion('robots/sawyer/robot.xml'))
+    mujoco_robot.add_gripper(MujocoGripper(xml_path_completion('robots/sawyer/gripper.xml')))
+    mujoco_object = MujocoObject(xml_path_completion('robots/sawyer/object_box.xml'))
     task = PusherTask(mujoco_robot, mujoco_object)
     model = task.get_model()
     # task.save_model('sample_combined_model.xml')

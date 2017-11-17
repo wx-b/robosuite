@@ -5,7 +5,7 @@ Displays robot fetch at a disco party.
 
 from mujoco_py import load_model_from_path, MjSim, MjViewer
 from mujoco_py.generated import const
-from xml_manip import MujocoRobot, MujocoGripper, RandomBoxObject, PusherTask, StackerTask, MujocoXMLObject
+from MujocoManip.xml_manip import MujocoRobot, MujocoGripper, RandomBoxObject, PusherTask, StackerTask, MujocoXMLObject, xml_path_completion
 import numpy as np
 import os
 import sys
@@ -92,17 +92,30 @@ class SawyerEnv(MujocoEnv):
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_robot = MujocoRobot('robots/sawyer/robot.xml')
-        self.mujoco_robot.add_gripper(MujocoGripper('robots/sawyer/gripper.xml'))
+        self.mujoco_robot = MujocoRobot(xml_path_completion('robots/sawyer/robot.xml'))
+        self.mujoco_robot.add_gripper(MujocoGripper(xml_path_completion('robots/sawyer/gripper.xml')))
 
     def _reset_internal(self):
         super()._reset_internal()
         self.sim.data.qpos[self._ref_joint_pos_indexes] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
+        self.sim.forward()
 
     def _get_reference(self):
         super()._get_reference()
+
+        # indices for joints in qpos, qvel
         self._ref_joint_pos_indexes = [self.model.get_joint_qpos_addr('right_j{}'.format(x)) for x in range(7)]
         self._ref_joint_vel_indexes = [self.model.get_joint_qvel_addr('right_j{}'.format(x)) for x in range(7)]
+
+        ### TODO: generalize across gripper types ###
+
+        # indices for joint pos actuation, joint vel actuation, gripper actuation
+        self._ref_joint_pos_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
+                                                                                      if actuator.startswith("pos")]
+        self._ref_joint_vel_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
+                                                                                      if actuator.startswith("vel")]
+        self._ref_joint_gripper_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
+                                                                                          if actuator.startswith("r_gripper")]
 
     def _pre_action(self, action):
         super()._pre_action(action)
@@ -134,7 +147,7 @@ class SawyerPushEnv(SawyerEnv):
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_object = MujocoObject('robots/sawyer/object_ball.xml')
+        self.mujoco_object = MujocoObject(xml_path_completion('robots/sawyer/object_ball.xml'))
         self.arena = PusherTask(self.mujoco_robot, self.mujoco_object)
         self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
         if self.debug:
@@ -170,6 +183,19 @@ class SawyerPushEnv(SawyerEnv):
         reward += np.exp(-2. * np.linalg.norm(self._target_pos - self._object_pos, 2))
         reward -= 0.01 * np.linalg.norm(action, 2)
         return reward
+
+    def _pre_action(self, action):
+        # NOTE: overrides parent implementation
+
+        ### TODO: reduce the number of hardcoded constants ###
+        ### TODO: should action range scaling happen here or in RL algo? ###
+
+        # action is joint vels + gripper position in range (0, 0.020833), convert to values to feed to actuator
+        self.sim.data.ctrl[self._ref_joint_vel_actuator_indexes] = action[:7]
+        self.sim.data.ctrl[self._ref_joint_gripper_actuator_indexes] = [-action[7], action[7]]
+
+        # gravity compensation
+        self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
 
     def _get_observation(self):
         obs = super()._get_observation()
@@ -317,6 +343,19 @@ class SawyerStackEnv(SawyerEnv):
         reward -= 0.01 * np.linalg.norm(action, 2)
         return reward
 
+    def _pre_action(self, action):
+        # NOTE: overrides parent implementation
+
+        ### TODO: reduce the number of hardcoded constants ###
+        ### TODO: should action range scaling happen here or in RL algo? ###
+
+        # action is joint vels + gripper position in range (0, 0.020833), convert to values to feed to actuator
+        self.sim.data.ctrl[self._ref_joint_vel_actuator_indexes] = action[:7]
+        self.sim.data.ctrl[self._ref_joint_gripper_actuator_indexes] = [-action[7], action[7]]
+
+        # gravity compensation
+        self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+
     def _get_observation(self):
         obs = super()._get_observation()
         all_observations = [obs]
@@ -374,21 +413,33 @@ class SawyerStackEnv(SawyerEnv):
         self.sim.model.body_pos[self.sim.model.body_name2id(target_name)] = pos + self._pos_offset
 
     
-env = SawyerStackEnv()
-obs = env._reset()
-print('Initial Obs: {}'.format(obs))
-while True:
+if __name__ == '__main__':
+
+    ### TODO: for some reason, when you just open a new terminal, import the env, do reset, then render, ###
+    ###       it doesn't render the correct configuration. ###
+    ### TODO: put in action range clipping ###
+    ### TODO: define observation space, action space (you can look at Julian's code for this) ###
+
+    # a test case: do completely random actions at each time step
+    env = SawyerStackEnv()
     obs = env._reset()
-    # print(obs)
-    action = np.random.rand(16) * 2
-    for i in range(2000):
-        if i % 500 == 499:
-            action = np.random.rand(16) * 2
-        obs, reward, done, info = env._step(action)
-        # 
-        # obs, reward, done, info = env._step([0,-1,0,0,0,0,2])
-        # print(obs, reward, done, info)
-        env._render()
-        if done:
-            print('done: {}'.format(reward))
-            break
+    print('Initial Obs: {}'.format(obs))
+    while True:
+        obs = env._reset()
+
+        ### TODO: we should implement 
+        ### TODO: this might need clipping ###
+        action = np.random.randn(8)
+        action[7] *= 0.020833
+        for i in range(2000):
+            action = np.random.randn(8)
+            action[7] *= 0.020833
+            print(action)
+            obs, reward, done, info = env._step(action)
+            # 
+            # obs, reward, done, info = env._step([0,-1,0,0,0,0,2])
+            # print(obs, reward, done, info)
+            env._render()
+            if done:
+                print('done: {}'.format(reward))
+                break
