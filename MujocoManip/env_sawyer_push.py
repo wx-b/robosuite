@@ -11,79 +11,79 @@ import os
 import sys
 import time
 
-class MujocoEnv(object):
-    def __init__(self, debug=True, display=True):
-        self.debug = debug
-        self.model = self._load_model()
-        self.sim = MjSim(self.model)
-        self.display = display
-        if self.display:
-            self.viewer = MjViewer(self.sim)
-        self.sim_state_initial = self.sim.get_state()
-        self._get_reference()
-        self.set_cam()
-        self.done = False
-        self._pos_offset = np.array([0, 0, 0])
+# class MujocoEnv(object):
+#     def __init__(self, debug=True, display=True):
+#         self.debug = debug
+#         self.model = self._load_model()
+#         self.sim = MjSim(self.model)
+#         self.display = display
+#         if self.display:
+#             self.viewer = MjViewer(self.sim)
+#         self.sim_state_initial = self.sim.get_state()
+#         self._get_reference()
+#         self.set_cam()
+#         self.done = False
+#         self._pos_offset = np.array([0, 0, 0])
         
 
-    def set_cam(self):
-        self.viewer.cam.fixedcamid = 0
-        # viewer.cam.type = const.CAMERA_FIXED
-        self.viewer.cam.azimuth = 179.7749999999999
-        self.viewer.cam.distance = 3.825077470729921
-        self.viewer.cam.elevation = -21.824999999999992
-        self.viewer.cam.lookat[:][0] = 0.09691817
-        self.viewer.cam.lookat[:][1] = 0.00164106
-        self.viewer.cam.lookat[:][2] = -0.30996464
+#     def set_cam(self):
+#         self.viewer.cam.fixedcamid = 0
+#         # viewer.cam.type = const.CAMERA_FIXED
+#         self.viewer.cam.azimuth = 179.7749999999999
+#         self.viewer.cam.distance = 3.825077470729921
+#         self.viewer.cam.elevation = -21.824999999999992
+#         self.viewer.cam.lookat[:][0] = 0.09691817
+#         self.viewer.cam.lookat[:][1] = 0.00164106
+#         self.viewer.cam.lookat[:][2] = -0.30996464
 
 
-    def _load_model(self):
-        pass
+#     def _load_model(self):
+#         pass
 
-    def _get_reference(self):
-        pass
+#     def _get_reference(self):
+#         pass
 
-    def _reset(self):
-        self._reset_internal()
-        return self._get_observation()
+#     def _reset(self):
+#         self._reset_internal()
+#         return self._get_observation()
 
-    def _reset_internal(self):
-        self.sim.set_state(self.sim_state_initial)
-        self.done = False
+#     def _reset_internal(self):
+#         self.sim.set_state(self.sim_state_initial)
+#         self.done = False
 
-    def _get_observation(self):
-        return []
+#     def _get_observation(self):
+#         return []
 
-    def _step(self, action):
-        # import pdb; pdb.set_trace()
-        reward = 0
-        info = None
-        if not self.done:
-            self._pre_action(action)
-            self.sim.step()
-            reward, done, info = self._post_action(action)
-            return self._get_observation(), reward, done, info
-        else:
-            return self._get_observation(), 0, True, None
+#     def _step(self, action):
+#         # import pdb; pdb.set_trace()
+#         reward = 0
+#         info = None
+#         if not self.done:
+#             self._pre_action(action)
+#             self.sim.step()
+#             reward, done, info = self._post_action(action)
+#             return self._get_observation(), reward, done, info
+#         else:
+#             return self._get_observation(), 0, True, None
 
-    def _pre_action(self, action):
-        self.sim.data.ctrl[:] = action
+#     def _pre_action(self, action):
+#         self.sim.data.ctrl[:] = action
 
-    def _post_action(self, action):
-        self.done = self._check_done()
-        reward = self._reward(action)
-        # TODO: how to manage info?
-        return reward, self.done, {}
+#     def _post_action(self, action):
+#         self.done = self._check_done()
+#         reward = self._reward(action)
+#         # TODO: how to manage info?
+#         return reward, self.done, {}
 
-    def _check_done(self):
-        return False
+#     def _check_done(self):
+#         return False
 
-    def _reward(self, action):
-        return 0
+#     def _reward(self, action):
+#         return 0
 
-    def _render(self):
-        if self.display:
-            self.viewer.render()
+#     def _render(self):
+#         if self.display:
+#             self.viewer.render()
 
 class SawyerEnv(MujocoEnv):
     def __init__(self, **kwargs):
