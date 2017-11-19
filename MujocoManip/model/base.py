@@ -23,6 +23,18 @@ class MujocoXML(object):
         self.worldbody = self.create_default_element('worldbody')
         self.actuator = self.create_default_element('actuator')
         self.asset = self.create_default_element('asset')
+        self.resolve_asset_dependency()
+
+    def resolve_asset_dependency(self):
+        """
+            Convert every file dependency into absolute path so when we merge we don't break things.
+        """
+        for node in self.asset.findall('./*[@file]'):
+            file = node.get('file')
+            abs_path = os.path.abspath(self.folder)
+            abs_path = os.path.join(abs_path, file)
+            node.set('file', abs_path)
+
 
     def create_default_element(self, name):
         """

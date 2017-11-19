@@ -1,8 +1,8 @@
 <mujoco model="base">
     <asset>
-        <mesh name="electric_gripper_base" file="electric_gripper/electric_gripper_base.STL" />
-        <mesh name="standard_narrow" file="electric_gripper/fingers/standard_narrow.STL" />
-        <mesh name="half_round_tip" file="electric_gripper/fingers/half_round_tip.STL" />
+        <mesh name="electric_gripper_base" file="meshes/electric_gripper_base.STL" />
+        <mesh name="standard_narrow" file="meshes/standard_narrow.STL" />
+        <mesh name="half_round_tip" file="meshes/half_round_tip.STL" />
     </asset>
 
     <actuator>
