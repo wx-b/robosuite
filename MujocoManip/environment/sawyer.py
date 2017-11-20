@@ -73,3 +73,11 @@ class SawyerEnv(MujocoEnv):
     @property
     def _right_hand_vel(self):
         return self.sim.data.get_body_xvelp('right_hand')
+
+    @property
+    def _joint_positions(self):
+        return self.sim.data.qpos[self._ref_joint_pos_indexes]
+
+    @property
+    def _joint_velocities(self):
+        return self.sim.data.qvel[self._ref_joint_vel_indexes]
