@@ -6,13 +6,15 @@ from MujocoManip.model.world import MujocoWorldBase
 from MujocoManip.model.model_util import *
 
 class PusherTask(MujocoWorldBase):
-    def __init__(self, mujoco_robot, mujoco_object):
+    def __init__(self, mujoco_arena, mujoco_robot, mujoco_object):
         super().__init__()
-        self.table_offset = np.array([0.5, 0, -0.2])
-        arena_xml = MujocoXML(xml_path_completion('arena/table_arena.xml'))
-        self.merge(arena_xml)
+        self.merge_arena(mujoco_arena)
         self.merge_robot(mujoco_robot)
         self.merge_object(mujoco_object)
+
+    def merge_arena(self, mujoco_arena):
+        self.table_top_offset = mujoco_arena.table_top_abs
+        self.merge(mujoco_arena)
 
     def merge_robot(self, mujoco_robot):
         self.merge(mujoco_robot)
@@ -23,7 +25,7 @@ class PusherTask(MujocoWorldBase):
         pusher_object = mujoco_object.get_full()
         pusher_object.set('name', 'pusher_object')
         object_bottom_offset = mujoco_object.get_bottom_offset()
-        object_center_offset = self.table_offset - object_bottom_offset
+        object_center_offset = self.table_top_offset - object_bottom_offset
         pusher_object.set('pos', array_to_string(object_center_offset))
         pusher_object.append(joint(name='pusher_object_free_joint', type='free'))
         self.worldbody.append(pusher_object)

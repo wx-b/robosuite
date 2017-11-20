@@ -3,12 +3,13 @@ import xml.etree.ElementTree as ET
 from MujocoManip.model.base import MujocoXML
 from MujocoManip.miscellaneous import XMLError
 from MujocoManip.model.gripper import MujocoGripper
+from MujocoManip.model.model_util import *
 
 class MujocoRobot(MujocoXML):
     """
         Base class for all robots
-        Since we will only be having sawyer for a while, all sawyer methods are put in here
     """
+    # TODO: custom actuator logic
     def __init__(self, fname):
         """
             Initialize from file @fname
@@ -37,4 +38,13 @@ class MujocoRobot(MujocoXML):
             self.right_hand.append(body)
         self.has_gripper = True
 
-    # TODO: custom actuator logic
+class SawyerRobot(MujocoRobot):
+    def __init__(self):
+        super().__init__(xml_path_completion('robot/sawyer/robot.xml'))
+        # TODO: fix me to the correct value
+        self.bottom_offset = np.array([0,0,-0.913])
+    
+    def place_on(self, on_pos):
+        """place the robot on position @pos"""
+        node = self.worldbody.find("./body[@name='base']")
+        node.set('pos', array_to_string(on_pos - self.bottom_offset))

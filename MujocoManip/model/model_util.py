@@ -3,9 +3,13 @@ import os
 import numpy as np
 import MujocoManip.model
 
+visual_size_shrink_ratio = 0.99
+
 def xml_path_completion(xml_path):
     """
-    Takes in a local xml path and returns a full path. 
+        Takes in a local xml path and returns a full path. 
+        if @xml_path is absolute, do nothing
+        if @xml_path is not absolute, load xml that is shipped by the package
     """
     if xml_path.startswith("/"):
         full_path = xml_path

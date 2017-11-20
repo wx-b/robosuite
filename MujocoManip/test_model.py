@@ -1,10 +1,13 @@
 from MujocoManip.model import *
 from mujoco_py import load_model_from_path, MjSim, MjViewer
 
-mujoco_robot = MujocoRobot('model/assets/robot/sawyer/robot.xml')
-mujoco_robot.add_gripper(MujocoGripper('model/assets/gripper/two_finger_gripper.xml'))
+mujoco_robot = SawyerRobot()
+mujoco_robot.add_gripper(TwoFingerGripper())
+mujoco_robot.place_on([0,0,0])
 mujoco_object = MujocoXMLObject('model/assets/object/object_box.xml')
-task = PusherTask(mujoco_robot, mujoco_object)
+mujoco_arena = TableArena()
+mujoco_arena.set_origin([0.56,0,0])
+task = StackerTask(mujoco_arena, mujoco_robot, [mujoco_object])
 model = task.get_model()
 # task.save_model('sample_combined_model.xml')
 sim = MjSim(model)

@@ -3,21 +3,24 @@ import xml.etree.ElementTree as ET
 from MujocoManip.model.base import MujocoXML
 from MujocoManip.miscellaneous import XMLError
 from MujocoManip.model.world import MujocoWorldBase
-
+from MujocoManip.model.model_util import *
 # TODO: Add a table arena to wrap around table offset
 
 class StackerTask(MujocoWorldBase):
-    def __init__(self, mujoco_robot, mujoco_objects):
+    def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects):
         super().__init__()
-        self.table_offset = np.array([0.5, 0, -0.2])
         self.object_metadata = []
-        arena_xml = MujocoXML(xml_path_completion('robots/sawyer/table_arena.xml'))
-        self.merge(arena_xml)
+        self.merge_arena(mujoco_arena)
         self.merge_robot(mujoco_robot)
         self.merge_objects(mujoco_objects)
 
     def merge_robot(self, mujoco_robot):
         self.merge(mujoco_robot)
+
+
+    def merge_arena(self, mujoco_arena):
+        self.table_top_offset = mujoco_arena.table_top_abs
+        self.merge(mujoco_arena)
 
     def merge_objects(self, mujoco_objects):
         for i, mujoco_object in enumerate(mujoco_objects):
@@ -30,7 +33,7 @@ class StackerTask(MujocoWorldBase):
             stacker_object = mujoco_object.get_full()
             stacker_object.set('name', object_name)
             object_bottom_offset = mujoco_object.get_bottom_offset()
-            object_center_offset = self.table_offset - object_bottom_offset
+            object_center_offset = self.table_top_offset - object_bottom_offset
             stacker_object.set('pos', array_to_string(object_center_offset))
             stacker_object.append(joint(name=joint_name, type='free'))
             self.worldbody.append(stacker_object)

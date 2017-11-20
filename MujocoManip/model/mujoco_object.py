@@ -150,7 +150,8 @@ class BoxObject(MujocoGeneratedObject):
         template = self.get_visual_attrib_template()
         template['type'] = 'box'
         template['rgba'] = array_to_string(self.rgba)
-        template['size'] = array_to_string(self.size * 0.99)
+        # shrink so that we don't see flickering when showing both visual and collision
+        template['size'] = array_to_string(self.size * visual_size_shrink_ratio) 
         template['group'] = '0'
         body.append(ET.Element('geom', attrib=template))
         template_gp1 = copy.deepcopy(template)
