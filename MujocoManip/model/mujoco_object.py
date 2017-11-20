@@ -171,7 +171,9 @@ class RandomBoxObject(BoxObject):
     """
         A random box
     """
-    def __init__(self, size_max=[0.07, 0.07, 0.07], size_min=[0.03, 0.03, 0.03]):
+    def __init__(self, size_max=[0.07, 0.07, 0.07], size_min=[0.03, 0.03, 0.03], seed=None):
+        if seed is not None:
+            np.random.seed(seed)
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(3)])
         rgba = np.array([np.random.uniform(0, 1) for i in range(3)] + [1])
         super().__init__(size, rgba)
