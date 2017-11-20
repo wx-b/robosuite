@@ -1,17 +1,16 @@
-from MujocoManip.env import SawyerStackEnv, SawyerPushEnv
+from MujocoManip.environment import SawyerStackEnv, SawyerPushEnv
 import numpy as np
 
 if __name__ == '__main__':
 
     ### TODO: for some reason, when you just open a new terminal, import the env, do reset, then render, ###
     ###       it doesn't render the correct configuration. ###
-    ### TODO: put in action range clipping ###
-    ### Note: Mujoco already has action range clipping, defined in actuators ###
     ### TODO: define observation space, action space (you can look at Julian's code for this) ###
 
     # a test case: do completely random actions at each time step
     env = SawyerStackEnv()
     obs = env._reset()
+    print('action space', env.action_space)
     print('Initial Obs: {}'.format(obs))
     while True:
         obs = env._reset()
@@ -23,7 +22,6 @@ if __name__ == '__main__':
         for i in range(2000):
             action = np.random.randn(8) / 2
             action[7] = -1
-            print(action)
             obs, reward, done, info = env._step(action)
             # 
             # obs, reward, done, info = env._step([0,-1,0,0,0,0,2])
