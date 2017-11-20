@@ -4,7 +4,7 @@ from mujoco_py import load_model_from_path, MjSim, MjViewer
 mujoco_robot = SawyerRobot()
 mujoco_robot.add_gripper(TwoFingerGripper())
 mujoco_robot.place_on([0,0,0])
-mujoco_object = MujocoXMLObject('model/assets/object/object_box.xml')
+mujoco_object = DefaultBallObject()
 mujoco_arena = TableArena()
 mujoco_arena.set_origin([0.56,0,0])
 task = StackerTask(mujoco_arena, mujoco_robot, [mujoco_object])

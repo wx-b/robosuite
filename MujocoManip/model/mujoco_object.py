@@ -104,6 +104,14 @@ class MujocoXMLObject(MujocoXML, MujocoObject):
         visual.attrib.pop('name')
         return visual
 
+class DefaultBoxObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/object_box.xml'))
+
+class DefaultBallObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/object_ball.xml'))
+
 class MujocoGeneratedObject(MujocoObject):
     """
         Base class for all programmatically generated mujoco object
