@@ -6,6 +6,6 @@ class XMLError(MujocoManipError):
     """Exception raised for errors related to xml."""
     pass
 
-class RuntimeError(MujocoManipError):
+class SimulationError(MujocoManipError):
     """Exception raised for errors during runtime."""
     pass

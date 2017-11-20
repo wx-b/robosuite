@@ -6,10 +6,11 @@ if __name__ == '__main__':
     ### TODO: for some reason, when you just open a new terminal, import the env, do reset, then render, ###
     ###       it doesn't render the correct configuration. ###
     ### TODO: put in action range clipping ###
+    ### Note: Mujoco already has action range clipping, defined in actuators ###
     ### TODO: define observation space, action space (you can look at Julian's code for this) ###
 
     # a test case: do completely random actions at each time step
-    env = SawyerPushEnv()
+    env = SawyerStackEnv()
     obs = env._reset()
     print('Initial Obs: {}'.format(obs))
     while True:
