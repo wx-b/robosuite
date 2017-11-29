@@ -16,6 +16,20 @@ pip install -e .
 ```bash
 python demo.py
 ```
+
+
+## Creating a new environment
+
+- Take a look at [sawyer\_push.py](https://github.com/StanfordVL/MujocoManipulation/blob/master/MujocoManip/environment/sawyer_push.py) and [sawyer\_stack.py](https://github.com/StanfordVL/MujocoManipulation/blob/master/MujocoManip/environment/sawyer_stack.py) for inspiration.
+
+- When you are done implementing your environment, add the following line to [\_\_init\_\_.py](https://github.com/StanfordVL/MujocoManipulation/blob/master/MujocoManip/__init__.py) 
+
+  ```python
+  from MujocoManip.environment.your_env_file import YourEnv
+  ```
+
+- Also register the environment in [make.py](https://github.com/StanfordVL/MujocoManipulation/blob/master/MujocoManip/environment/make.py) by importing the environment and adding it to the REGISTERED_ENVS dictionary.
+
 ## Prototyping new environments
 
 - It is often necessary to prototype new environments. To make this simple, we rely on the [VRTeleop](https://github.com/StanfordVL/VRTeleop/tree/master) repo.
