@@ -1,4 +1,4 @@
-from MujocoManip.environment import SawyerStackEnv, SawyerPushEnv
+from MujocoManip import SawyerStackEnv, SawyerPushEnv
 import numpy as np
 
 if __name__ == '__main__':

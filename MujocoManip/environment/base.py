@@ -3,7 +3,7 @@ from mujoco_py import MjSim, MjViewer
 from MujocoManip.miscellaneous import SimulationError, XMLError
 
 class MujocoEnv(object):
-    def __init__(self, debug=False, display=True, control_freq=100):
+    def __init__(self, debug=False, display=True, control_freq=100, **kwargs):
         """
             Initialize a Mujoco Environment
             @debug when True saves a model file for inspection

@@ -9,10 +9,12 @@ class SawyerPushEnv(SawyerEnv):
                 table_size=(0.8, 0.8, 0.8),
                 min_target_xy_distance=(0.1,0.1),
                 table_friction=None,
-                reward_lose=-2,
-                reward_win=2,
-                reward_action_norm_factor=-0.1,
-                reward_objective_factor=0.1,
+                reward_lose=-1,
+                reward_win=1,
+                reward_action_norm_factor=0,
+                reward_objective_factor=5,
+                reward_touch_object_factor=0.001,
+                reward_align_direction_factor=0.001,
                 win_rel_tolerance=1e-2,
                 **kwargs):
         """
@@ -41,6 +43,8 @@ class SawyerPushEnv(SawyerEnv):
         self.reward_win=reward_win
         self.reward_action_norm_factor=reward_action_norm_factor
         self.reward_objective_factor=reward_objective_factor
+        self.reward_touch_object_factor=reward_touch_object_factor
+        self.reward_align_direction_factor=reward_align_direction_factor
         self.win_rel_tolerance = win_rel_tolerance
 
         super().__init__(**kwargs)
@@ -73,16 +77,28 @@ class SawyerPushEnv(SawyerEnv):
     def _set_target_xy(self, x,y):
         self._target_pos = np.array([x,y,0]) - self.target_bottom_offset
     
+    def _pre_action(self):
+        super()._pre_action()
+        self.pre_action_object_target_dist = np.linalg.norm(self._target_pos[:2] - self._object_pos[:2])
 
     def _reward(self, action):
         reward = 0
+        self.post_action_object_target_dist = np.linalg.norm(self._target_pos[:2] - self._object_pos[:2])
+        # Credit to jyg
+        # Secret sauce to get pushing working
         if self._check_win():
             reward += self.reward_win
         elif self._check_lose():
             reward += self.reward_lose
         # TODO: set a good action penalty coefficient
-        reward += self.reward_objective_factor * np.exp(-2. * np.linalg.norm(self._target_pos - self._object_pos, 2))
+        reward += self.reward_objective_factor * (self.pre_action_object_target_dist - self.post_action_object_target_dist)
         reward += self.reward_action_norm_factor * np.linalg.norm(action, 2)
+        reward += self.reward_touch_object_factor * np.exp(-20. * np.linalg.norm(self._right_hand_pos - self._object_pos))
+        reward += self.reward_align_direction_factor * np.dot(self._right_hand_pos - self._object_pos, 
+                 self._object_pos - self._target_pos) / (np.linalg.norm(
+                     self._object_pos - self._target_pos) * \
+                         np.linalg.norm(self._right_hand_pos - self._object_pos))
+
         return reward
 
     # def _pre_action(self, action):
