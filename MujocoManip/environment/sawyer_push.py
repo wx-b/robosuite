@@ -77,8 +77,8 @@ class SawyerPushEnv(SawyerEnv):
     def _set_target_xy(self, x,y):
         self._target_pos = np.array([x,y,0]) - self.target_bottom_offset
     
-    def _pre_action(self):
-        super()._pre_action()
+    def _pre_action(self, action):
+        super()._pre_action(action)
         self.pre_action_object_target_dist = np.linalg.norm(self._target_pos[:2] - self._object_pos[:2])
 
     def _reward(self, action):
