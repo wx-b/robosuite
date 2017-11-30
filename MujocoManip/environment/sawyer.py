@@ -38,6 +38,8 @@ class SawyerEnv(MujocoEnv):
 
     # Note: Overrides super
     def _pre_action(self, action):
+        action = np.array(action)
+        action[7] *= -1 # we choose to make 1 open, -1 closed
         # symmetric action on the gripper
         action = np.concatenate([action, np.array([-1 * action[7]])])
         action = np.clip(action, -1, 1)
