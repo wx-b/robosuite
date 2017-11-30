@@ -45,6 +45,10 @@ class SawyerEnv(MujocoEnv):
         bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
         weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
         applied_action = bias + weight * action
+        # print('bias', bias[7:])
+        # print('weight', weight[7:])
+        # print('input_action', action[7:])
+        # print('applied_action', applied_action[7:])
         self.sim.data.ctrl[:] = bias + weight * action
 
         # correct for gravity

@@ -18,14 +18,15 @@ if __name__ == '__main__':
 
         ### TODO: we should implement 
         ### TODO: this might need clipping ###
-        action = np.random.randn(8)
-        action[7] = 0
+        action = -1 * np.random.randn(8) / 2
+        action[7] = -1
         # action[7] *= 0.020833
         for i in range(2000):
             if i % 100 == 0:
-                print("gripper: {}".format(env.sim.data.qpos[env._ref_joint_gripper_actuator_indexes]))
-            action = np.random.randn(8) / 2
-            action[7] = 0
+                print("gripper_l_finger: {}".format(env.sim.data.qpos[env.model.get_joint_qpos_addr('r_gripper_l_finger_joint')]))
+                print("gripper_r_finger: {}".format(env.sim.data.qpos[env.model.get_joint_qpos_addr('r_gripper_r_finger_joint')]))
+            action = -1 * np.random.randn(8) / 2
+            action[7] = -1
             obs, reward, done, info = env._step(action)
             # 
             # obs, reward, done, info = env._step([0,-1,0,0,0,0,2])
