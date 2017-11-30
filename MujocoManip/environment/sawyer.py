@@ -14,7 +14,9 @@ class SawyerEnv(MujocoEnv):
 
     def _reset_internal(self):
         super()._reset_internal()
+        ### TODO: get rid of these magic numbers ###
         self.sim.data.qpos[self._ref_joint_pos_indexes] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
+        self.sim.data.qpos[self._ref_joint_gripper_actuator_indexes] = [0.020833, -0.020833] 
         self.sim.forward()
 
     def _get_reference(self):

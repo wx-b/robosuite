@@ -15,13 +15,17 @@ if __name__ == '__main__':
     while True:
         obs = env._reset()
 
+
         ### TODO: we should implement 
         ### TODO: this might need clipping ###
         action = np.random.randn(8)
+        action[7] = 0
         # action[7] *= 0.020833
         for i in range(2000):
+            if i % 100 == 0:
+                print("gripper: {}".format(env.sim.data.qpos[env._ref_joint_gripper_actuator_indexes]))
             action = np.random.randn(8) / 2
-            action[7] = -1
+            action[7] = 0
             obs, reward, done, info = env._step(action)
             # 
             # obs, reward, done, info = env._step([0,-1,0,0,0,0,2])
