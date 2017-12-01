@@ -17,7 +17,7 @@ if __name__ == '__main__':
     while True:
         obs = env._reset()
 
-        gripper_pos = 1
+        gripper_pos = -1
         ### TODO: we should implement 
         ### TODO: this might need clipping ###
         action = -1 * np.random.randn(8) / 2
@@ -26,7 +26,7 @@ if __name__ == '__main__':
         for i in range(2000):
             # if i % 100 == 0:
             #     print("gripper_l_finger: {}".format(env.sim.data.qpos[env.model.get_joint_qpos_addr('r_gripper_l_finger_joint')]))
-            print("gripper: {}".format(env.sim.data.qpos[env.model.get_joint_qpos_addr('robotiq_85_left_knuckle_joint')]))
+            # print("gripper: {}".format(env.sim.data.qpos[env.model.get_joint_qpos_addr('robotiq_85_left_knuckle_joint')]))
             action = -1 * np.random.randn(8) / 2
             action[7] = gripper_pos
             obs, reward, done, info = env._step(action)
