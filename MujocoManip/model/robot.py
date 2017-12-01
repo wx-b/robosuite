@@ -31,11 +31,14 @@ class MujocoRobot(MujocoXML):
         if not isinstance(gripper, MujocoGripper):
             raise XMLError('{} is not a MujocoGripper instance.'.format(type(gripper)))
         for actuator in gripper.actuator:
+            if not (actuator.get('name') is not None and actuator.get('name').startswith('gripper')):
+                raise XMLError('Actuator name {} does not have prefix "gripper"'.format(actuator.get('name')))
             self.actuator.append(actuator)
-        for asset in gripper.asset:
-            self.asset.append(asset)
+        self.merge_asset(gripper)
         for body in gripper.worldbody:
             self.right_hand.append(body)
+        for equality in gripper.equality:
+            self.equality.append(equality)
         self.has_gripper = True
 
 class SawyerRobot(MujocoRobot):

@@ -28,3 +28,8 @@ if __name__ == '__main__':
 		f.write(xml_string)
 
 	os.remove(tempfile)
+
+
+# replace dae with stl
+# set meshdir
+# replace 

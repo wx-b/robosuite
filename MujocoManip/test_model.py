@@ -2,7 +2,9 @@ from MujocoManip.model import *
 from mujoco_py import load_model_from_path, MjSim, MjViewer
 
 mujoco_robot = SawyerRobot()
-mujoco_robot.add_gripper(TwoFingerGripper())
+# mujoco_robot.add_gripper(TwoFingerGripper())
+# mujoco_robot.add_gripper(PR2Gripper())
+mujoco_robot.add_gripper(RobotiqGripper())
 mujoco_robot.place_on([0,0,0])
 mujoco_object = DefaultBallObject()
 mujoco_arena = TableArena()

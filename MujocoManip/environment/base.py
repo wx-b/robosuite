@@ -23,6 +23,7 @@ class MujocoEnv(object):
         self.set_cam()
         self.done = False
 
+
     def initialize_time(self, control_freq):
         """
             Initialize the time constants used for simulation

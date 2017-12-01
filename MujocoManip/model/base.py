@@ -23,6 +23,7 @@ class MujocoXML(object):
         self.worldbody = self.create_default_element('worldbody')
         self.actuator = self.create_default_element('actuator')
         self.asset = self.create_default_element('asset')
+        self.equality = self.create_default_element('equality')
         self.resolve_asset_dependency()
 
     def resolve_asset_dependency(self):
@@ -63,6 +64,8 @@ class MujocoXML(object):
             self.asset.append(one_asset)
         for one_actuator in other.actuator:
             self.actuator.append(one_actuator)
+        for one_equality in other.equality:
+            self.equality.append(one_equality)
         # self.config.append(other.config)
 
     def get_model(self):
@@ -90,3 +93,13 @@ class MujocoXML(object):
                 parsed_xml = xml.dom.minidom.parseString(xml_str)
                 xml_str = parsed_xml.toprettyxml(newl='')
             f.write(xml_str)
+
+    def merge_asset(self, other):
+        """Useful for merging other files in a custom logic"""
+        for asset in other.asset:
+            asset_name = asset.get('name')
+            asset_type = asset.tag
+            # Avoids duplication
+            pattern = "./{}[@name='{}']".format(asset_type, asset_name)
+            if self.asset.find(pattern) is None:
+                self.asset.append(asset)
