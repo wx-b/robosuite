@@ -57,6 +57,7 @@ class RobotiqGripper(MujocoGripper):
     def rest_pos(self):
         return [ 3.3161, 0., 0., 0., 0., 0.]
 
+
 def gripper_factory(name):
 	"""Genreator for grippers"""
 	if name == "TwoFingerGripper":

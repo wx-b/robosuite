@@ -4,7 +4,8 @@ from MujocoManip.model import SawyerRobot, gripper_factory
 
 
 class SawyerEnv(MujocoEnv):
-    def __init__(self, gripper, **kwargs):
+    def __init__(self, gripper=None, **kwargs):
+        self.has_gripper = not (gripper is None)
         self.gripper_name = gripper
         super().__init__(**kwargs)
         
@@ -12,15 +13,17 @@ class SawyerEnv(MujocoEnv):
     def _load_model(self):
         super()._load_model()
         self.mujoco_robot = SawyerRobot()
-        self.gripper = gripper_factory(self.gripper_name)
-        self.mujoco_robot.add_gripper(self.gripper)
+        if self.has_gripper:
+            self.gripper = gripper_factory(self.gripper_name)
+            self.mujoco_robot.add_gripper(self.gripper)
 
     def _reset_internal(self):
         super()._reset_internal()
         ### TODO: get rid of these magic numbers ###
         self.sim.data.qpos[self._ref_joint_pos_indexes] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
         # print(self.sim.data.qpos[self._ref_joint_gripper_actuator_indexes])
-        self.sim.data.qpos[self._ref_joint_gripper_actuator_indexes] = self.gripper.rest_pos()
+        if self.has_gripper:
+            self.sim.data.qpos[self._ref_joint_gripper_actuator_indexes] = self.gripper.rest_pos()
         self.sim.forward()
 
     def _get_reference(self):
@@ -36,16 +39,20 @@ class SawyerEnv(MujocoEnv):
                                                                                       if actuator.startswith("pos")]
         self._ref_joint_vel_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
                                                                                       if actuator.startswith("vel")]
-        self._ref_joint_gripper_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
+        if self.has_gripper:
+            self._ref_joint_gripper_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
                                                                                           if actuator.startswith("gripper")]
 
     # Note: Overrides super
     def _pre_action(self, action):
         action = np.clip(action, -1, 1)
-        arm_action = action[:7]
-        gripper_action_in = action[7]
-        gripper_action_actual = self.gripper.format_action(gripper_action_in)
-        full_action = np.concatenate([arm_action, gripper_action_actual])
+        if self.has_gripper:
+            arm_action = action[:7]
+            gripper_action_in = action[7]
+            gripper_action_actual = self.gripper.format_action(gripper_action_in)
+            full_action = np.concatenate([arm_action, gripper_action_actual])
+        else:
+            full_action = action[:7]
 
         ctrl_range = self.sim.model.actuator_ctrlrange
         bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
