@@ -13,12 +13,12 @@ class MujocoGripper(MujocoXML):
         super().__init__(fname)
 
     def format_action(self, action):
-    	"""
-    		Given action in closed (-1, 1) to open, 
-    		returns the control for underlying actuators
+        """
+            Given action in closed (-1, 1) to open, 
+            returns the control for underlying actuators
             returns 1-d np array 
-    	"""
-    	raise NotImplementedError
+        """
+        raise NotImplementedError
 
     def rest_pos(self):
         """
@@ -32,7 +32,7 @@ class TwoFingerGripper(MujocoGripper):
         super().__init__(xml_path_completion('gripper/two_finger_gripper.xml'))
 
     def format_action(self, action):
-        return np.array([action, -1 * action])
+        return np.array([-1 * action, 1 * action])
 
     def rest_pos(self):
         return np.array([0.020833, -0.020833] )
@@ -57,16 +57,23 @@ class RobotiqGripper(MujocoGripper):
     def rest_pos(self):
         return [ 3.3161, 0., 0., 0., 0., 0.]
 
+class PushingGripper(TwoFingerGripper):
+    """Same as Two FingerGripper, but always closed"""
+    def format_action(self, action):
+        return np.array([1, -1])
+
 
 def gripper_factory(name):
-	"""Genreator for grippers"""
-	if name == "TwoFingerGripper":
-		return TwoFingerGripper()
-	if name == "PR2Gripper":
-		return PR2Gripper()
-	if name == "RobotiqGripper":
-		return RobotiqGripper()
-	raise XMLError('Unkown gripper name {}'.format(name))
+    """Genreator for grippers"""
+    if name == "TwoFingerGripper":
+        return TwoFingerGripper()
+    if name == "PR2Gripper":
+        return PR2Gripper()
+    if name == "RobotiqGripper":
+        return RobotiqGripper()
+    if name == "PushingGripper":
+        return PushingGripper()
+    raise XMLError('Unkown gripper name {}'.format(name))
 
 
 

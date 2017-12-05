@@ -9,3 +9,7 @@ class XMLError(MujocoManipError):
 class SimulationError(MujocoManipError):
     """Exception raised for errors during runtime."""
     pass
+
+class RandomizationError(MujocoManipError):
+	"""Exception raised for really really bad RNG."""
+	pass

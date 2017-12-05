@@ -1,4 +1,4 @@
-from MujocoManip import SawyerStackEnv, SawyerPushEnv
+from MujocoManip import SawyerStackEnv, SawyerPushEnv, SawyerGraspEnv
 import numpy as np
 
 if __name__ == '__main__':
@@ -9,15 +9,17 @@ if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
     # env = SawyerStackEnv(gripper='TwoFingerGripper')
-    env = SawyerStackEnv(gripper='RobotiqGripper')
+    # env = SawyerStackEnv(gripper='RobotiqGripper')
     # env = SawyerStackEnv(gripper='PR2Gripper')
+    # env = SawyerPushEnv()
+    env = SawyerGraspEnv()
     obs = env._reset()
     print('action space', env.action_space)
     print('Initial Obs: {}'.format(obs))
     while True:
         obs = env._reset()
 
-        gripper_pos = -1
+        gripper_pos = 1
         ### TODO: we should implement 
         ### TODO: this might need clipping ###
         action = -1 * np.random.randn(8) / 2

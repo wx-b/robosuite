@@ -1,4 +1,5 @@
 import numpy as np
+from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environment.sawyer import SawyerEnv
 from MujocoManip.model import MujocoObject, StackerTask, RandomBoxObject, TableArena
 
@@ -6,6 +7,7 @@ from MujocoManip.model import MujocoObject, StackerTask, RandomBoxObject, TableA
 
 class SawyerStackEnv(SawyerEnv):
     def __init__(self, 
+                gripper='TwoFingerGripper',
                 mujoco_objects=None,
                 n_mujoco_objects=5,
                 table_size=(0.8, 0.8, 0.8),
@@ -44,7 +46,7 @@ class SawyerStackEnv(SawyerEnv):
         self.reward_objective_factor=reward_objective_factor
         self.win_rel_tolerance = win_rel_tolerance
 
-        super().__init__(**kwargs)
+        super().__init__(gripper=gripper, **kwargs)
         self.max_horizontal_radius = max([di['object_horizontal_radius'] for di in self.object_metadata])
         self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
 
@@ -98,7 +100,7 @@ class SawyerStackEnv(SawyerEnv):
             di = self.object_metadata[index]
             horizontal_radius = di['object_horizontal_radius']
             success = False
-            for i in range(100): # 100 retries
+            for i in range(1000): # 1000 retries
                 object_x = np.random.uniform(high=self.table_size[0]/2 - horizontal_radius, low=-1 * (self.table_size[0]/2 - horizontal_radius))
                 object_y = np.random.uniform(high=self.table_size[1]/2 - horizontal_radius, low=-1 * (self.table_size[1]/2 - horizontal_radius))
                 # objects cannot overlap
@@ -118,8 +120,7 @@ class SawyerStackEnv(SawyerEnv):
                 success = True
                 break
             if not success:
-                print('Error: cannot place all objects on the desk')
-                raise ValueError
+                raise RandomizationError('Cannot place all objects on the desk')
     
     def _reward(self, action):
         reward = 0
