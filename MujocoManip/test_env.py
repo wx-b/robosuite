@@ -12,29 +12,23 @@ if __name__ == '__main__':
     # env = SawyerStackEnv(gripper='RobotiqGripper')
     # env = SawyerStackEnv(gripper='PR2Gripper')
     # env = SawyerPushEnv()
-    env = SawyerGraspEnv()
+    # env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
+    env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper", gripper_action_1d=True)
     obs = env._reset()
+    dof = env.dof()
     print('action space', env.action_space)
     print('Initial Obs: {}'.format(obs))
+    print('DOF: {}'.format(dof))
     while True:
         obs = env._reset()
-
-        gripper_pos = 1
-        ### TODO: we should implement 
-        ### TODO: this might need clipping ###
-        action = -1 * np.random.randn(8) / 2
-        action[7] = gripper_pos
-        # action[7] *= 0.020833
+        action = np.random.randn(dof)
+        # action[:7] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
+        # action[7] = 1
         for i in range(2000):
-            # if i % 100 == 0:
-            #     print("gripper_l_finger: {}".format(env.sim.data.qpos[env.model.get_joint_qpos_addr('r_gripper_l_finger_joint')]))
-            # print("gripper: {}".format(env.sim.data.qpos[env.model.get_joint_qpos_addr('robotiq_85_left_knuckle_joint')]))
-            action = -1 * np.random.randn(8) / 2
-            action[7] = gripper_pos
+            action = np.random.randn(dof)
+            # action[:7] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
+            # action[7] = 1
             obs, reward, done, info = env._step(action)
-            # 
-            # obs, reward, done, info = env._step([0,-1,0,0,0,0,2])
-            # print(obs, reward, done, info)
             env._render()
             if done:
                 print('done: {}'.format(reward))

@@ -33,13 +33,21 @@ class MujocoRobot(MujocoXML):
         for actuator in gripper.actuator:
             if not (actuator.get('name') is not None and actuator.get('name').startswith('gripper')):
                 raise XMLError('Actuator name {} does not have prefix "gripper"'.format(actuator.get('name')))
-            self.actuator.append(actuator)
-        self.merge_asset(gripper)
+        
         for body in gripper.worldbody:
             self.right_hand.append(body)
-        for equality in gripper.equality:
-            self.equality.append(equality)
+
+        self.merge(gripper, merge_body=False)
+        
         self.has_gripper = True
+
+    def dof(self):
+        """
+            Returns the number of DOF of the robot, not including gripper
+        """
+        raise NotImplementedError
+
+
 
 class SawyerRobot(MujocoRobot):
     def __init__(self):
@@ -51,3 +59,9 @@ class SawyerRobot(MujocoRobot):
         """place the robot on position @pos"""
         node = self.worldbody.find("./body[@name='base']")
         node.set('pos', array_to_string(on_pos - self.bottom_offset))
+
+    def dof(self):
+        """
+            Returns the number of DOF of the robot, not including gripper
+        """
+        return 7

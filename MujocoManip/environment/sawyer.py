@@ -4,9 +4,10 @@ from MujocoManip.model import SawyerRobot, gripper_factory
 
 
 class SawyerEnv(MujocoEnv):
-    def __init__(self, gripper=None, **kwargs):
+    def __init__(self, gripper=None, gripper_action_1d=False, **kwargs):
         self.has_gripper = not (gripper is None)
         self.gripper_name = gripper
+        self.gripper_action_1d = gripper_action_1d
         super().__init__(**kwargs)
         
 
@@ -46,18 +47,16 @@ class SawyerEnv(MujocoEnv):
     # Note: Overrides super
     def _pre_action(self, action):
         action = np.clip(action, -1, 1)
-        if self.has_gripper:
-            arm_action = action[:7]
-            gripper_action_in = action[7]
-            gripper_action_actual = self.gripper.format_action(gripper_action_in)
-            full_action = np.concatenate([arm_action, gripper_action_actual])
-        else:
-            full_action = action[:7]
+        if self.has_gripper and self.gripper_action_1d:
+            arm_action = action[:self.mujoco_robot.dof()]
+            gripper_action_in = action[self.mujoco_robot.dof()]
+            gripper_action_actual = self.gripper.format_action_1d(gripper_action_in)
+            action = np.concatenate([arm_action, gripper_action_actual])
 
         ctrl_range = self.sim.model.actuator_ctrlrange
         bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
         weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
-        applied_action = bias + weight * full_action
+        applied_action = bias + weight * action
         # print('bias', bias[7:])
         # print('weight', weight[7:])
         # print('input_action', action[7:])
@@ -75,12 +74,21 @@ class SawyerEnv(MujocoEnv):
         joint_vel = [self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes]
         return np.concatenate([obs, joint_pos, joint_pos_sin, joint_pos_cos, joint_vel])
 
+    def dof(self):
+        dof = self.mujoco_robot.dof()
+        if self.has_gripper:
+            if self.gripper_action_1d:
+                dof += 1
+            else:
+                dof += self.gripper.dof()
+        return dof
+
     @property
     def action_space(self):
         # TODO: I am not sure if we want to add gym dependency just for observation space and action space
         # return spaces.Box(
-        low=np.ones(8) * -1.
-        high=np.ones(8) * 1.
+        low=np.ones(self.dof()) * -1.
+        high=np.ones(self.dof()) * 1.
         # )
         return low, high
 

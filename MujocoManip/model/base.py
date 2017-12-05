@@ -24,6 +24,7 @@ class MujocoXML(object):
         self.actuator = self.create_default_element('actuator')
         self.asset = self.create_default_element('asset')
         self.equality = self.create_default_element('equality')
+        self.contact = self.create_default_element('contact')
         self.resolve_asset_dependency()
 
     def resolve_asset_dependency(self):
@@ -49,7 +50,7 @@ class MujocoXML(object):
         return ele
 
 
-    def merge(self, other):
+    def merge(self, other, merge_body=True):
         """
             Default merge method
             @other is another MujocoXML instance
@@ -58,14 +59,16 @@ class MujocoXML(object):
         """
         if not isinstance(other, MujocoXML):
             raise XMLError('{} is not a MujocoXML instance.'.format(type(other)))
-        for body in other.worldbody:
-            self.worldbody.append(body)
-        for one_asset in other.asset:
-            self.asset.append(one_asset)
+        if merge_body:
+            for body in other.worldbody:
+                self.worldbody.append(body)
+        self.merge_asset(other)
         for one_actuator in other.actuator:
             self.actuator.append(one_actuator)
         for one_equality in other.equality:
             self.equality.append(one_equality)
+        for one_contact in other.contact:
+            self.contact.append(one_contact)
         # self.config.append(other.config)
 
     def get_model(self):
