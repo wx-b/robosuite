@@ -77,6 +77,9 @@ class PushingGripper(TwoFingerGripper):
     def format_action_1d(self, action):
         return np.array([1, -1])
 
+    def dof(self):
+        return 0
+
 class RobotiqThreeFingerGripper(MujocoGripper):
     def __init__(self):
         super().__init__(xml_path_completion('gripper/robotiq_gripper_s.xml'))
