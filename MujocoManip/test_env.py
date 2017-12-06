@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # env = SawyerStackEnv(gripper='PR2Gripper')
     # env = SawyerPushEnv()
     # env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
-    env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper", gripper_action_1d=True)
+    env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
     obs = env._reset()
     dof = env.dof()
     print('action space', env.action_space)

@@ -4,10 +4,9 @@ from MujocoManip.model import SawyerRobot, gripper_factory
 
 
 class SawyerEnv(MujocoEnv):
-    def __init__(self, gripper=None, gripper_action_1d=False, **kwargs):
+    def __init__(self, gripper=None, **kwargs):
         self.has_gripper = not (gripper is None)
         self.gripper_name = gripper
-        self.gripper_action_1d = gripper_action_1d
         super().__init__(**kwargs)
         
 
@@ -47,10 +46,10 @@ class SawyerEnv(MujocoEnv):
     # Note: Overrides super
     def _pre_action(self, action):
         action = np.clip(action, -1, 1)
-        if self.has_gripper and self.gripper_action_1d:
+        if self.has_gripper:
             arm_action = action[:self.mujoco_robot.dof()]
-            gripper_action_in = action[self.mujoco_robot.dof()]
-            gripper_action_actual = self.gripper.format_action_1d(gripper_action_in)
+            gripper_action_in = action[self.mujoco_robot.dof():self.mujoco_robot.dof()+self.gripper.dof()]
+            gripper_action_actual = self.gripper.format_action(gripper_action_in)
             action = np.concatenate([arm_action, gripper_action_actual])
 
         ctrl_range = self.sim.model.actuator_ctrlrange
@@ -77,10 +76,7 @@ class SawyerEnv(MujocoEnv):
     def dof(self):
         dof = self.mujoco_robot.dof()
         if self.has_gripper:
-            if self.gripper_action_1d:
-                dof += 1
-            else:
-                dof += self.gripper.dof()
+            dof += self.gripper.dof()
         return dof
 
     @property

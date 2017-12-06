@@ -12,7 +12,7 @@ class MujocoGripper(MujocoXML):
     def __init__(self, fname):
         super().__init__(fname)
 
-    def format_action_1d(self, action):
+    def format_action(self, action):
         """
             Given 1-d action in closed (-1, 1) to open, 
             returns the control for underlying actuators
@@ -37,8 +37,9 @@ class TwoFingerGripper(MujocoGripper):
     def __init__(self):
         super().__init__(xml_path_completion('gripper/two_finger_gripper.xml'))
 
-    def format_action_1d(self, action):
-        return np.array([-1 * action, 1 * action])
+    def format_action(self, action):
+        return action
+        # return np.array([-1 * action, 1 * action])
 
     def rest_pos(self):
         return np.array([0.020833, -0.020833] )
@@ -50,8 +51,9 @@ class PR2Gripper(MujocoGripper):
     def __init__(self):
         super().__init__(xml_path_completion('gripper/pr2_gripper.xml'))
 
-    def format_action_1d(self, action):
-        return np.ones(4) * action
+    def format_action(self, action):
+        return action
+ #       return np.ones(4) * action
 
     def rest_pos(self):
         return np.zeros(4)
@@ -63,8 +65,9 @@ class RobotiqGripper(MujocoGripper):
     def __init__(self):
         super().__init__(xml_path_completion('gripper/robotiq_gripper.xml'))
 
-    def format_action_1d(self, action):
-        return -1 * np.ones(6) * action
+    def format_action(self, action):
+        return action
+#         return -1 * np.ones(6) * action
 
     def rest_pos(self):
         return [ 3.3161, 0., 0., 0., 0., 0.]
@@ -74,7 +77,7 @@ class RobotiqGripper(MujocoGripper):
 
 class PushingGripper(TwoFingerGripper):
     """Same as Two FingerGripper, but always closed"""
-    def format_action_1d(self, action):
+    def format_action(self, action):
         return np.array([1, -1])
 
     def dof(self):
@@ -84,8 +87,9 @@ class RobotiqThreeFingerGripper(MujocoGripper):
     def __init__(self):
         super().__init__(xml_path_completion('gripper/robotiq_gripper_s.xml'))
 
-    def format_action_1d(self, action):
-        return np.array([0] + [action] * 3 + [0] + [action] * 6)
+
+    def format_action(self, action):
+        return action
 
     def rest_pos(self):
         return np.zeros(11)

@@ -1,13 +1,14 @@
 import numpy as np
 from MujocoManip.environment.sawyer_single_object_target import SawyerSingleObjectTargetEnv
 from MujocoManip.model import MujocoXMLObject
+from MujocoManip.model.model_util import xml_path_completion
 class SawyerPushEnv(SawyerSingleObjectTargetEnv):
     def __init__(self,
                 mujoco_object=None,
                 gripper='PushingGripper',
                 min_target_xy_distance=(0.1,0.1),
-                reward_touch_object_factor=0,
-                reward_align_direction_factor=0,
+                reward_touch_object_factor=0.01,
+                reward_align_direction_factor=0.01,
                 **kwargs):
         """
             @min_target_xy_distance: Minimal x/y distance between object and target
@@ -41,7 +42,7 @@ class SawyerPushEnv(SawyerSingleObjectTargetEnv):
             if abs(object_x - target_x) > self.min_target_xy_distance[0] and \
                 abs(object_y - target_y) > self.min_target_xy_distance[1]:
                 success = True
-                self._object_pos=[object_x,object_y,0,0,0,0,0]
+                self._object_pos=np.concatenate([[object_x,object_y,0,] - self.mujoco_object.get_bottom_offset(), [0,0,0,0]])
                 break
         if not success:
             raise RandomizationError('Cannot place all objects on the desk')
@@ -55,5 +56,6 @@ class SawyerPushEnv(SawyerSingleObjectTargetEnv):
                  self._object_pos - self._target_pos) / (np.linalg.norm(
                      self._object_pos - self._target_pos) * \
                          np.linalg.norm(self._right_hand_pos - self._object_pos))
+        return reward
 
 

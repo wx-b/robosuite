@@ -83,7 +83,6 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
             reward += self.reward_lose
         reward += self.reward_objective_factor * (self.pre_action_object_target_dist - self.post_action_object_target_dist)
         reward += self.reward_action_norm_factor * np.linalg.norm(action, 2)
-
         return reward
 
     def _get_observation(self):
@@ -101,11 +100,91 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
 
         object_vel_rel = object_vel - hand_vel
 
-        return np.concatenate([ obs,
+        obs = np.concatenate([ obs,
                                 object_pos_rel,
                                 object_vel_rel,
                                 target_pos_rel,
                                 ])
+        # print('hand_pos', hand_pos)
+        # print('object_pos_rel', object_pos_rel)
+        # print('object_vel_rel', object_vel_rel)
+        # print('target_pos_rel', target_pos_rel)
+        emp_means = [0.17414709140143952,
+        -1.0701878703264207,
+        -0.46217007456936954,
+        2.037620194117416,
+        -0.01178486285514388,
+        0.0496273615314479,
+        -0.20758468336339597,
+        0.1721360833988203,
+        -0.8731182199179391,
+        -0.41432259207243055,
+        0.859941558529584,
+        -0.006380524972150775,
+        0.046081454354876546,
+        -0.19096883055745195,
+        0.9789492615169951,
+        0.4776731098300898,
+        0.8245281583729884,
+        -0.4394451858088656,
+        0.8917387477600704,
+        0.9706675311962557,
+        0.9214127690547003,
+        -0.0039005982309288155,
+        -0.005464123011624275,
+        -0.08028433098725504,
+        -0.07812990994705413,
+        -0.04622794393548642,
+        -0.03653098354772133,
+        -0.05408816873457371,
+        0.2064460926917751,
+        0.1418058040585972,
+        -0.3817655700032953,
+        0.001655948482725992,
+        0.03583169767162121,
+        -0.040332740377748026,
+        -0.13849420934640605,
+        -0.005584512632434509,
+        0.09615511628971267,]
+        emp_stds = [0.10997010847022229,
+        0.09761819245213194,
+        0.39810135955838355,
+        0.26591186544912304,
+        0.472650802405765,
+        0.23947395910314556,
+        0.34696328935591886,
+        0.10736986189466033,
+        0.04695346391892218,
+        0.3502364397902247,
+        0.06824180719436772,
+        0.4434466312835077,
+        0.23076648440911016,
+        0.32135407792126014,
+        0.022343341830748965,
+        0.08537181278732828,
+        0.160700161765627,
+        0.25046257272089284,
+        0.09009095319558855,
+        0.049273452480674246,
+        0.10611772416446406,
+        0.3616811940429793,
+        0.2968132549293374,
+        0.5789497150341597,
+        0.5233351130470609,
+        1.966899144857867,
+        0.7444694648559674,
+        1.8596187909385966,
+        0.05697821204150268,
+        0.17594845641337575,
+        0.12493683758051835,
+        0.12636076256316436,
+        0.1621882479578597,
+        0.1282257240582145,
+        0.056912682275926926,
+        0.1757682453071995,
+        0.1249989171101154,]
+        # return (obs) / emp_stds
+        return obs
 
 
     def _check_done(self):
@@ -114,7 +193,7 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
     def _check_lose(self):
         x_out = np.abs(self._object_pos[0]) > self.table_size[0] / 2
         y_out = np.abs(self._object_pos[1]) > self.table_size[1] / 2
-        return x_out or y_out
+        return x_out or y_out or self.t > self.horizon
 
     def _check_win(self):
         return np.allclose(self._target_pos, self._object_pos, rtol=self.win_rel_tolerance)

@@ -3,7 +3,7 @@ from mujoco_py import MjSim, MjViewer
 from MujocoManip.miscellaneous import SimulationError, XMLError
 
 class MujocoEnv(object):
-    def __init__(self, debug=False, display=True, control_freq=100, **kwargs):
+    def __init__(self, debug=False, display=True, control_freq=100, horizon=1200, **kwargs):
         """
             Initialize a Mujoco Environment
             @debug when True saves a model file for inspection
@@ -22,6 +22,8 @@ class MujocoEnv(object):
         self._get_reference()
         self.set_cam()
         self.done = False
+        self.t = 0
+        self.horizon = horizon
 
 
     def initialize_time(self, control_freq):
@@ -62,6 +64,7 @@ class MujocoEnv(object):
     def _reset_internal(self):
         self.sim.set_state(self.sim_state_initial)
         self.cur_time = 0
+        self.t=0
         self.done = False
 
     def _get_observation(self):
@@ -71,12 +74,15 @@ class MujocoEnv(object):
         reward = 0
         info = None
         if not self.done:
+            self.t += 1
             self._pre_action(action)
             end_time = self.cur_time + self.control_timestep
             while self.cur_time < end_time:
                 self.sim.step()
                 self.cur_time += self.model_timestep
             reward, done, info = self._post_action(action)
+            if done:
+                print('done')
             return self._get_observation(), reward, done, info
         else:
             return self._get_observation(), 0, True, None
@@ -91,7 +97,7 @@ class MujocoEnv(object):
         return reward, self.done, {}
 
     def _check_done(self):
-        return False
+        return self.t >= self.horizon
 
     def _reward(self, action):
         return 0

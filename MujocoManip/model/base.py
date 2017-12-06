@@ -1,9 +1,11 @@
 import os
 import xml.etree.ElementTree as ET
 import numpy as np
-from mujoco_py import load_model_from_path
+from mujoco_py import load_model_from_path, load_model_from_xml
 from MujocoManip.miscellaneous import XMLError
 import xml.dom.minidom
+import io
+
 
 class MujocoXML(object):
     """
@@ -75,11 +77,16 @@ class MujocoXML(object):
         """
             Returns a MJModel instance from the current xml tree
         """
-        tempfile = os.path.join(self.folder, '.mujocomanip_temp_model.xml')
-        with open(tempfile, 'w') as f:
-            f.write(ET.tostring(self.root, encoding='unicode'))
-        model = load_model_from_path(tempfile)
-        os.remove(tempfile)
+
+        # tempfile = os.path.join(self.folder, '.mujocomanip_temp_model.xml')
+        # with open(tempfile, 'w') as f:
+        #     f.write(ET.tostring(self.root, encoding='unicode'))
+        # model = load_model_from_path(tempfile)
+        # os.remove(tempfile)
+
+        with io.StringIO() as string:
+            string.write(ET.tostring(self.root, encoding='unicode'))
+            model = load_model_from_xml(string.getvalue())
         return model
 
     def save_model(self, fname, pretty=False):
