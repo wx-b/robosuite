@@ -25,6 +25,9 @@ class MujocoEnv(object):
         self.t = 0
         self.horizon = horizon
 
+        # for key in kwargs:
+        #     print('Warning: Parameter {} not recognized'.format(key))
+
 
     def initialize_time(self, control_freq):
         """
@@ -81,8 +84,6 @@ class MujocoEnv(object):
                 self.sim.step()
                 self.cur_time += self.model_timestep
             reward, done, info = self._post_action(action)
-            if done:
-                print('done')
             return self._get_observation(), reward, done, info
         else:
             return self._get_observation(), 0, True, None
@@ -91,13 +92,13 @@ class MujocoEnv(object):
         self.sim.data.ctrl[:] = action
 
     def _post_action(self, action):
-        self.done = self._check_done()
+        self.done = self._check_done() or self.t >= self.horizon
         reward = self._reward(action)
         # TODO: how to manage info?
         return reward, self.done, {}
 
     def _check_done(self):
-        return self.t >= self.horizon
+        return False
 
     def _reward(self, action):
         return 0

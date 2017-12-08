@@ -1,5 +1,5 @@
 from MujocoManip.environment.sawyer_push import SawyerPushEnv
 from MujocoManip.environment.sawyer_stack import SawyerStackEnv
 from MujocoManip.environment.sawyer_grasp import SawyerGraspEnv
-from MujocoManip.environment.sawyer_reach import SawyerReachEnv
+from MujocoManip.environment.sawyer_reach import SawyerReachEnv, SawyerReachEnvEEVel
 from MujocoManip.environment.make import make

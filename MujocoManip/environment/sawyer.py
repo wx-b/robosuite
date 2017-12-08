@@ -4,9 +4,10 @@ from MujocoManip.model import SawyerRobot, gripper_factory
 
 
 class SawyerEnv(MujocoEnv):
-    def __init__(self, gripper=None, **kwargs):
+    def __init__(self, gripper=None, end_effector_control=False, **kwargs):
         self.has_gripper = not (gripper is None)
         self.gripper_name = gripper
+        self.end_effector_control = end_effector_control
         super().__init__(**kwargs)
         
 
@@ -45,22 +46,25 @@ class SawyerEnv(MujocoEnv):
 
     # Note: Overrides super
     def _pre_action(self, action):
-        action = np.clip(action, -1, 1)
-        if self.has_gripper:
-            arm_action = action[:self.mujoco_robot.dof()]
-            gripper_action_in = action[self.mujoco_robot.dof():self.mujoco_robot.dof()+self.gripper.dof()]
-            gripper_action_actual = self.gripper.format_action(gripper_action_in)
-            action = np.concatenate([arm_action, gripper_action_actual])
+        if self.end_effector_control:
+            jacp = self.sim.data.get_body_jacp('right_hand').reshape([3, -1])
+            jacp_joint = jacp[:, self._ref_joint_vel_indexes]
+            vel = action[0:3]
+            sol, _, _, _ = np.linalg.lstsq(jacp_joint, vel)
+            self.sim.data.ctrl[:] = np.concatenate([sol, self.gripper.rest_pos()])
+        else:
+            action = np.clip(action, -1, 1)    
+            if self.has_gripper:
+                arm_action = action[:self.mujoco_robot.dof()]
+                gripper_action_in = action[self.mujoco_robot.dof():self.mujoco_robot.dof()+self.gripper.dof()]
+                gripper_action_actual = self.gripper.format_action(gripper_action_in)
+                action = np.concatenate([arm_action, gripper_action_actual])
 
-        ctrl_range = self.sim.model.actuator_ctrlrange
-        bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
-        weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
-        applied_action = bias + weight * action
-        # print('bias', bias[7:])
-        # print('weight', weight[7:])
-        # print('input_action', action[7:])
-        # print('applied_action', applied_action[7:])
-        self.sim.data.ctrl[:] = applied_action
+            ctrl_range = self.sim.model.actuator_ctrlrange
+            bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
+            weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
+            applied_action = bias + weight * action
+            self.sim.data.ctrl[:] = applied_action
 
         # correct for gravity
         self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
@@ -74,7 +78,10 @@ class SawyerEnv(MujocoEnv):
         return np.concatenate([obs, joint_pos, joint_pos_sin, joint_pos_cos, joint_vel])
 
     def dof(self):
-        dof = self.mujoco_robot.dof()
+        if self.end_effector_control:
+            dof = 3
+        else:
+            dof = self.mujoco_robot.dof()
         if self.has_gripper:
             dof += self.gripper.dof()
         return dof

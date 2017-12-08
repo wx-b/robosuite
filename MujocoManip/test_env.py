@@ -1,4 +1,4 @@
-from MujocoManip import SawyerStackEnv, SawyerPushEnv, SawyerGraspEnv
+from MujocoManip import SawyerStackEnv, SawyerPushEnv, SawyerGraspEnv, SawyerReachEnvEEVel, SawyerReachEnv
 import numpy as np
 
 if __name__ == '__main__':
@@ -13,22 +13,28 @@ if __name__ == '__main__':
     # env = SawyerStackEnv(gripper='PR2Gripper')
     # env = SawyerPushEnv()
     # env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
-    env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
+    # env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
+    env = SawyerReachEnv(end_effector_control=True, reward_objective_factor=500)
     obs = env._reset()
     dof = env.dof()
     print('action space', env.action_space)
-    print('Initial Obs: {}'.format(obs))
+    print('Obs: {}'.format(len(obs)))
     print('DOF: {}'.format(dof))
     while True:
         obs = env._reset()
-        action = np.random.randn(dof)
+        # action = np.random.randn(dof)
+        action = obs[len(obs) - 3: len(obs)]
         # action[:7] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
         # action[7] = 1
         for i in range(2000):
-            action = np.random.randn(dof)
+            # print(obs[len(obs) - 6: len(obs) - 3])
+            # print(obs[len(obs) - 9: len(obs) - 6])
+            action = obs[len(obs) - 3: len(obs)]
             # action[:7] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
             # action[7] = 1
             obs, reward, done, info = env._step(action)
+            print('obs: {}'.format(obs))
+            print('reward: {}'.format(reward))
             env._render()
             if done:
                 print('done: {}'.format(reward))
