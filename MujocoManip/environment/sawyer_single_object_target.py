@@ -1,7 +1,7 @@
 import numpy as np
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environment.sawyer import SawyerEnv
-from MujocoManip.model import MujocoXMLObject, SingleTargetTask, TableArena
+from MujocoManip.model import MujocoXMLObject, SingleTargetTask, TableArena, SingleObjectTargetTask
 from MujocoManip.model.model_util import xml_path_completion
 
 class SawyerSingleObjectTargetEnv(SawyerEnv):
