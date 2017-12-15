@@ -3,7 +3,7 @@ cffi==1.11.2
 Cython==0.27.3
 glfw==1.4.0
 imageio==2.2.0
-mujoco-py==1.50.1.33
+mujoco-py==1.50.1
 -e git+https://github.com/StanfordVL/MujocoManipulation.git@2dadd0180bd3f9406ab72bc83ae2ad8770255342#egg=MujocoManip
 numpy==1.13.3
 olefile==0.44
