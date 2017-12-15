@@ -5,7 +5,7 @@ setup(name='MujocoManip',
       packages=[package for package in find_packages()
                 if package.startswith('MujocoManip')],
       install_requires=['glfw',
-						'mujoco-py==1.50.1.33',
+						'mujoco-py==1.50.1',
 						'numpy',
 						],
       description="MujocoManipulation: Provides training envs for continuous control on robots",
