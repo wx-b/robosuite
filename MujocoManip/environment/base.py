@@ -3,12 +3,13 @@ from mujoco_py import MjSim, MjViewer
 from MujocoManip.miscellaneous import SimulationError, XMLError
 
 class MujocoEnv(object):
-    def __init__(self, debug=False, display=True, control_freq=100, horizon=1200, **kwargs):
+    def __init__(self, debug=False, display=True, control_freq=100, horizon=1200, ignore_done=False, **kwargs):
         """
             Initialize a Mujoco Environment
             @debug when True saves a model file for inspection
             @display render the environment
             @controL_freq in Hz, how many control signals to receive in every second
+            @ignore_done: if True, never terminate the env
             TODO(extension): What about control_freq = a + bN(0,1) to simulate imperfect timing
         """
         self.debug = debug
@@ -24,6 +25,7 @@ class MujocoEnv(object):
         self.done = False
         self.t = 0
         self.horizon = horizon
+        self.ignore_done = ignore_done
 
         # for key in kwargs:
         #     print('Warning: Parameter {} not recognized'.format(key))
@@ -92,7 +94,7 @@ class MujocoEnv(object):
         self.sim.data.ctrl[:] = action
 
     def _post_action(self, action):
-        self.done = self._check_done() or self.t >= self.horizon
+        self.done = (self._check_done() or self.t >= self.horizon) and (not self.ignore_done)
         reward = self._reward(action)
         # TODO: how to manage info?
         return reward, self.done, {}

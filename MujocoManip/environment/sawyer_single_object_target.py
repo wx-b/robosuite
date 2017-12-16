@@ -14,7 +14,6 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
                 reward_action_norm_factor=0,
                 reward_objective_factor=5,
                 win_rel_tolerance=1e-2,
-                ignore_done=False,
                 **kwargs):
         """
             @mujoco_object(None), the object to be pushed, need that is is an MujocoObject instace
@@ -27,7 +26,6 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
             @reward_objective_factor: reward scaling factor for being close to completing the objective
             @win_rel_tolerance: relative tolerance between object and target location 
                 used when deciding if the agent has completed the task
-            @ignore_done: if True, never terminate the env
         """
         # Handle parameters
         self.mujoco_object = mujoco_object
