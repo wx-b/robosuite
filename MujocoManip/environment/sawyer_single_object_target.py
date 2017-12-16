@@ -14,6 +14,7 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
                 reward_action_norm_factor=0,
                 reward_objective_factor=5,
                 win_rel_tolerance=1e-2,
+                ignore_done=False,
                 **kwargs):
         """
             @mujoco_object(None), the object to be pushed, need that is is an MujocoObject instace
@@ -26,6 +27,7 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
             @reward_objective_factor: reward scaling factor for being close to completing the objective
             @win_rel_tolerance: relative tolerance between object and target location 
                 used when deciding if the agent has completed the task
+            @ignore_done: if True, never terminate the env
         """
         # Handle parameters
         self.mujoco_object = mujoco_object
@@ -39,7 +41,8 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
         self.win_rel_tolerance = win_rel_tolerance
         self.reward_action_norm_factor=reward_action_norm_factor
         self.reward_objective_factor=reward_objective_factor
-        
+
+        self.ignore_done = ignore_done
 
         super().__init__(**kwargs)
         self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
@@ -108,7 +111,7 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
 
 
     def _check_done(self):
-        return self._check_lose() or self._check_win()
+        return (self._check_lose() or self._check_win()) and (not self.ignore_done)
 
     def _check_lose(self):
         x_out = np.abs(self._object_pos[0]) > self.table_size[0] / 2
