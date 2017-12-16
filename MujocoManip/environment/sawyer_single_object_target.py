@@ -40,8 +40,6 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
         self.reward_action_norm_factor=reward_action_norm_factor
         self.reward_objective_factor=reward_objective_factor
 
-        self.ignore_done = ignore_done
-
         super().__init__(**kwargs)
         self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
 
