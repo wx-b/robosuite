@@ -65,3 +65,11 @@ class SawyerRobot(MujocoRobot):
             Returns the number of DOF of the robot, not including gripper
         """
         return 7
+
+    @property
+    def joints(self):
+        return ['right_j{}'.format(x) for x in range(7)]
+
+    @property
+    def rest_pos(self):
+        return [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]

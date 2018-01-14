@@ -20,6 +20,7 @@ class MujocoGripper(MujocoXML):
         """
         raise NotImplementedError
 
+    @property
     def rest_pos(self):
         """
             Returns rest(open) qpos of the gripper
@@ -41,8 +42,13 @@ class TwoFingerGripper(MujocoGripper):
         return action
         # return np.array([-1 * action, 1 * action])
 
+    @property
     def rest_pos(self):
-        return np.array([0.020833, -0.020833] )
+        return np.array([0.020833, -0.020833])
+
+    @property
+    def joints(self):
+        return ['r_gripper_l_finger_joint', 'r_gripper_r_finger_joint']
 
     def dof(self):
         return 2
@@ -55,8 +61,13 @@ class PR2Gripper(MujocoGripper):
         return action
  #       return np.ones(4) * action
 
+    @property
     def rest_pos(self):
         return np.zeros(4)
+
+    @property
+    def joints(self):
+        return ['r_gripper_r_finger_joint', 'r_gripper_l_finger_joint', 'r_gripper_r_finger_tip_joint', 'r_gripper_l_finger_tip_joint']
 
     def dof(self):
         return 4
@@ -69,8 +80,21 @@ class RobotiqGripper(MujocoGripper):
         return action
 #         return -1 * np.ones(6) * action
 
+    @property
     def rest_pos(self):
         return [ 3.3161, 0., 0., 0., 0., 0.]
+
+    @property
+    def joints(self):
+        return [
+            'robotiq_85_left_knuckle_joint', 
+            'robotiq_85_left_inner_knuckle_joint', 
+            'robotiq_85_left_finger_tip_joint',
+            'robotiq_85_right_knuckle_joint',
+            'robotiq_85_right_inner_knuckle_joint',
+            'robotiq_85_right_finger_tip_joint',
+            ]
+
 
     def dof(self):
         return 6
@@ -91,8 +115,25 @@ class RobotiqThreeFingerGripper(MujocoGripper):
     def format_action(self, action):
         return action
 
+    @property
     def rest_pos(self):
         return np.zeros(11)
+
+    @property
+    def joints(self):
+        return [
+        "palm_finger_1_joint",
+        "finger_1_joint_1",
+        "finger_1_joint_2", 
+        "finger_1_joint_3", 
+        "palm_finger_2_joint", 
+        "finger_2_joint_1", 
+        "finger_2_joint_2", 
+        "finger_2_joint_3", 
+        "finger_middle_joint_1", 
+        "finger_middle_joint_2", 
+        "finger_middle_joint_3"
+        ]
 
     def dof(self):
         return 11

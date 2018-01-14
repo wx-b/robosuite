@@ -16,7 +16,7 @@ if __name__ == '__main__':
     # env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
     # env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
     # env = SawyerReachEnv(end_effector_control=True, reward_objective_factor=500)
-    env = make("SawyerPushEnv", display=True, ignore_done=True)
+    env = make("SawyerStackEnv", display=True, ignore_done=False)
     obs = env._reset()
     dof = env.dof()
     print('action space', env.action_space)
@@ -37,17 +37,18 @@ if __name__ == '__main__':
             # action[7] = 1
             obs, reward, done, info = env._step(action)
             env._render()
-            if i % 500 == 0:
-                A = env.sim.render(width=500, height=500, camera_name='camera1', mode='window')
-                im = Image.fromarray(A)
-                im.save('{}.jpg'.format(i))
+            # if i % 500 == 0:
+            #     A = env.sim.render(width=500, height=500, camera_name='camera1')
+            #     im = Image.fromarray(A)
+            #     im.save('{}.jpg'.format(i))
             # print('obs: {}'.format(obs))
             # print('reward: {}'.format(reward))
             # t = time.time()
             # A = env.sim.render(500, 500)
             # dt = time.time() - t
             # print('dt: {}'.format(dt))
+            if i % 100 == 0:
+                print(i)
             if done:
                 print('done: {}'.format(reward))
                 break
-        break

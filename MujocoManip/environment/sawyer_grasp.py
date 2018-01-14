@@ -24,8 +24,6 @@ class SawyerGraspEnv(SawyerSingleObjectTargetEnv):
         self.max_target_height = max_target_height
         self.min_target_height = min_target_height
 
-
-
     def _reset_internal(self):
         super()._reset_internal()
 
@@ -43,7 +41,7 @@ class SawyerGraspEnv(SawyerSingleObjectTargetEnv):
             if abs(object_x - target_x) > self.min_target_xy_distance[0] and \
                 abs(object_y - target_y) > self.min_target_xy_distance[1]:
                 success = True
-                self._object_pos=np.concatenate([[object_x,object_y,0,] - self.mujoco_object.get_bottom_offset(), [0,0,0,0]])
+                self._object_pos=[object_x,object_y,0,] - self.mujoco_object.get_bottom_offset()
                 break
         if not success:
             raise RandomizationError('Cannot place all objects on the desk')

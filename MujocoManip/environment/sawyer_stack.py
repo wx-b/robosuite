@@ -48,7 +48,7 @@ class SawyerStackEnv(SawyerEnv):
 
         super().__init__(gripper=gripper, **kwargs)
         self.max_horizontal_radius = max([di['object_horizontal_radius'] for di in self.object_metadata])
-        self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
+        self._pos_offset = np.copy(self.physics.named.data.site_xpos['table_top'])
 
     def _load_model(self):
         super()._load_model()
@@ -60,19 +60,17 @@ class SawyerStackEnv(SawyerEnv):
      
         self.task = StackerTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
 
-        if self.debug:
-            self.task.save_model('sample_combined_model.xml')
         self.object_metadata = self.task.object_metadata
         self.n_objects = len(self.object_metadata)
         return self.task.get_model()
 
     def _get_reference(self):
         super()._get_reference()
-        self._ref_object_pos_indexes = []
-        self._ref_object_vel_indexes = []
-        for di in self.object_metadata:
-            self._ref_object_pos_indexes.append(self.model.get_joint_qpos_addr(di['joint_name']))
-            self._ref_object_vel_indexes.append(self.model.get_joint_qvel_addr(di['joint_name']))
+        # self._ref_object_pos_indexes = []
+        # self._ref_object_vel_indexes = []
+        # for di in self.object_metadata:
+        #     self._ref_object_pos_indexes.append(self.model.get_joint_qpos_addr(di['joint_name']))
+        #     self._ref_object_vel_indexes.append(self.model.get_joint_qvel_addr(di['joint_name']))
 
     
     def _reset_internal(self):
@@ -113,9 +111,9 @@ class SawyerStackEnv(SawyerEnv):
                     continue
                 # location is valid, put the object down
                 # quarternions, later we can add random rotation
-                pos = np.array([object_x, object_y, 0, 0, 0, 0, 0])
+                pos = np.array([object_x, object_y, 0])
                 self._set_object_pos(index, pos)
-                self._set_object_vel(index, np.zeros(6))
+                self._set_object_vel(index, np.zeros(3))
                 placed_objects.append((object_x, object_y, horizontal_radius))
                 success = True
                 break
@@ -136,21 +134,6 @@ class SawyerStackEnv(SawyerEnv):
         reward += self.reward_action_norm_factor * np.linalg.norm(action, 2)
         return reward
 
-    # def _pre_action(self, action):
-    #     print('called')
-    #     import pdb; pdb.set_trace()
-    #     # NOTE: overrides parent implementation
-
-    #     ### TODO: reduce the number of hardcoded constants ###
-    #     ### TODO: should action range scaling happen here or in RL algo? ###
-
-    #     # action is joint vels + gripper position in range (0, 0.020833), convert to values to feed to actuator
-    #     self.sim.data.ctrl[self._ref_joint_vel_actuator_indexes] = action[:7]
-    #     self.sim.data.ctrl[self._ref_joint_gripper_actuator_indexes] = [-action[7], action[7]]
-
-    #     # gravity compensation
-    #     self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
-
     def _get_observation(self):
         obs = super()._get_observation()
         all_observations = [obs]
@@ -163,11 +146,7 @@ class SawyerStackEnv(SawyerEnv):
                                 self._target_pos(i) - hand_pos]
 
         return np.concatenate(all_observations)
-
-
-    def _check_done(self):
-        return self._check_lose() or self._check_win()
-
+        
     def _check_lose(self):
         object_z = np.concatenate([self._object_pos(i)[2:3] for i in range(self.n_objects)])
         # Object falls off the table
@@ -193,25 +172,23 @@ class SawyerStackEnv(SawyerEnv):
 
     def _object_pos(self, i):
         object_name = self.object_metadata[i]['object_name']
-        return self.sim.data.get_body_xpos(object_name) - self._pos_offset
+        return self.physics.named.data.xpos[object_name] - self._pos_offset
 
     def _set_object_pos(self, i, pos):
-        pos[0:3] += self._pos_offset
-        low, high = self._ref_object_pos_indexes[i]
-        self.sim.data.qpos[low:high] = pos
+        pos += self._pos_offset
+        self.physics.named.data.qpos[self.object_metadata[i]['joint_name']][0:3] = pos 
 
     def _object_vel(self, i):
         object_name = self.object_metadata[i]['object_name']
-        return self.sim.data.get_body_xvelp(object_name)
+        return self.physics.named.data.subtree_linvel[object_name]
 
     def _set_object_vel(self, i, vel):
-        low, high = self._ref_object_vel_indexes[i]
-        self.sim.data.qvel[low:high] = vel
+        self.physics.named.data.qvel[self.object_metadata[i]['joint_name']][0:3] = vel
 
     def _target_pos(self, i):
         target_name = self.object_metadata[i]['target_name']
-        return self.sim.model.body_pos[self.sim.model.body_name2id(target_name)] - self._pos_offset
+        return self.physics.named.data.xpos[target_name] - self._pos_offset
 
     def _set_target_pos(self, i, pos):
         target_name = self.object_metadata[i]['target_name']
-        self.sim.model.body_pos[self.sim.model.body_name2id(target_name)] = pos + self._pos_offset
+        self.physics.named.model.body_pos[target_name] = pos + self._pos_offset
