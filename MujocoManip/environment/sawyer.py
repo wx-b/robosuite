@@ -109,8 +109,12 @@ class SawyerEnv(MujocoEnv):
 
     @property
     def _joint_positions(self):
-        return self.sim.data.qpos[self.mujoco_robot.joints]
+        #return self.sim.data.qpos[self.mujoco_robot.joints]
+        return self.physics.named.data.qpos[self.mujoco_robot.joints]
 
     @property
     def _joint_velocities(self):
-        return self.sim.data.qvel[self.mujoco_robot.joints]
+        #return self.sim.data.qvel[self.mujoco_robot.joints]
+        return self.physics.named.data.qvel[self.mujoco_robot.joints]
+
+
