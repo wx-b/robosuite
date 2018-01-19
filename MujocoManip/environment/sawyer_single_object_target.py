@@ -34,19 +34,17 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
         self.table_size = table_size
         self.table_friction = table_friction
 
-        self.reward_lose=reward_lose
-        self.reward_win=reward_win
+        self.reward_lose = reward_lose
+        self.reward_win = reward_win
         self.win_rel_tolerance = win_rel_tolerance
-        self.reward_action_norm_factor=reward_action_norm_factor
-        self.reward_objective_factor=reward_objective_factor
+        self.reward_action_norm_factor = reward_action_norm_factor
+        self.reward_objective_factor = reward_objective_factor
 
         super().__init__(**kwargs)
-        self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
+        self._pos_offset = np.copy(self.physics.named.data.site_xpos['table_top'])
 
     def _get_reference(self):
         super()._get_reference()
-        self._ref_object_pos_indexes = self.model.get_joint_qpos_addr('object_free_joint')
-        self._ref_object_vel_indexes = self.model.get_joint_qvel_addr('object_free_joint')
 
     def _load_model(self):
         super()._load_model()
@@ -59,22 +57,19 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
         self.target_bottom_offset = self.mujoco_object.get_bottom_offset()
         self.task = SingleObjectTargetTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_object)
 
-        if self.debug:
-            self.task.save_model('sample_combined_model.xml')
         return self.task.get_model()
 
     def _reset_internal(self):
         super()._reset_internal()
         # inherited class should reset position of target and then reset position of object
 
-
     def _pre_action(self, action):
         super()._pre_action(action)
-        self.pre_action_object_target_dist = np.linalg.norm(self._target_pos[:3] - self._object_pos[:3])
+        self.pre_action_object_target_dist = np.linalg.norm(self._target_pos - self._object_pos)
 
     def _reward(self, action):
         reward = 0
-        self.post_action_object_target_dist = np.linalg.norm(self._target_pos[:3] - self._object_pos[:3])
+        self.post_action_object_target_dist = np.linalg.norm(self._target_pos - self._object_pos)
         
         if self._check_win():
             reward += self.reward_win
@@ -105,10 +100,6 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
                                 ])
         return obs
 
-
-    def _check_done(self):
-        return (self._check_lose() or self._check_win()) and (not self.ignore_done)
-
     def _check_lose(self):
         x_out = np.abs(self._object_pos[0]) > self.table_size[0] / 2
         y_out = np.abs(self._object_pos[1]) > self.table_size[1] / 2
@@ -130,23 +121,22 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
 
     @property
     def _object_pos(self):
-        return self.sim.data.get_body_xpos('object') - self._pos_offset
+        return self.physics.named.data.xpos['object'] - self._pos_offset
 
     @_object_pos.setter
     def _object_pos(self, pos):
-        pos[0:3] += self._pos_offset
-        low, high = self._ref_object_pos_indexes
-        self.sim.data.qpos[low:high] = pos
+        pos += self._pos_offset
+        self.physics.named.data.qpos['object_free_joint'][0:3] = pos 
 
     @property
     def _target_pos(self):
-        return self.sim.model.body_pos[self.sim.model.body_name2id('target')] - self._pos_offset
+        return self.physics.named.data.xpos['target'] - self._pos_offset
 
     @_target_pos.setter
     def _target_pos(self, pos):
-        self.sim.model.body_pos[self.sim.model.body_name2id('target')] = pos + self._pos_offset
+        self.physics.named.model.body_pos['target'] = pos + self._pos_offset
 
     @property
     def _object_vel(self):
-        return self.sim.data.get_body_xvelp('object')
+        return self.physics.named.data.subtree_linvel['object']
 

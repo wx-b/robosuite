@@ -1,7 +1,10 @@
+# Imported as needed in get_model()
+# from mujoco_py import load_model_from_path, load_model_from_xml
+# from dm_control.mujoco import Physics
+
 import os
 import xml.etree.ElementTree as ET
 import numpy as np
-from mujoco_py import load_model_from_path, load_model_from_xml
 from MujocoManip.miscellaneous import XMLError
 import xml.dom.minidom
 import io
@@ -73,21 +76,24 @@ class MujocoXML(object):
             self.contact.append(one_contact)
         # self.config.append(other.config)
 
-    def get_model(self):
+    def get_model(self, mode='dm_control'):
         """
             Returns a MJModel instance from the current xml tree
         """
-
-        # tempfile = os.path.join(self.folder, '.mujocomanip_temp_model.xml')
-        # with open(tempfile, 'w') as f:
-        #     f.write(ET.tostring(self.root, encoding='unicode'))
-        # model = load_model_from_path(tempfile)
-        # os.remove(tempfile)
-
+        
+        available_modes = ['dm_control', 'mujoco_py']
         with io.StringIO() as string:
             string.write(ET.tostring(self.root, encoding='unicode'))
-            model = load_model_from_xml(string.getvalue())
-        return model
+            if mode == 'dm_control':
+                from MujocoManip.dm_control_ext import Physics
+                model = Physics.from_xml_string(string.getvalue())
+                return model
+            elif mode == 'mujoco_py':
+                from mujoco_py import load_model_from_path, load_model_from_xml
+                model = load_model_from_xml(string.getvalue())
+                return model
+            raise ValueError('Unkown model mode: {}. Available options are: {}'.format(mode, ','.join(available_modes)))
+        
 
     def save_model(self, fname, pretty=False):
         """
@@ -113,3 +119,19 @@ class MujocoXML(object):
             pattern = "./{}[@name='{}']".format(asset_type, asset_name)
             if self.asset.find(pattern) is None:
                 self.asset.append(asset)
+
+    # Subclass should also define it as a property
+    @property
+    def joints(self):
+        """
+            Returns the names of Joints
+        """
+        raise NotImplementedError
+
+    # Subclass should also define it as a property
+    @property
+    def rest_pos(self):
+        """
+            Returns the rest position of joints, in raw actuation units
+        """
+        raise NotImplementedError

@@ -29,7 +29,7 @@ class SawyerReachEnv(SawyerEnv):
         self.win_rel_tolerance=win_rel_tolerance
         self.max_target_height=max_target_height
         self.min_target_height=min_target_height
-        self._pos_offset=np.copy(self.sim.data.get_site_xpos('table_top'))
+        self._pos_offset = np.copy(self.physics.named.data.site_xpos['table_top'])
 
 
     def _load_model(self):
@@ -43,8 +43,6 @@ class SawyerReachEnv(SawyerEnv):
         self.target_bottom_offset = self.mujoco_object.get_bottom_offset()
         self.task = SingleTargetTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_object)
 
-        if self.debug:
-            self.task.save_model('sample_combined_model.xml')
         return self.task.get_model()
 
 
@@ -86,17 +84,20 @@ class SawyerReachEnv(SawyerEnv):
         return obs
 
 
-    def _check_done(self):
+    def _check_win(self):
         return np.allclose(self._target_pos, self._right_hand_pos, rtol=self.win_rel_tolerance)
+
+    def _check_lose(self):
+        return False
 
     @property
     def _target_pos(self):
-        return self.sim.model.body_pos[self.sim.model.body_name2id('target')] - self._pos_offset
+        return self.physics.named.data.xpos['target'] - self._pos_offset
 
     @_target_pos.setter
     def _target_pos(self, pos):
-        self.sim.model.body_pos[self.sim.model.body_name2id('target')] = pos + self._pos_offset
-    
+        self.physics.named.model.body_pos['target'] = pos + self._pos_offset
+
     def observation_space(self):
         low=np.ones(self.robot.dof() + 3) * -100.
         high=np.ones(self.robot.dof() + 3) * 100.
