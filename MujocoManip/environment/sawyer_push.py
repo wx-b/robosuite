@@ -14,6 +14,7 @@ class SawyerPushEnv(SawyerSingleObjectTargetEnv):
             @min_target_xy_distance: Minimal x/y distance between object and target
             @reward_touch_object_factor: coefficient for custom find grained reward (touching object)
             @reward_touch_object_factor: coefficient for custom find grained reward (aligning direction)
+            @use_torque_ctrl: if True, actions are joint torques, not joint velocities
         """
         if mujoco_object is None:
             mujoco_object = MujocoXMLObject(xml_path_completion('object/object_ball.xml'))
