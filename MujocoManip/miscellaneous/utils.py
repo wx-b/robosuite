@@ -223,6 +223,51 @@ def pose_inv(pose):
     pose_inv[3, 3] = 1.0
     return pose_inv
 
+def _skew_symmetric_translation(pos_A_in_B):
+    """
+    Helper function to get a skew symmetric translation matrix for converting quantities
+    between frames.
+    """
+    return np.array([0., -pos_A_in_B[2], pos_A_in_B[1],
+                     pos_A_in_B[2], 0., -pos_A_in_B[0],
+                     -pos_A_in_B[1], pos_A_in_B[0], 0.]).reshape((3, 3))
+
+def vel_in_A_to_vel_in_B(vel_A, ang_vel_A, pose_A_in_B):
+    """
+    Converts linear and angular velocity of a point in frame A to the equivalent in frame B.
+
+    :param vel_A: 3-dim iterable for linear velocity in A
+    :param ang_vel_A: 3-dim iterable for angular velocity in A
+    :param pose_A_in_B: numpy array of shape (4,4) corresponding to the pose of A in frame B
+
+    :return vel_B, ang_vel_B: two numpy arrays of shape (3,) for the velocities in B
+
+    """
+    pos_A_in_B = pose_A_in_B[:3, 3]
+    rot_A_in_B = pose_A_in_B[:3, :3]
+    skew_symm = _skew_symmetric_translation(pos_A_in_B)
+    vel_B = rot_A_in_B.dot(vel_A) + skew_symm.dot(rot_A_in_B.dot(ang_vel_A))
+    ang_vel_B = rot_A_in_B.dot(ang_vel_A)
+    return vel_B, ang_vel_B
+
+def force_in_A_to_force_in_B(force_A, torque_A, pose_A_in_B):
+    """
+    Converts linear and rotational force at a point in frame A to the equivalent in frame B.
+
+    :param force_A: 3-dim iterable for linear force in A
+    :param torque_A: 3-dim iterable for rotational force (moment) in A
+    :param pose_A_in_B: numpy array of shape (4,4) corresponding to the pose of A in frame B
+
+    :return force_B, torque_B: two numpy arrays of shape (3,) for the forces in B
+    """
+
+    pos_A_in_B = pose_A_in_B[:3, 3]
+    rot_A_in_B = pose_A_in_B[:3, :3]
+    skew_symm = _skew_symmetric_translation(pos_A_in_B)
+    force_B = rot_A_in_B.T.dot(force_A)
+    torque_B = -rot_A_in_B.T.dot(skew_symm.dot(force_A)) + rot_A_in_B.T.dot(torque_A)
+    return force_B, torque_B
+
 def rotation_matrix(angle, direction, point=None):
     """Return matrix to rotate about axis defined by point and direction.
     >>> angle = (random.random() - 0.5) * (2*math.pi)

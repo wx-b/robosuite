@@ -55,6 +55,11 @@ class SawyerEnv(MujocoEnv):
                 self.physics.data.ctrl[:7] = action[:7]
                 self.physics.named.data.qfrc_applied[self.mujoco_robot.joints] = self.physics.named.data.qfrc_bias[self.mujoco_robot.joints] 
             elif self.use_force_ctrl:
+
+                ### TODO: is this force acting in the end effector frame? If so, we need to translate to base coords... ###
+
+                # note we convert force in base frame to force in world frame
+                # self.physics.named.data.xfrc_applied['right_hand'] = self._convert_base_force_to_world_force(action[:6])
                 self.physics.named.data.xfrc_applied['right_hand'] = action[:6]
 
                 # gravity compensation
@@ -116,14 +121,17 @@ class SawyerEnv(MujocoEnv):
         """
 
         ### TODO: check this function for correctness... ###
+        ### TODO: do we want body inertia orientation, or body frame orientation? ###
 
-        eef_pos_in_world = self.physics.named.data.xpos['right_hand']
-        # note we convert (w, x, y, z) quat to (x, y, z, w)
-        eef_rot_in_world = quat2mat(self.physics.named.data.xquat['right_hand'][[1, 2, 3, 0]])
+        eef_pos_in_world = self.physics.named.data.xipos['right_hand']
+        eef_rot_in_world = self.physics.named.data.ximat['right_hand'].reshape((3, 3))
+        # # note we convert (w, x, y, z) quat to (x, y, z, w)
+        # eef_rot_in_world = quat2mat(self.physics.named.data.xquat['right_hand'][[1, 2, 3, 0]])
         eef_pose_in_world = make_pose(eef_pos_in_world, eef_rot_in_world)
 
-        base_pos_in_world = self.physics.named.data.xpos['base']
-        base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
+        base_pos_in_world = self.physics.named.data.xipos['base']
+        base_rot_in_world = self.physics.named.data.ximat['base'].reshape((3, 3))
+        # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
         base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
         world_pose_in_base = pose_inv(base_pose_in_world)
 
@@ -138,34 +146,52 @@ class SawyerEnv(MujocoEnv):
 
         ### TODO: check this function for correctness... ###
 
-        world_pose_in_base = pose_inv(self._right_hand_pose)
-        world_pos_in_base = world_pose_in_base[3, :3]
-        world_rot_in_base = world_pose_in_base[:3, :3]
+        base_pos_in_world = self.physics.named.data.xipos['base']
+        base_rot_in_world = self.physics.named.data.ximat['base'].reshape((3, 3))
+        # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
+        base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
+        world_pose_in_base = pose_inv(base_pose_in_world)
 
-        # Get linear and angular velocities in world frame
-        eef_vel_in_world = self.physics.named.data.subtree_linvel['right_hand']
-        eef_ang_momentum_in_world = self.physics.named.data.subtree_angmom['right_hand']
+        total_vel = self.physics.named.data.cvel['right_hand']
+        eef_vel_in_world = total_vel[3:]
+        eef_ang_vel_in_world = total_vel[:3]
 
-        ### IMPORTANT: I'm assuming the last element in the 10-dim matrix is the point mass, could be wrong... ###
-        eef_moment_of_inertia = self.physics.named.data.cinert['right_hand'][:9].reshape((3, 3))
-        eef_ang_vel_in_world = (np.linalg.inv(eef_moment_of_inertia)).dot(eef_ang_momentum_in_world)
+        # # Get linear and angular velocities in world frame
+        # eef_vel_in_world = self.physics.named.data.subtree_linvel['right_hand']
+        # eef_ang_momentum_in_world = self.physics.named.data.subtree_angmom['right_hand']
 
-        # Convert velocities to base frame using pose.
-        skew_symm = np.array([0., -world_pos_in_base[2], world_pos_in_base[1], 
-                              world_pos_in_base[2], 0., -world_pos_in_base[0],
-                              -world_pos_in_base[1], world_pos_in_base[0], 0.]).reshape((3, 3))
-        eef_vel_in_base = world_rot_in_base.T.dot(eef_vel_in_world) + (skew_symm.dot(world_rot_in_base)).dot(eef_ang_vel_in_world)
-        eef_ang_vel_in_base = world_rot_in_base.dot(eef_ang_vel_in_world)
-        return eef_vel_in_base, eef_ang_vel_in_base
+        # ### IMPORTANT: I'm assuming the last element in the 10-dim matrix is the point mass, could be wrong... ###
+        # eef_moment_of_inertia = self.physics.named.data.cinert['right_hand'][:9].reshape((3, 3))
+        # eef_ang_vel_in_world = (np.linalg.inv(eef_moment_of_inertia)).dot(eef_ang_momentum_in_world)
+
+        return vel_in_A_to_vel_in_B(vel_A=eef_vel_in_world, ang_vel_A=eef_ang_vel_in_world, pose_A_in_B=world_pose_in_base)
+
+    def _convert_base_force_to_world_force(self, base_force):
+        """
+        Utility function to convert a force measured in the base frame to one in the world frame.
+        This should be used when applying force control, since all control occurs with respect
+        to the base frame but all simulation happens with respect to the world frame.
+        """
+
+        base_pos_in_world = self.physics.named.data.xipos['base']
+        base_rot_in_world = self.physics.named.data.ximat['base'].reshape((3, 3))
+        # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
+        base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
+
+        world_force = np.zeros(6)
+        lin_force_in_world, rot_force_in_world = force_in_A_to_force_in_B(force_A=base_force[:3], torque_A=base_force[3:], pose_A_in_B=base_pose_in_world)
+        world_force[:3] = lin_force_in_world
+        world_force[3:] = rot_force_in_world
+        print("world_force: {}".format(world_force))
+        print("base_rot_in_world: {}".format(base_rot_in_world))
+        return world_force
 
     @property
     def _right_hand_pos(self):
         """
         Returns position of eef in base frame of robot. 
         """
-
         eef_pose_in_base = self._right_hand_pose
-
         return eef_pose_in_base[:3, 3]
 
     @property
@@ -174,7 +200,6 @@ class SawyerEnv(MujocoEnv):
         Returns orientation of eef in base frame of robot as a rotation matrix.
         """
         eef_pose_in_base = self._right_hand_pose
-
         return eef_pose_in_base[:3, :3]
 
     @property
@@ -185,7 +210,7 @@ class SawyerEnv(MujocoEnv):
         return self._right_hand_total_velocity[0]
 
     @property
-    def _right_hand_angular_vel(self):
+    def _right_hand_ang_vel(self):
         """
         Returns angular velocity of eef in base frame of robot.
         """
