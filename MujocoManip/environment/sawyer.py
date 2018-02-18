@@ -136,8 +136,6 @@ class SawyerEnv(MujocoEnv):
         world_pose_in_base = pose_inv(base_pose_in_world)
 
         eef_pose_in_base = pose_in_A_to_pose_in_B(eef_pose_in_world, world_pose_in_base)
-        from IPython import embed
-        embed()
         return eef_pose_in_base
 
     @property
