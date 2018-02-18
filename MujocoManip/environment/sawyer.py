@@ -123,19 +123,21 @@ class SawyerEnv(MujocoEnv):
         ### TODO: check this function for correctness... ###
         ### TODO: do we want body inertia orientation, or body frame orientation? ###
 
-        eef_pos_in_world = self.physics.named.data.xipos['right_hand']
-        eef_rot_in_world = self.physics.named.data.ximat['right_hand'].reshape((3, 3))
+        eef_pos_in_world = self.physics.named.data.xpos['right_hand']
+        eef_rot_in_world = self.physics.named.data.xmat['right_hand'].reshape((3, 3))
         # # note we convert (w, x, y, z) quat to (x, y, z, w)
         # eef_rot_in_world = quat2mat(self.physics.named.data.xquat['right_hand'][[1, 2, 3, 0]])
         eef_pose_in_world = make_pose(eef_pos_in_world, eef_rot_in_world)
 
-        base_pos_in_world = self.physics.named.data.xipos['base']
-        base_rot_in_world = self.physics.named.data.ximat['base'].reshape((3, 3))
+        base_pos_in_world = self.physics.named.data.xpos['base']
+        base_rot_in_world = self.physics.named.data.xmat['base'].reshape((3, 3))
         # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
         base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
         world_pose_in_base = pose_inv(base_pose_in_world)
 
         eef_pose_in_base = pose_in_A_to_pose_in_B(eef_pose_in_world, world_pose_in_base)
+        from IPython import embed
+        embed()
         return eef_pose_in_base
 
     @property
@@ -144,14 +146,18 @@ class SawyerEnv(MujocoEnv):
         Returns the total eef velocity (linear + angular) in the base frame as a tuple
         """
 
+        ### TODO: get velocity in frame, not COM (xpos vs. xipos) by translating between the orientations... ###
+
         ### TODO: check this function for correctness... ###
 
-        base_pos_in_world = self.physics.named.data.xipos['base']
-        base_rot_in_world = self.physics.named.data.ximat['base'].reshape((3, 3))
+        base_pos_in_world = self.physics.named.data.xpos['base']
+        base_rot_in_world = self.physics.named.data.xmat['base'].reshape((3, 3))
         # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
         base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
         world_pose_in_base = pose_inv(base_pose_in_world)
 
+
+        ### TODO: convert COM velocity to frame velocity here... ###
         total_vel = self.physics.named.data.cvel['right_hand']
         eef_vel_in_world = total_vel[3:]
         eef_ang_vel_in_world = total_vel[:3]
@@ -173,8 +179,8 @@ class SawyerEnv(MujocoEnv):
         to the base frame but all simulation happens with respect to the world frame.
         """
 
-        base_pos_in_world = self.physics.named.data.xipos['base']
-        base_rot_in_world = self.physics.named.data.ximat['base'].reshape((3, 3))
+        base_pos_in_world = self.physics.named.data.xpos['base']
+        base_rot_in_world = self.physics.named.data.xmat['base'].reshape((3, 3))
         # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
         base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
 

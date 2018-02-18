@@ -193,9 +193,12 @@ def pose_in_A_to_pose_in_B(pose_A, pose_A_in_B):
     :return: numpy array of shape (4,4) corresponding to the pose of C in frame B
     """
 
-    # pose of C in B = pose of C in A * pose of A in B
+    # pose of A in B takes a point in A and transforms it to a point in C.
+
+    # pose of C in B = pose of A in B * pose of C in A
+    # take a point in C, transform it to A, then to B
     # T_B^C = T_A^C * T_B^A
-    return pose_A.dot(pose_A_in_B)
+    return pose_A_in_B.dot(pose_A)
 
 def pose_inv(pose):
     """
