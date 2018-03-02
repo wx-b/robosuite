@@ -104,6 +104,28 @@ class SawyerEnv(MujocoEnv):
             dof += self.gripper.dof()
         return dof
 
+    def pose_in_base_from_name(self, name):
+        """
+        A helper function that takes in a named data field and returns the pose of that
+        object in the base frame.
+        """
+
+        pos_in_world = self.physics.named.data.xpos[name]
+        rot_in_world = self.physics.named.data.xmat[name].reshape((3, 3))
+        # # note we convert (w, x, y, z) quat to (x, y, z, w)
+        # eef_rot_in_world = quat2mat(self.physics.named.data.xquat['right_hand'][[1, 2, 3, 0]])
+        pose_in_world = make_pose(pos_in_world, rot_in_world)
+
+        base_pos_in_world = self.physics.named.data.xpos['base']
+        base_rot_in_world = self.physics.named.data.xmat['base'].reshape((3, 3))
+        # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
+        base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
+        world_pose_in_base = pose_inv(base_pose_in_world)
+
+        pose_in_base = pose_in_A_to_pose_in_B(pose_in_world, world_pose_in_base)
+        return pose_in_base
+
+
     @property
     #TODO: fix it
     def action_space(self):
@@ -114,6 +136,13 @@ class SawyerEnv(MujocoEnv):
         # )
         return low, high
 
+    @property
+    def _right_hand_joint_cartesian_pose(self):
+        """
+        Returns the cartesian pose of the last robot joint in base frame of robot.
+        """
+        return self.pose_in_base_from_name('right_l6')
+
     @property 
     def _right_hand_pose(self):
         """
@@ -122,21 +151,15 @@ class SawyerEnv(MujocoEnv):
 
         ### TODO: check this function for correctness... ###
         ### TODO: do we want body inertia orientation, or body frame orientation? ###
+        return self.pose_in_base_from_name('right_hand')
 
-        eef_pos_in_world = self.physics.named.data.xpos['right_hand']
-        eef_rot_in_world = self.physics.named.data.xmat['right_hand'].reshape((3, 3))
-        # # note we convert (w, x, y, z) quat to (x, y, z, w)
-        # eef_rot_in_world = quat2mat(self.physics.named.data.xquat['right_hand'][[1, 2, 3, 0]])
-        eef_pose_in_world = make_pose(eef_pos_in_world, eef_rot_in_world)
-
-        base_pos_in_world = self.physics.named.data.xpos['base']
-        base_rot_in_world = self.physics.named.data.xmat['base'].reshape((3, 3))
-        # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
-        base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
-        world_pose_in_base = pose_inv(base_pose_in_world)
-
-        eef_pose_in_base = pose_in_A_to_pose_in_B(eef_pose_in_world, world_pose_in_base)
-        return eef_pose_in_base
+    @property
+    def _right_hand_joint_cartesian_velocity(self):
+        """
+        Returns the current cartesian velocity of the last robot joint with respect to
+        the base frame as a tuple (vel, ang_vel), each is a 3-dim numpy array
+        """
+        raise Exception("Not implemented yet...")
 
     @property
     def _right_hand_total_velocity(self):
@@ -160,14 +183,7 @@ class SawyerEnv(MujocoEnv):
         eef_vel_in_world = total_vel[3:]
         eef_ang_vel_in_world = total_vel[:3]
 
-        # # Get linear and angular velocities in world frame
-        # eef_vel_in_world = self.physics.named.data.subtree_linvel['right_hand']
-        # eef_ang_momentum_in_world = self.physics.named.data.subtree_angmom['right_hand']
-
-        # ### IMPORTANT: I'm assuming the last element in the 10-dim matrix is the point mass, could be wrong... ###
-        # eef_moment_of_inertia = self.physics.named.data.cinert['right_hand'][:9].reshape((3, 3))
-        # eef_ang_vel_in_world = (np.linalg.inv(eef_moment_of_inertia)).dot(eef_ang_momentum_in_world)
-
+        ### TODO: should we just rotate the axis? Or is this velocity conversion below correct? ###
         return vel_in_A_to_vel_in_B(vel_A=eef_vel_in_world, ang_vel_A=eef_ang_vel_in_world, pose_A_in_B=world_pose_in_base)
 
     def _convert_base_force_to_world_force(self, base_force):

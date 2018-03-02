@@ -107,8 +107,8 @@ class MujocoEnv(object, metaclass=EnvMeta):
     def _reward(self, action):
         return 0
 
-    def _render(self):
-        self.viewer.render()
+    def _render(self, camera_id=0):
+        self.viewer.render(camera_id=camera_id)
 
     def observation_spec(self):
         return OrderedDict()

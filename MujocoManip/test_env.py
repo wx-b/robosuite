@@ -17,14 +17,16 @@ if __name__ == '__main__':
     # env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
     # env = SawyerReachEnv(end_effector_control=True, reward_objective_factor=500)
     # env = make("SawyerReachEnv", display=True, ignore_done=False)
-    # env = make("SawyerStackEnv", display=True, ignore_done=False)
+    env = make("SawyerStackEnv", display=True, ignore_done=True)
     # env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
-    env = make("SawyerPushEnv", display=True, ignore_done=False, use_torque_ctrl=True)
+    # env = make("SawyerPushEnv", display=True, ignore_done=False, use_torque_ctrl=True)
     obs = env._reset()
     dof = env.dof()
     print('action space', env.action_space)
     print('Obs: {}'.format(len(obs)))
     print('DOF: {}'.format(dof))
+    env._render()
+
     while True:
         obs = env._reset()
         for i in range(20000):
@@ -33,8 +35,12 @@ if __name__ == '__main__':
             # action = obs[len(obs) - 3: len(obs)]
             # action[:7] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
             action = np.random.randn(dof)
+            action = [0.] * 9
+            action[6] = 1.
+            action[7] = -(i % 100) / 100.
+            action[8] = 1. #(i % 100) / 100.
             # action[:] = [0, 0, 0, 0, 0, 0, 0.01]
-            action[:6] = [0, 0, 1.0, 0, 0, 0]
+            # action[:6] = [0, 0, 1.0, 0, 0, 0]
             # action[7] = 1
             obs, reward, done, info = env._step(action)
             env._render()
@@ -53,3 +59,4 @@ if __name__ == '__main__':
             if done:
                 print('done: {}'.format(reward))
                 break
+

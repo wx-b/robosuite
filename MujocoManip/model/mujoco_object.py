@@ -115,7 +115,7 @@ class DefaultBallObject(MujocoXMLObject):
 class MujocoGeneratedObject(MujocoObject):
     """
         Base class for all programmatically generated mujoco object
-        i.e., every MujocoObject that does not have an correcponding xml file 
+        i.e., every MujocoObject that does not have an corresponding xml file 
     """
     def get_collision_attrib_template(self):
         return {'pos': '0 0 0'}
