@@ -18,8 +18,8 @@ if __name__ == '__main__':
     # env = SawyerReachEnv(end_effector_control=True, reward_objective_factor=500)
     # env = make("SawyerReachEnv", display=True, ignore_done=False)
     # env = make("SawyerStackEnv", display=True, ignore_done=True)
-    env = make("SawyerStackEnv", display=True, ignore_done=True, use_eef_ctrl=True)
-    # env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
+    # env = make("SawyerStackEnv", display=True, ignore_done=True, use_eef_ctrl=True)
+    env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
     # env = make("SawyerPushEnv", display=True, ignore_done=False, use_torque_ctrl=True)
     obs = env._reset()
     dof = env.dof()
@@ -39,8 +39,8 @@ if __name__ == '__main__':
             # action = obs[len(obs) - 3: len(obs)]
             # action[:7] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
             # action = np.random.randn(dof)
-            action = np.zeros(5)
-            action[2] = 0.1
+            action = np.zeros(dof)
+            # action[6] = 0.1
 
             # action[:] = [0, 0, 0, 0, 0, 0, 0.01]
             # action[:6] = [0, 0, 1.0, 0, 0, 0]

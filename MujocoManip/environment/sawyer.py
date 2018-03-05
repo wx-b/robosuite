@@ -79,6 +79,9 @@ class SawyerEnv(MujocoEnv):
             ctrl_set_action(self.physics, action)
             mocap_set_action(self.physics, action)
 
+            # gravity compensation
+            self.physics.named.data.qfrc_applied[self.mujoco_robot.joints] = self.physics.named.data.qfrc_bias[self.mujoco_robot.joints]
+
         else:
             if self.use_torque_ctrl:
                 # correct for gravity and add in torques
