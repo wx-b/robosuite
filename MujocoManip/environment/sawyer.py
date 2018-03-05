@@ -5,18 +5,39 @@ from MujocoManip.miscellaneous.utils import *
 
 
 class SawyerEnv(MujocoEnv):
-    def __init__(self, gripper=None, end_effector_control=False, use_torque_ctrl=False, use_force_ctrl=False, **kwargs):
+    def __init__(self, gripper=None, use_eef_ctrl=False, use_torque_ctrl=False, use_force_ctrl=False, **kwargs):
         self.has_gripper = not (gripper is None)
         self.gripper_name = gripper
-        self.end_effector_control = end_effector_control
+        self.use_eef_ctrl = use_eef_ctrl
         self.use_torque_ctrl = use_torque_ctrl
         self.use_force_ctrl = use_force_ctrl
         super().__init__(**kwargs)
+
+        ### TODO: any joint positions need to be set here? ###
+
+        # setup mocap stuff if necessary
+        if self.use_eef_ctrl:
+            self._setup_mocap()
         
+    def _setup_mocap(self):
+        with self.physics.reset_context():
+            reset_mocap_welds(self.physics)
+
+        # Move end effector into position.
+        gripper_target = self.physics.named.data.xpos['right_hand']
+        gripper_rotation = self.physics.named.data.xquat['right_hand']
+        # gripper_target = np.array([-0.498, 0.005, -0.431]) + self.sim.data.get_site_xpos('robot0:grip')
+        # gripper_rotation = np.array([0., 0., 1., 0.])
+
+        ### TOOD: replace this with dm_control equivalent ###
+        self.physics.named.data.mocap_pos['mocap'] = gripper_target
+        self.physics.named.data.mocap_quat['mocap'] = gripper_rotation
+        for _ in range(10):
+            self.physics.step()
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_robot = SawyerRobot(use_torque_ctrl=self.use_torque_ctrl)
+        self.mujoco_robot = SawyerRobot(use_torque_ctrl=self.use_torque_ctrl, use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
             self.gripper = gripper_factory(self.gripper_name)
             self.mujoco_robot.add_gripper(self.gripper)
@@ -42,13 +63,22 @@ class SawyerEnv(MujocoEnv):
 
     # Note: Overrides super
     def _pre_action(self, action):
-        if self.end_effector_control:
-            raise NotImplementedError
-            # jacp = self.sim.data.get_body_jacp('right_hand').reshape([3, -1])
-            # jacp_joint = jacp[:, self._ref_joint_vel_indexes]
-            # vel = action[0:3]
-            # sol, _, _, _ = np.linalg.lstsq(jacp_joint, vel)
-            # self.sim.data.ctrl[:] = np.concatenate([sol, self.gripper.rest_pos()])
+        if self.use_eef_ctrl:
+            assert len(action) == 5
+            action = action.copy()  # ensure that we don't change the action outside of this scope
+            pos_ctrl, gripper_ctrl = action[:3], action[3:]
+
+            pos_ctrl *= 0.05  # limit maximum change in position
+            rot_ctrl = [0., -1./np.sqrt(2.), -1./np.sqrt(2.), 0.]
+            # rot_ctrl = [0., 0., 1., 0.]  # (w, x, y, z) # fixed rotation of the end effector, expressed as a quaternion
+            # gripper_ctrl = np.array([gripper_ctrl, gripper_ctrl])
+            assert gripper_ctrl.shape == (2,)
+            action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
+
+            # Apply action to simulation.
+            ctrl_set_action(self.physics, action)
+            mocap_set_action(self.physics, action)
+
         else:
             if self.use_torque_ctrl:
                 # correct for gravity and add in torques
@@ -96,7 +126,7 @@ class SawyerEnv(MujocoEnv):
         return np.concatenate([obs, joint_pos, joint_pos_sin, joint_pos_cos, joint_vel])
 
     def dof(self):
-        if self.end_effector_control:
+        if self.use_eef_ctrl:
             dof = 3
         else:
             dof = self.mujoco_robot.dof()

@@ -50,9 +50,11 @@ class MujocoRobot(MujocoXML):
 
 
 class SawyerRobot(MujocoRobot):
-    def __init__(self, use_torque_ctrl=False):
+    def __init__(self, use_torque_ctrl=False, use_eef_ctrl=False):
         if use_torque_ctrl:
             super().__init__(xml_path_completion('robot/sawyer/robot_torque.xml'))
+        elif use_eef_ctrl:
+            super().__init__(xml_path_completion('robot/sawyer/robot_mocap.xml'))
         else:
             super().__init__(xml_path_completion('robot/sawyer/robot.xml'))
         # TODO: fix me to the correct value
