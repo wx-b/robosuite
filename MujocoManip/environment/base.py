@@ -65,7 +65,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
         """Set up necessary reference for objects"""
         pass
 
-    def _reset(self):
+    def reset(self):
         with self.physics.reset_context():
             self._reset_internal()
         return self._get_observation()
@@ -80,7 +80,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
         return []
         #return OrderedDict()
 
-    def _step(self, action):
+    def step(self, action):
         reward = 0
         info = None
         if not self.done:
@@ -107,7 +107,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
     def _reward(self, action):
         return 0
 
-    def _render(self, camera_id=0):
+    def render(self, camera_id=0):
         self.viewer.render(camera_id=camera_id)
 
     def observation_spec(self):

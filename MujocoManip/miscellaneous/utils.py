@@ -460,7 +460,7 @@ def mocap_set_action(physics, action):
 
         reset_mocap2body_xpos(physics)
         physics.data.mocap_pos[:] = physics.data.mocap_pos + pos_delta
-        physics.data.mocap_quat[:] = physics.data.mocap_quat + quat_delta
+        physics.data.mocap_quat[:] = quat_delta #physics.data.mocap_quat + quat_delta
 
 
 def reset_mocap_welds(physics):

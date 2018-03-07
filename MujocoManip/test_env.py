@@ -17,36 +17,53 @@ if __name__ == '__main__':
     # env = SawyerGraspEnv(gripper="RobotiqThreeFingerGripper")
     # env = SawyerReachEnv(end_effector_control=True, reward_objective_factor=500)
     # env = make("SawyerReachEnv", display=True, ignore_done=False)
-    # env = make("SawyerStackEnv", display=True, ignore_done=True)
+    env = make("SawyerStackEnv", display=True, ignore_done=True)
     # env = make("SawyerStackEnv", display=True, ignore_done=True, use_eef_ctrl=True)
-    env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
+    # env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
     # env = make("SawyerPushEnv", display=True, ignore_done=False, use_torque_ctrl=True)
-    obs = env._reset()
+    obs = env.reset()
     dof = env.dof()
     print('action space', env.action_space)
     print('Obs: {}'.format(len(obs)))
     print('DOF: {}'.format(dof))
-    env._render()
+    env.render()
 
-    # from IPython import embed
-    # embed()
+    target_jp = env._joint_positions
+    target_jp -= 0.1
+    kp = np.array([50.0, 30.0, 20.0, 15.0, 10.0, 5.0, 2.0]) # gains for PD controller
+    kv = np.array([8.0, 7.0, 6.0, 4.0, 2.0, 0.5, 0.1]) # gains for PD controller
+
+    ### TODO: try torque control with fixed joint positions that are slightly off from the start ones? ###
 
     while True:
-        obs = env._reset()
+        obs = env.reset()
+
+        tst = np.zeros(9)
+        for _ in range(100):
+            tst[6] = 1.
+            tst[7:] = [1., -1.]
+            env.step(tst)
+            env.render()
+
         for i in range(20000):
             # print(obs[len(obs) - 6: len(obs) - 3])
             # print(obs[len(obs) - 9: len(obs) - 6])
             # action = obs[len(obs) - 3: len(obs)]
             # action[:7] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
-            # action = np.random.randn(dof)
+            # action = 0.5 * np.random.randn(dof)
             action = np.zeros(dof)
-            # action[6] = 0.1
+            action[7:] = [-1., 1.]
+            # action[2] = 0.1
+
+            # pos_err = env._joint_positions - target_jp
+            # vel_err = env._joint_velocities
+            # action = - kp * pos_err - kv * vel_err
 
             # action[:] = [0, 0, 0, 0, 0, 0, 0.01]
             # action[:6] = [0, 0, 1.0, 0, 0, 0]
             # action[7] = 1
-            obs, reward, done, info = env._step(action)
-            env._render()
+            obs, reward, done, info = env.step(action)
+            env.render()
             # if i % 500 == 0:
             #     A = env.sim.render(width=500, height=500, camera_name='camera1')
             #     im = Image.fromarray(A)

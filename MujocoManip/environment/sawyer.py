@@ -64,12 +64,16 @@ class SawyerEnv(MujocoEnv):
     # Note: Overrides super
     def _pre_action(self, action):
         if self.use_eef_ctrl:
-            assert len(action) == 5
+            # assert len(action) == 5
+            assert len(action) == 9
             action = action.copy()  # ensure that we don't change the action outside of this scope
-            pos_ctrl, gripper_ctrl = action[:3], action[3:]
+            # pos_ctrl, gripper_ctrl = action[:3], action[3:]
 
-            pos_ctrl *= 0.05  # limit maximum change in position
-            rot_ctrl = [0., -1./np.sqrt(2.), -1./np.sqrt(2.), 0.]
+            pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:]
+
+            # pos_ctrl *= 0.05  # limit maximum change in position
+            # rot_ctrl = [0., -1./np.sqrt(2.), -1./np.sqrt(2.), 0.]
+
             # rot_ctrl = [0., 0., 1., 0.]  # (w, x, y, z) # fixed rotation of the end effector, expressed as a quaternion
             # gripper_ctrl = np.array([gripper_ctrl, gripper_ctrl])
             assert gripper_ctrl.shape == (2,)
@@ -110,6 +114,7 @@ class SawyerEnv(MujocoEnv):
                 bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
                 weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
                 applied_action = bias + weight * action
+                print("applied: {}".format(applied_action[7:]))
                 self.physics.data.ctrl[:] = applied_action
 
                 # gravity compensation

@@ -6,8 +6,8 @@
     </asset>
 
     <actuator>
-        <position ctrllimited="true" ctrlrange="0 0.020833" joint="r_gripper_r_finger_joint" kp="10000" name="gripper_r_gripper_r_finger_joint" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="-0.020833 0" joint="r_gripper_l_finger_joint" kp="10000" name="gripper_r_gripper_l_finger_joint" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="-0.1 0.050833" joint="r_gripper_r_finger_joint" kp="10000" name="gripper_r_gripper_r_finger_joint" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="-0.050833 0.1" joint="r_gripper_l_finger_joint" kp="10000" name="gripper_r_gripper_l_finger_joint" forcelimited="true" forcerange="-20 20"/>
     </actuator>
     
     <worldbody>
@@ -20,9 +20,9 @@
             <body name="right_gripper" pos="0 0 0.095">
                 <inertial pos="0 0 0" mass="0.0001" diaginertia="0 0 0" />
             </body>
-            <body name="r_gripper_l_finger" pos="0 -0.0015 0.02">
+            <body name="r_gripper_l_finger" pos="0 0.05 0.02">
                 <inertial pos="0 0 0" quat="0 0 0 -1" mass="0.02" diaginertia="0.01 0.01 0.01" />
-                <joint name="r_gripper_l_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" limited="true" range="0 0.020833" damping="0.7"/>
+                <joint name="r_gripper_l_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" limited="true" range="-0.1 0.050833" damping="0.7"/>
                 <geom quat="0 0 0 -1" type="mesh" contype="0" conaffinity="0" group="1" mesh="standard_narrow" />
                 <geom size="0.005 0.00675 0.0375" pos="0 0.01725 0.04" quat="0 0 0 -1" type="box" />
                 <geom size="0.005 0.025 0.0085" pos="-0.005 -0.003 0.0083" quat="0 0 0 -1" type="box" />
@@ -32,9 +32,9 @@
                     <geom size="0.004 0.004 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="box" />
                 </body>
             </body>
-            <body name="r_gripper_r_finger" pos="0 0.0015 0.02">
+            <body name="r_gripper_r_finger" pos="0 -0.05 0.02">
                 <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.01 0.01" />
-                <joint name="r_gripper_r_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" limited="true" range="-0.020833 0" damping="0.7"/>
+                <joint name="r_gripper_r_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" limited="true" range="-0.050833 0.1" damping="0.7"/>
                 <geom type="mesh" contype="0" conaffinity="0" group="1" mesh="standard_narrow" />
                 <geom size="0.005 0.00675 0.0375" pos="0 -0.01725 0.04" type="box" />
                 <geom size="0.005 0.025 0.0085" pos="0.005 0.003 0.0083" type="box" />
