@@ -7,7 +7,7 @@ dof = env.dof()
 print('action space', env.action_space)
 print('Obs: {}'.format(len(obs)))
 print('DOF: {}'.format(dof))
-env.render()
+# env.render()
 
 while True:
     obs = env.reset()
