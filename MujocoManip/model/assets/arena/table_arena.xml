@@ -13,6 +13,7 @@
 		</body>
 		<light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="1 1 4.0" specular="0.3 0.3 0.3"/>
 		<light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="-3. -3. 4.0" specular="0.3 0.3 0.3"/>
-		<camera mode="fixed" name="camera1" pos="1.2 0 2.2" quat="0.653 0.271 0.271 0.653"/>
+		<!-- <camera mode="fixed" name="camera1" pos="1.2 0 2.2" quat="0.653 0.271 0.271 0.653"/> -->
+		<camera mode="fixed" name="camera1" pos="0.8 0 1.65" quat="0.653 0.271 0.271 0.653"/>
 	</worldbody>
 </mujoco>

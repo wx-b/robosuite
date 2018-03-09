@@ -87,11 +87,7 @@ class SawyerEnv(MujocoEnv):
             self.physics.named.data.qfrc_applied[self.mujoco_robot.joints] = self.physics.named.data.qfrc_bias[self.mujoco_robot.joints]
 
         else:
-            if self.use_torque_ctrl:
-                # correct for gravity and add in torques
-                self.physics.data.ctrl[:7] = action[:7]
-                self.physics.named.data.qfrc_applied[self.mujoco_robot.joints] = self.physics.named.data.qfrc_bias[self.mujoco_robot.joints] 
-            elif self.use_force_ctrl:
+            if self.use_force_ctrl:
 
                 ### TODO: is this force acting in the end effector frame? If so, we need to translate to base coords... ###
 
