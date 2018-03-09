@@ -114,7 +114,6 @@ class SawyerEnv(MujocoEnv):
                 bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
                 weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
                 applied_action = bias + weight * action
-                print("applied: {}".format(applied_action[7:]))
                 self.physics.data.ctrl[:] = applied_action
 
                 # gravity compensation
@@ -163,6 +162,12 @@ class SawyerEnv(MujocoEnv):
         pose_in_base = pose_in_A_to_pose_in_B(pose_in_world, world_pose_in_base)
         return pose_in_base
 
+    def set_robot_joint_positions(self, jpos):
+        """
+        Helper method to force robot joint positions to the passed values.
+        """
+        with self.physics.reset_context():
+            self.physics.named.data.qpos[self.mujoco_robot.joints] = jpos
 
     @property
     #TODO: fix it
