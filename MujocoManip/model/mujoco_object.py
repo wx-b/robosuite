@@ -112,6 +112,10 @@ class DefaultBallObject(MujocoXMLObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_ball.xml'))
 
+class DefautCylinderObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/object_cylinder.xml'))
+
 class MujocoGeneratedObject(MujocoObject):
     """
         Base class for all programmatically generated mujoco object
@@ -130,6 +134,7 @@ class BoxObject(MujocoGeneratedObject):
     # TODO: friction, etc
     def __init__(self, size, rgba):
         super().__init__()
+        assert(len(size) == 3)
         self.size = np.array(size)
         self.rgba = np.array(rgba)
 
@@ -167,6 +172,51 @@ class BoxObject(MujocoGeneratedObject):
         body.append(ET.Element('geom', attrib=template_gp1))
         return body
 
+class CylinderObject(MujocoGeneratedObject):
+    """
+        An object that is a box
+    """
+    # TODO: friction, etc
+    def __init__(self, size, rgba):
+        super().__init__()
+        assert(len(size) == 2)
+        self.size = np.array(size)
+        self.rgba = np.array(rgba)
+
+    def get_bottom_offset(self):
+        return np.array([0, 0, -1 * self.size[1]])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.size[1]])
+
+    def get_horizontal_radius(self):
+        return self.size[0]
+
+    # returns a copy, Returns xml body node
+    def get_collision(self):
+        body = ET.Element('body')
+        template = self.get_collision_attrib_template()
+        template['type'] = 'cylinder'
+        template['rgba'] = array_to_string(self.rgba)
+        template['size'] = array_to_string(self.size)
+        body.append(ET.Element('geom', attrib=template))
+        return body
+    
+    # returns a copy, Returns xml body node
+    def get_visual(self):
+        body = ET.Element('body')
+        template = self.get_visual_attrib_template()
+        template['type'] = 'cylinder'
+        template['rgba'] = array_to_string(self.rgba)
+        # shrink so that we don't see flickering when showing both visual and collision
+        template['size'] = array_to_string(self.size * visual_size_shrink_ratio) 
+        template['group'] = '0'
+        body.append(ET.Element('geom', attrib=template))
+        template_gp1 = copy.deepcopy(template)
+        template_gp1['group'] = '1'
+        body.append(ET.Element('geom', attrib=template_gp1))
+        return body
+
 class RandomBoxObject(BoxObject):
     """
         A random box
@@ -177,3 +227,16 @@ class RandomBoxObject(BoxObject):
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(3)])
         rgba = np.array([np.random.uniform(0, 1) for i in range(3)] + [1])
         super().__init__(size, rgba)
+
+class RandomCylinderObject(CylinderObject):
+    """
+        A random box
+    """
+    def __init__(self, size_max=[0.07, 0.07], size_min=[0.03, 0.03], seed=None):
+        if seed is not None:
+            np.random.seed(seed)
+        size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(2)])
+        rgba = np.array([np.random.uniform(0, 1) for i in range(3)] + [1])
+        super().__init__(size, rgba)
+
+

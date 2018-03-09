@@ -78,3 +78,5 @@ class SawyerRobot(MujocoRobot):
     @property
     def rest_pos(self):
         return [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
+
+        

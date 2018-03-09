@@ -20,8 +20,8 @@ class SawyerEnv(MujocoEnv):
             self._setup_mocap()
         
     def _setup_mocap(self):
-        with self.physics.reset_context():
-            reset_mocap_welds(self.physics)
+        reset_mocap_welds(self.physics)
+        self.physics.forward()
 
         # Move end effector into position.
         gripper_target = self.physics.named.data.xpos['right_hand']
@@ -166,8 +166,8 @@ class SawyerEnv(MujocoEnv):
         """
         Helper method to force robot joint positions to the passed values.
         """
-        with self.physics.reset_context():
-            self.physics.named.data.qpos[self.mujoco_robot.joints] = jpos
+        self.physics.named.data.qpos[self.mujoco_robot.joints] = jpos
+        self.physics.forward()
 
     @property
     #TODO: fix it
