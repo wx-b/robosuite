@@ -4,7 +4,7 @@ import time
 from PIL import Image
 from IPython import embed
 
-from MujocoManip.model import DefautCylinderObject, RandomCylinderObject, RandomBoxObject
+from MujocoManip.model import DefaultCylinderObject, RandomCylinderObject, RandomBoxObject, DefaultBallObject, RandomBallObject, DefaultCapsuleObject, RandomCapsuleObject
 
 if __name__ == '__main__':
 
@@ -22,17 +22,18 @@ if __name__ == '__main__':
     # env = SawyerReachEnv(end_effector_control=True, reward_objective_factor=500)
     # env = make("SawyerReachEnv", display=True, ignore_done=False)
 
-    env = make("SawyerStackEnv", display=True, ignore_done=True)
+    # env = make("SawyerStackEnv", display=True, ignore_done=True)
 
     # env = make("SawyerStackEnv", display=True, ignore_done=True, use_eef_ctrl=True)
     # env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
     # env = make("SawyerPushEnv", display=True, ignore_done=False, use_torque_ctrl=True)
 
     ### TEST object generation ###
-    # obj_arr = [DefautCylinderObject() for _ in range(10)]
+    obj_arr = [RandomCapsuleObject() for _ in range(5)]
     # obj_arr = [RandomCylinderObject() for _ in range(5)]
     # obj_arr.extend([RandomBoxObject() for _ in range(5)])
-    # env = make("SawyerStackEnv", display=True, ignore_done=True, mujoco_objects=obj_arr)
+    # obj_arr.extend([RandomBallObject() for _ in range(5)])
+    env = make("SawyerStackEnv", display=True, ignore_done=True, mujoco_objects=obj_arr)
 
     obs = env.reset()
 
