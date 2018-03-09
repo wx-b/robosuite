@@ -4,7 +4,7 @@ import time
 from PIL import Image
 from IPython import embed
 
-from MujocoManip.model import DefautCylinderObject
+from MujocoManip.model import DefautCylinderObject, RandomCylinderObject, RandomBoxObject
 
 if __name__ == '__main__':
 
@@ -22,14 +22,17 @@ if __name__ == '__main__':
     # env = SawyerReachEnv(end_effector_control=True, reward_objective_factor=500)
     # env = make("SawyerReachEnv", display=True, ignore_done=False)
 
-    # env = make("SawyerStackEnv", display=True, ignore_done=True)
+    env = make("SawyerStackEnv", display=True, ignore_done=True)
 
     # env = make("SawyerStackEnv", display=True, ignore_done=True, use_eef_ctrl=True)
     # env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
     # env = make("SawyerPushEnv", display=True, ignore_done=False, use_torque_ctrl=True)
 
-    obj_arr = [DefautCylinderObject() for _ in range(10)]
-    env = make("SawyerStackEnv", display=True, ignore_done=True, mujoco_objects=obj_arr)
+    ### TEST object generation ###
+    # obj_arr = [DefautCylinderObject() for _ in range(10)]
+    # obj_arr = [RandomCylinderObject() for _ in range(5)]
+    # obj_arr.extend([RandomBoxObject() for _ in range(5)])
+    # env = make("SawyerStackEnv", display=True, ignore_done=True, mujoco_objects=obj_arr)
 
     obs = env.reset()
 
@@ -90,6 +93,9 @@ if __name__ == '__main__':
 
     while True:
         obs = env.reset()
+
+        # rotate the gripper so we can see it easily 
+        env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
         for i in range(20000):
             # print(obs[len(obs) - 6: len(obs) - 3])

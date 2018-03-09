@@ -108,10 +108,6 @@ class SawyerStackEnv(SawyerEnv):
                 # objects cannot overlap
                 location_valid = True
                 for _, (x, y, z), r in placed_objects:
-                    # print(object_x, object_y)
-                    # print(x, y)
-                    # print(r, horizontal_radius)
-                    # print(np.linalg.norm([object_x - x, object_y - y], 2))
                     if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
                         location_valid = False
                         break
@@ -122,14 +118,12 @@ class SawyerStackEnv(SawyerEnv):
 
                 pos = np.array([object_x, object_y, 0])
                 pos -= bottom_offset
-                # self._set_object_pos(index, pos.copy())
-                # self._set_object_vel(index, np.zeros(3))
                 placed_objects.append((index, pos, horizontal_radius))
                 success = True
                 break
             if not success:
                 raise RandomizationError('Cannot place all objects on the desk')
-        print(placed_objects)
+
         # with self.physics.reset_context():
         for index, pos, r in placed_objects:
             self._set_object_pos(index, pos)
@@ -193,8 +187,7 @@ class SawyerStackEnv(SawyerEnv):
         return self.physics.named.data.xpos[object_name] - self._pos_offset
 
     def _set_object_pos(self, i, pos):
-        pos += self._pos_offset
-        self.physics.named.data.qpos[self.object_metadata[i]['joint_name']][0:3] = pos 
+        self.physics.named.data.qpos[self.object_metadata[i]['joint_name']][0:3] = pos + self._pos_offset
 
     def _object_vel(self, i):
         object_name = self.object_metadata[i]['object_name']
