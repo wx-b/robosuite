@@ -466,12 +466,12 @@ def mocap_set_action(physics, action):
 def reset_mocap_welds(physics):
     """Resets the mocap welds that we use for actuation.
     """
-    with physics.reset_context():
-        if physics.model.nmocap > 0 and physics.model.eq_data is not None:
-            for i in range(physics.model.eq_data.shape[0]):
-                if physics.model.eq_type[i] == enums.mjtEq.mjEQ_WELD:
-                    physics.model.eq_data[i, :] = np.array(
-                        [0., 0., 0., 1., 0., 0., 0.])
+    if physics.model.nmocap > 0 and physics.model.eq_data is not None:
+        for i in range(physics.model.eq_data.shape[0]):
+            if physics.model.eq_type[i] == enums.mjtEq.mjEQ_WELD:
+                physics.model.eq_data[i, :] = np.array(
+                    [0., 0., 0., 1., 0., 0., 0.])
+    physics.forward()
 
 
 def reset_mocap2body_xpos(physics):

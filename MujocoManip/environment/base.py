@@ -66,8 +66,8 @@ class MujocoEnv(object, metaclass=EnvMeta):
         pass
 
     def reset(self):
-        with self.physics.reset_context():
-            self._reset_internal()
+        self._reset_internal()
+        self.physics.forward()
         return self._get_observation()
 
     def _reset_internal(self):

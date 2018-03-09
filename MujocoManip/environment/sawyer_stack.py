@@ -9,7 +9,7 @@ class SawyerStackEnv(SawyerEnv):
     def __init__(self, 
                 gripper='TwoFingerGripper',
                 mujoco_objects=None,
-                n_mujoco_objects=5,
+                n_mujoco_objects=10,
                 table_size=(0.8, 0.8, 0.8),
                 table_friction=None,
                 reward_lose=-2,
@@ -35,7 +35,7 @@ class SawyerStackEnv(SawyerEnv):
         # Handle parameters
         self.mujoco_objects = mujoco_objects
         if self.mujoco_objects is None:
-            self.mujoco_objects = [RandomBoxObject() for i in range(n_mujoco_objects)]
+            self.mujoco_objects = [RandomBoxObject(size_max=[0.03, 0.03, 0.03], size_min=[0.01, 0.01, 0.01]) for i in range(n_mujoco_objects)]
         self.n_mujoco_objects = len(self.mujoco_objects)
         self.table_size = table_size
         self.table_friction = table_friction
@@ -93,32 +93,50 @@ class SawyerStackEnv(SawyerEnv):
             contact_point = contact_point - di['object_bottom_offset'] + di['object_top_offset']
         
     def _place_objects(self):
+        """
+        Place objects randomly until no more collisions or max iterations hit.
+        """
         placed_objects = []
         for index in range(self.n_objects):
             di = self.object_metadata[index]
             horizontal_radius = di['object_horizontal_radius']
+            bottom_offset = di['object_bottom_offset']
             success = False
-            for i in range(1000): # 1000 retries
+            for i in range(100000): # 1000 retries
                 object_x = np.random.uniform(high=self.table_size[0]/2 - horizontal_radius, low=-1 * (self.table_size[0]/2 - horizontal_radius))
                 object_y = np.random.uniform(high=self.table_size[1]/2 - horizontal_radius, low=-1 * (self.table_size[1]/2 - horizontal_radius))
                 # objects cannot overlap
                 location_valid = True
-                for x, y, r in placed_objects:
-                    if np.linalg.norm([object_x - x, object_y - y], 2) < r + horizontal_radius:
+                for _, (x, y, z), r in placed_objects:
+                    # print(object_x, object_y)
+                    # print(x, y)
+                    # print(r, horizontal_radius)
+                    # print(np.linalg.norm([object_x - x, object_y - y], 2))
+                    if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
                         location_valid = False
                         break
                 if not location_valid: # bad luck, reroll
                     continue
                 # location is valid, put the object down
                 # quarternions, later we can add random rotation
+
                 pos = np.array([object_x, object_y, 0])
-                self._set_object_pos(index, pos)
-                self._set_object_vel(index, np.zeros(3))
-                placed_objects.append((object_x, object_y, horizontal_radius))
+                pos -= bottom_offset
+                # self._set_object_pos(index, pos.copy())
+                # self._set_object_vel(index, np.zeros(3))
+                placed_objects.append((index, pos, horizontal_radius))
                 success = True
                 break
             if not success:
                 raise RandomizationError('Cannot place all objects on the desk')
+        print(placed_objects)
+        # with self.physics.reset_context():
+        for index, pos, r in placed_objects:
+            self._set_object_pos(index, pos)
+            self._set_object_vel(index, np.zeros(3))
+        self.physics.forward()
+            # pos = np.array([object_x, object_y, 0])
+
     
     def _reward(self, action):
         reward = 0

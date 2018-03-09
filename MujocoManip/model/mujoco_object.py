@@ -112,6 +112,10 @@ class DefaultBallObject(MujocoXMLObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_ball.xml'))
 
+class DefautCylinderObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/object_cylinder.xml'))
+
 class MujocoGeneratedObject(MujocoObject):
     """
         Base class for all programmatically generated mujoco object
@@ -177,3 +181,5 @@ class RandomBoxObject(BoxObject):
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(3)])
         rgba = np.array([np.random.uniform(0, 1) for i in range(3)] + [1])
         super().__init__(size, rgba)
+
+
