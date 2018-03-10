@@ -14,6 +14,15 @@
 		<light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="1 1 4.0" specular="0.3 0.3 0.3"/>
 		<light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="-3. -3. 4.0" specular="0.3 0.3 0.3"/>
 		<!-- <camera mode="fixed" name="camera1" pos="1.2 0 2.2" quat="0.653 0.271 0.271 0.653"/> -->
+		<!-- original -->
 		<camera mode="fixed" name="camera1" pos="0.8 0 1.65" quat="0.653 0.271 0.271 0.653"/>
+		<!-- look down at table -->
+		<camera mode="fixed" name="camera2" pos="0.8 0 1.65" quat="0.69342629 0.1384196 0.1384196 0.69342629"/>
+		<!-- look sort of at table and robot base -->
+		<camera mode="fixed" name="camera3" pos="0.8 0 1.65" quat="0.67651976 0.20572073 0.20572073 0.67651976"/>
+		<!-- look all the way down -->
+		<camera mode="fixed" name="camera4" pos="0.8 0 1.65" quat="0.707106619 0 0 0.707106619"/>
+
+
 	</worldbody>
 </mujoco>
