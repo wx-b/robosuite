@@ -7,8 +7,8 @@ cdef class MjRenderContext(object):
     MuJoCo simulation.
     """
 
-    # cdef mjModel *_model_ptr
-    # cdef mjData *_data_ptr
+    cdef mjModel *_model_ptr
+    cdef mjData *_data_ptr
 
     cdef mjvScene _scn
     cdef mjvCamera _cam
