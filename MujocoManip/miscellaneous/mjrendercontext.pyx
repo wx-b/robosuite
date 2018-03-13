@@ -1,5 +1,5 @@
 from threading import Lock
-from mujoco_py.generated import const
+import const
 
 cdef class MjRenderContext(object):
     """
@@ -38,8 +38,9 @@ cdef class MjRenderContext(object):
         mjv_defaultOption(&self._vopt)
         mjr_defaultContext(&self._con)
 
-    def __init__(self, MjSim sim, bint offscreen=True, int device_id=-1):
-        self.sim = sim
+    ### added, changed MjSim sim -> physics ### 
+    def __init__(self, physics, bint offscreen=True, int device_id=-1):
+        self.sim = physics
         self._setup_opengl_context(offscreen, device_id)
         self.offscreen = offscreen
 
@@ -47,7 +48,8 @@ cdef class MjRenderContext(object):
         # is something to render
         sim.forward()
 
-        sim.add_render_context(self)
+        ### added, can just remember that we are the context ### 
+        # sim.add_render_context(self)
 
         self._model_ptr = sim.model.ptr
         self._data_ptr = sim.data.ptr
@@ -65,15 +67,15 @@ cdef class MjRenderContext(object):
         self._init_camera(sim)
         self._set_mujoco_buffers()
 
-    def update_sim(self, MjSim new_sim):
-        if new_sim == self.sim:
-            return
-        self._model_ptr = new_sim.model.ptr
-        self._data_ptr = new_sim.data.ptr
-        self._set_mujoco_buffers()
-        for render_context in self.sim.render_contexts:
-            new_sim.add_render_context(render_context)
-        self.sim = new_sim
+    # def update_sim(self, MjSim new_sim):
+    #     if new_sim == self.sim:
+    #         return
+    #     self._model_ptr = new_sim.model.ptr
+    #     self._data_ptr = new_sim.data.ptr
+    #     self._set_mujoco_buffers()
+    #     for render_context in self.sim.render_contexts:
+    #         new_sim.add_render_context(render_context)
+    #     self.sim = new_sim
 
     def _set_mujoco_buffers(self):
         mjr_makeContext(self._model_ptr, &self._con, mjFONTSCALE_150)
@@ -125,8 +127,10 @@ cdef class MjRenderContext(object):
         rect.width = width
         rect.height = height
 
+        ### added, no support for render_callback ###
         if self.sim.render_callback is not None:
-            self.sim.render_callback(self.sim, self)
+            raise Exception("No support for render callback")
+            # self.sim.render_callback(self.sim, self)
 
         # Sometimes buffers are too small.
         if width > self._con.offWidth or height > self._con.offHeight:
@@ -254,13 +258,15 @@ cdef class MjRenderContext(object):
 
 class MjRenderContextOffscreen(MjRenderContext):
 
-    def __cinit__(self, MjSim sim, int device_id):
-        super().__init__(sim, offscreen=True, device_id=device_id)
+    ### added, changed MjSim sim -> physics ### 
+    def __cinit__(self, physics, int device_id):
+        super().__init__(physics, offscreen=True, device_id=device_id)
 
 class MjRenderContextWindow(MjRenderContext):
 
-    def __init__(self, MjSim sim):
-        super().__init__(sim, offscreen=False)
+    ### added, changed MjSim sim -> physics ### 
+    def __init__(self, physics):
+        super().__init__(physics, offscreen=False)
 
         assert isinstance(self.opengl_context, GlfwContext), (
             "Only GlfwContext supported for windowed rendering")
@@ -276,3 +282,5 @@ class MjRenderContextWindow(MjRenderContext):
         glfw.make_context_current(self.window)
         super().render(*glfw.get_framebuffer_size(self.window))
         glfw.swap_buffers(self.window)
+
+        

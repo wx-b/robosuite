@@ -1,5 +1,8 @@
 import const
 
+### TODO: figure out this cython crap... ###
+import cymj
+
 class MujocoPyRenderer():
     def __init__(self, sim):
         """
@@ -17,12 +20,12 @@ class MjViewerBasic(cymj.MjRenderContextWindow):
     :class:`.MjViewer` extends this class to provide more sophisticated playback and interaction controls.
     Parameters
     ----------
-    sim : :class:`.MjSim`
-        The simulator to display.
+    physics : :class:`Physics`
+        Physics class instance from dm_control.
     """
 
-    def __init__(self, sim):
-        super().__init__(sim)
+    def __init__(self, physics):
+        super().__init__(physics)
 
         self._gui_lock = Lock()
         self._button_left_pressed = False
@@ -125,10 +128,10 @@ class MjViewer(MjViewerBasic):
         The simulator to display.
     """
 
-    def __init__(self, sim):
-        super().__init__(sim)
+    def __init__(self, physics):
+        super().__init__(physics)
 
-        self._ncam = sim.model.ncam
+        self._ncam = physics.model.ncam
         self._paused = False  # is viewer paused.
         # should we advance viewer just by one step.
         self._advance_by_one_step = False
@@ -156,6 +159,13 @@ class MjViewer(MjViewerBasic):
         self._time_per_render = 1 / 60.0
         self._hide_overlay = False  # hide the entire overlay.
         self._user_overlay = {}
+
+        ### added, force an offscreen context to be made ###
+        self._offscreen_context = MjRenderContextOffscreen(self.sim, device_id=device_id)
+
+        ### added, extras dictionary here instead of MjSim ###
+        self.extras = {}
+
 
     def render(self):
         """
@@ -205,9 +215,11 @@ class MjViewer(MjViewerBasic):
 
         ### TODO: what is the equivalent in dm_control? ###
 
+        ### added, don't support off-screen rendering, assume class instance is render context ###
+
         # Reads pixels with markers and overlay from the same camera as screen.
-        resolution = glfw.get_framebuffer_size(
-            self.sim._render_context_window.window)
+        resolution = glfw.get_framebuffer_size(self.window)
+            # self.sim._render_context_window.window)
 
         resolution = np.array(resolution)
         resolution = resolution * min(1000 / np.min(resolution), 1)
@@ -216,10 +228,15 @@ class MjViewer(MjViewerBasic):
 
         ### TODO: what is the equivalent in dm_control? ###
 
-        if self.sim._render_context_offscreen is None:
-            self.sim.render(resolution[0], resolution[1])
-        offscreen_ctx = self.sim._render_context_offscreen
-        window_ctx = self.sim._render_context_window
+        ### added, forced offscreen context ###
+        offscreen_ctx = self._offscreen_context
+        window_ctx = self
+
+        # if self.sim._render_context_offscreen is None:
+        #     self.sim.render(resolution[0], resolution[1])
+        # offscreen_ctx = self.sim._render_context_offscreen
+        # window_ctx = self.sim._render_context_window
+
         # Save markers and overlay from offscreen.
         saved = [copy.deepcopy(offscreen_ctx._markers),
                  copy.deepcopy(offscreen_ctx._overlay),
@@ -361,14 +378,24 @@ class MjViewer(MjViewerBasic):
                     ### TODO: what is the equivalent in dm_control? ###
                     for geom_idx, body_idx2 in enumerate(self.sim.model.geom_bodyid):
                         if body_idx1 == body_idx2:
+                            ### added, extras dictionary in viewer ###
                             if not self._show_mocap:
                                 # Store transparency for later to show it.
-                                self.sim.extras[
+                                self.extras[
                                     geom_idx] = self.sim.model.geom_rgba[geom_idx, 3]
                                 self.sim.model.geom_rgba[geom_idx, 3] = 0
                             else:
                                 self.sim.model.geom_rgba[
-                                    geom_idx, 3] = self.sim.extras[geom_idx]
+                                    geom_idx, 3] = self.extras[geom_idx]
+
+                            # if not self._show_mocap:
+                            #     # Store transparency for later to show it.
+                            #     self.sim.extras[
+                            #         geom_idx] = self.sim.model.geom_rgba[geom_idx, 3]
+                            #     self.sim.model.geom_rgba[geom_idx, 3] = 0
+                            # else:
+                            #     self.sim.model.geom_rgba[
+                            #         geom_idx, 3] = self.sim.extras[geom_idx]
         elif key in (glfw.KEY_0, glfw.KEY_1, glfw.KEY_2, glfw.KEY_3, glfw.KEY_4):
             self.vopt.geomgroup[key - glfw.KEY_0] ^= 1
         super().key_callback(window, key, scancode, action, mods)
