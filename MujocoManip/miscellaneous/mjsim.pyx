@@ -1,6 +1,6 @@
 from xml.dom import minidom
-from mujoco_py.utils import remove_empty_lines
-from mujoco_py.builder import build_callback_fn
+from openai_utils import remove_empty_lines
+from builder import build_callback_fn
 from threading import Lock
 
 _MjSim_render_lock = Lock()

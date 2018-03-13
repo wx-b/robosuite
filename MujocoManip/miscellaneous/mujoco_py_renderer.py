@@ -1,7 +1,13 @@
+from threading import Lock
+import glfw
+from builder import cymj
 import const
-
-### TODO: figure out this cython crap... ###
-import cymj
+import time
+import copy
+from multiprocessing import Process, Queue
+from openai_utils import rec_copy, rec_assign
+import numpy as np
+import imageio
 
 class MujocoPyRenderer():
     def __init__(self, sim):
@@ -399,34 +405,6 @@ class MjViewer(MjViewerBasic):
         elif key in (glfw.KEY_0, glfw.KEY_1, glfw.KEY_2, glfw.KEY_3, glfw.KEY_4):
             self.vopt.geomgroup[key - glfw.KEY_0] ^= 1
         super().key_callback(window, key, scancode, action, mods)
-
-def rec_assign(node, assign):
-    # Assigns values to node recursively.
-    # This is neccessary to avoid overriding pointers in MuJoCo.
-    for field in dir(node):
-        if field.find("__") == -1 and field != 'uintptr':
-            val = getattr(node, field)
-            if isinstance(val, (int, bool, float, None.__class__, str)):
-                setattr(node, field, assign[field])
-            elif isinstance(val, np.ndarray):
-                val[:] = assign[field][:]
-            elif not hasattr(val, "__call__"):
-                rec_assign(val, assign[field])
-
-def rec_copy(node):
-    # Recursively copies object to dictionary.
-    # Applying directly copy.deepcopy causes seg fault.
-    ret = {}
-    for field in dir(node):
-        if field.find("__") == -1:
-            val = getattr(node, field)
-            if isinstance(val, (int, bool, float, None.__class__, str)):
-                ret[field] = val
-            elif isinstance(val, np.ndarray):
-                ret[field] = copy.deepcopy(val)
-            elif not hasattr(val, "__call__"):
-                ret[field] = rec_copy(val)
-    return ret
 
 
 

@@ -19,19 +19,7 @@ from cffi import FFI
 from Cython.Build import cythonize
 from Cython.Distutils.old_build_ext import old_build_ext as build_ext
 
-from mujoco_py.utils import discover_mujoco
-
-def discover_mujoco():
-    """
-    Discovers where MuJoCo is located in the file system.
-    Currently assumes path is in ~/.mujoco
-    Returns:
-    - mjpro_path (str): Path to MuJoCo Pro 1.50 directory.
-    - key_path (str): Path to the MuJoCo license key.
-    """
-    key_path = join(expanduser('~'), '.mujoco', 'mjkey.txt')
-    mjpro_path = join(expanduser('~'), '.mujoco', 'mjpro150')
-    return (mjpro_path, key_path)
+from openai_utils import discover_mujoco
 
 def get_nvidia_version():
     cmd = 'nvidia-smi --query-gpu=driver_version --format=csv,noheader --id=0'
