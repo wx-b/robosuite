@@ -1,5 +1,5 @@
 from threading import Lock
-import const
+from MujocoManip.miscellaneous.generated import const
 
 cdef class MjRenderContext(object):
     """
@@ -7,8 +7,8 @@ cdef class MjRenderContext(object):
     MuJoCo simulation.
     """
 
-    cdef mjModel *_model_ptr
-    cdef mjData *_data_ptr
+    # cdef mjModel *_model_ptr
+    # cdef mjData *_data_ptr
 
     cdef mjvScene _scn
     cdef mjvCamera _cam
@@ -46,13 +46,13 @@ cdef class MjRenderContext(object):
 
         # Ensure the model data has been updated so that there
         # is something to render
-        sim.forward()
+        physics.forward()
 
         ### added, can just remember that we are the context ### 
         # sim.add_render_context(self)
 
-        self._model_ptr = sim.model.ptr
-        self._data_ptr = sim.data.ptr
+        self._model_ptr = physics.model.ptr
+        self._data_ptr = physics.data.ptr
         self.scn = WrapMjvScene(&self._scn)
         self.cam = WrapMjvCamera(&self._cam)
         self.vopt = WrapMjvOption(&self._vopt)
@@ -64,7 +64,7 @@ cdef class MjRenderContext(object):
         self._markers = []
         self._overlay = {}
 
-        self._init_camera(sim)
+        self._init_camera(physics)
         self._set_mujoco_buffers()
 
     # def update_sim(self, MjSim new_sim):
@@ -283,4 +283,3 @@ class MjRenderContextWindow(MjRenderContext):
         super().render(*glfw.get_framebuffer_size(self.window))
         glfw.swap_buffers(self.window)
 
-        

@@ -1,7 +1,7 @@
 import os
 import sys
 from abc import ABCMeta, abstractmethod
-from openai_utils import discover_mujoco
+from MujocoManip.miscellaneous.openai_utils import discover_mujoco
 
 
 def _add_mujoco_bin_to_dyld_library_path():

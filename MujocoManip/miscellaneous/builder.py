@@ -19,7 +19,7 @@ from cffi import FFI
 from Cython.Build import cythonize
 from Cython.Distutils.old_build_ext import old_build_ext as build_ext
 
-from openai_utils import discover_mujoco
+from MujocoManip.miscellaneous.openai_utils import discover_mujoco
 
 def get_nvidia_version():
     cmd = 'nvidia-smi --query-gpu=driver_version --format=csv,noheader --id=0'
@@ -212,8 +212,11 @@ class MujocoExtensionBuilder():
 
     def __init__(self, mjpro_path):
         self.mjpro_path = mjpro_path
+
+        ### added, changed extension name ###
         self.extension = Extension(
-            'mujoco_py.cymj',
+            'MujocoManip.miscellaneous.cymj',
+            # 'mujoco_py.cymj',
             sources=[join(self.CYMJ_DIR_PATH, "cymj.pyx")],
             include_dirs=[
                 self.CYMJ_DIR_PATH,

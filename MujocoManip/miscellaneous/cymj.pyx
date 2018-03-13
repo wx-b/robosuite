@@ -15,7 +15,7 @@ import numpy as np
 from cython cimport view
 from cython.parallel import parallel, prange
 
-import const
+from MujocoManip.miscellaneous.generated import const
 
 include "generated/wrappers.pxi"
 include "opengl_context.pyx"
