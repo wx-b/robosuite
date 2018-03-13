@@ -26,8 +26,9 @@ class MujocoEnv(object, metaclass=EnvMeta):
     def __init__(self, control_freq=100, horizon=500, ignore_done=False, **kwargs):
         """
             Initialize a Mujoco Environment
-            @controL_freq in Hz, how many control signals to receive in every second
+            @control_freq in Hz, how many control signals to receive in every second
             @ignore_done: if True, never terminate the env
+
             TODO(extension): What about control_freq = a + bN(0,1) to simulate imperfect timing
         """
         self.physics = self._load_model()
@@ -73,7 +74,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
     def _reset_internal(self):
         # self.sim.set_state(self.sim_state_initial)
         self.cur_time = 0
-        self.t=0
+        self.t = 0
         self.done = False
 
     def _get_observation(self):

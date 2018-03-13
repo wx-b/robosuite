@@ -29,7 +29,6 @@ class SawyerEnv(MujocoEnv):
         # gripper_target = np.array([-0.498, 0.005, -0.431]) + self.sim.data.get_site_xpos('robot0:grip')
         # gripper_rotation = np.array([0., 0., 1., 0.])
 
-        ### TOOD: replace this with dm_control equivalent ###
         self.physics.named.data.mocap_pos['mocap'] = gripper_target
         self.physics.named.data.mocap_quat['mocap'] = gripper_rotation
         for _ in range(10):
