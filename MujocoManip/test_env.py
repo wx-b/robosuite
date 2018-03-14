@@ -46,6 +46,40 @@ if __name__ == '__main__':
     print('DOF: {}'.format(dof))
     env.render()
 
+    # save the model xml
+    env.task.save_model('save.xml')
+
+    # save the physics state
+    state = env.physics.state()
+    np.savez('save.npz', state=state)
+
+    # save an image of the state
+    A = env.physics.render(480, 480, camera_id=0)
+    im = Image.fromarray(A)
+    im.save('save.jpg')
+
+    env.reset()
+    env.render()
+
+    # load the model xml
+    with open('save.xml', 'r') as f:
+        env.physics.reload_from_xml_string(f.read())
+
+    # load the physics state
+    dic = np.load('save.npz')
+    state = dic['state']
+    env.physics.set_state(state)
+    env.physics.forward()
+
+    # save an image of the reloaded frame
+    A = env.physics.render(480, 480, camera_id=0)
+    im = Image.fromarray(A)
+    im.save('reloaded.jpg')
+    env.render()
+
+    from IPython import embed
+    embed()
+
     target_jp = env._joint_positions
     target_jp -= 0.1
     kp = np.array([50.0, 30.0, 20.0, 15.0, 10.0, 5.0, 2.0]) # gains for PD controller
