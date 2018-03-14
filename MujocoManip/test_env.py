@@ -5,6 +5,7 @@ from PIL import Image
 from IPython import embed
 
 from MujocoManip.model import DefaultCylinderObject, RandomCylinderObject, RandomBoxObject, DefaultBallObject, RandomBallObject, DefaultCapsuleObject, RandomCapsuleObject
+from MujocoManip.wrappers import DataCollector
 
 if __name__ == '__main__':
 
@@ -23,22 +24,16 @@ if __name__ == '__main__':
     # env = make("SawyerReachEnv", display=True, ignore_done=False)
 
     env = make("SawyerStackEnv", display=True, ignore_done=True)
-
+    direct = "./"
+    env = DataCollector(env, direct)
     # env = make("SawyerStackEnv", display=True, ignore_done=True, use_eef_ctrl=True)
     # env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
-    # env = make("SawyerPushEnv", display=True, ignore_done=False, use_torque_ctrl=True)
-
-    ### TEST object generation ###
-    # obj_arr = [RandomCapsuleObject() for _ in range(3)]
-    # obj_arr.extend([RandomCylinderObject() for _ in range(5)])
-    # obj_arr.extend([RandomBoxObject() for _ in range(5)])
-    # obj_arr.extend([RandomBallObject() for _ in range(3)])
-    # env = make("SawyerStackEnv", display=True, ignore_done=True, mujoco_objects=obj_arr)
 
     obs = env.reset()
 
     # rotate the gripper so we can see it easily 
-    env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
+    # env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
+    env.env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
     dof = env.dof()
     print('action space', env.action_space)
@@ -46,44 +41,43 @@ if __name__ == '__main__':
     print('DOF: {}'.format(dof))
     env.render()
 
-    # save the model xml
-    env.task.save_model('save.xml')
+    ### Test saving and loading environment state... ###
 
-    # save the physics state
-    state = env.physics.state()
-    np.savez('save.npz', state=state)
+    # # save the model xml
+    # env.task.save_model('save.xml')
 
-    # save an image of the state
-    A = env.physics.render(480, 480, camera_id=0)
-    im = Image.fromarray(A)
-    im.save('save.jpg')
+    # # save the physics state
+    # state = env.physics.state()
+    # np.savez('save.npz', state=state)
 
-    env.reset()
-    env.render()
+    # # save an image of the state
+    # A = env.physics.render(480, 480, camera_id=0)
+    # im = Image.fromarray(A)
+    # im.save('save.jpg')
 
-    # load the model xml
-    with open('save.xml', 'r') as f:
-        env.physics.reload_from_xml_string(f.read())
+    # env.reset()
+    # env.render()
 
-    # load the physics state
-    dic = np.load('save.npz')
-    state = dic['state']
-    env.physics.set_state(state)
-    env.physics.forward()
+    # # load the model xml
+    # with open('save.xml', 'r') as f:
+    #     env.physics.reload_from_xml_string(f.read())
 
-    # save an image of the reloaded frame
-    A = env.physics.render(480, 480, camera_id=0)
-    im = Image.fromarray(A)
-    im.save('reloaded.jpg')
-    env.render()
+    # # load the physics state
+    # dic = np.load('save.npz')
+    # state = dic['state']
+    # env.physics.set_state(state)
+    # env.physics.forward()
 
-    from IPython import embed
-    embed()
+    # # save an image of the reloaded frame
+    # A = env.physics.render(480, 480, camera_id=0)
+    # im = Image.fromarray(A)
+    # im.save('reloaded.jpg')
+    # env.render()
 
-    target_jp = env._joint_positions
-    target_jp -= 0.1
-    kp = np.array([50.0, 30.0, 20.0, 15.0, 10.0, 5.0, 2.0]) # gains for PD controller
-    kv = np.array([8.0, 7.0, 6.0, 4.0, 2.0, 0.5, 0.1]) # gains for PD controller
+    # target_jp = env._joint_positions
+    # target_jp -= 0.1
+    # kp = np.array([50.0, 30.0, 20.0, 15.0, 10.0, 5.0, 2.0]) # gains for PD controller
+    # kv = np.array([8.0, 7.0, 6.0, 4.0, 2.0, 0.5, 0.1]) # gains for PD controller
 
     ### TODO: try torque control with fixed joint positions that are slightly off from the start ones? ###
 
@@ -130,16 +124,17 @@ if __name__ == '__main__':
         obs = env.reset()
 
         # rotate the gripper so we can see it easily 
-        env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
+        # env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
+        env.env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
         for i in range(20000):
             # print(obs[len(obs) - 6: len(obs) - 3])
             # print(obs[len(obs) - 9: len(obs) - 6])
             # action = obs[len(obs) - 3: len(obs)]
             # action[:7] = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
-            # action = 0.5 * np.random.randn(dof)
-            action = np.zeros(dof)
-            action[7:] = [-1., 1.]
+            action = 0.5 * np.random.randn(dof)
+            # action = np.zeros(dof)
+            # action[7:] = [-1., 1.]
             # action[2] = 0.1
 
             # pos_err = env._joint_positions - target_jp
@@ -160,16 +155,6 @@ if __name__ == '__main__':
                     pass
                     # print("collision: {} with {}".format(names.get(g1, g1), names.get(g2, g2)))
             
-            # if i % 500 == 0:
-            #     A = env.sim.render(width=500, height=500, camera_name='camera1')
-            #     im = Image.fromarray(A)
-            #     im.save('{}.jpg'.format(i))
-            # print('obs: {}'.format(obs))
-            # print('reward: {}'.format(reward))
-            # t = time.time()
-            # A = env.sim.render(500, 500)
-            # dt = time.time() - t
-            # print('dt: {}'.format(dt))
             if i % 100 == 0:
                 print(i)
             if done:

@@ -3,7 +3,7 @@ This file contains the base wrapper class for Mujoco environments.
 Wrappers are useful for data collection and logging. Highly recommended.
 """
 
-from MujocoManip.environment import MujocoEnv
+from MujocoManip.environment.base import MujocoEnv
 
 class Wrapper(MujocoEnv):
     env = None
@@ -41,7 +41,13 @@ class Wrapper(MujocoEnv):
         return self.env.observation_spec()
 
     def action_spec(self):
-        raise self.env.action_spec()
+        return self.env.action_spec()
+
+    def action_space(self):
+        return self.env.action_space()
+
+    def dof(self):
+        return self.env.dof()
 
     @property
     def unwrapped(self):

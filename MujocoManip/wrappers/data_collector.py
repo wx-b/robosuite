@@ -6,6 +6,7 @@ This is useful for collecting demonstrations.
 from MujocoManip.wrappers import Wrapper
 import os
 import time
+import numpy as np
 
 class DataCollector(Wrapper):
 
@@ -26,7 +27,7 @@ class DataCollector(Wrapper):
         self.collect_freq = 1
 
         # how frequently to dump data to disk, in terms of environment steps
-        self.flush_freq = 1000000
+        self.flush_freq = 1000
 
         if not os.path.exists(directory):
             print("DataCollector: making new directory at {}".format(directory))
@@ -40,8 +41,6 @@ class DataCollector(Wrapper):
         Bookkeeping to do at the start of each new episode.
         """
 
-        # TODO: save xml, create new subdirectory for logging, etc...
-
         # flush any data left over from the previous episode
         if self.ep_directory is not None:
             self._flush()
@@ -49,6 +48,9 @@ class DataCollector(Wrapper):
         # create a directory with a timestamp
         t1, t2 = str(time.time()).split('.')
         self.ep_directory = os.path.join(self.directory, "ep_{}_{}".format(t1, t2))
+        assert(not os.path.exists(self.ep_directory))
+        print("DataCollector: making new directory at {}".format(self.ep_directory))
+        os.makedirs(self.ep_directory)
 
         # save the model xml
         xml_path = os.path.join(self.ep_directory, 'model.xml')
@@ -62,8 +64,8 @@ class DataCollector(Wrapper):
         Method to flush internal state to disk. 
         """
         t1, t2 = str(time.time()).split('.')
-        state_path = os.path.join(self.directory, "state_{}_{}.npz".format(t1, t2))
-        np.savez(state_path, states=*self.states)
+        state_path = os.path.join(self.ep_directory, "state_{}_{}.npz".format(t1, t2))
+        np.savez(state_path, *self.states)
         self.states = []
 
     def reset(self):
