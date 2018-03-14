@@ -1,4 +1,5 @@
-from mujoco_py import MjSim, MjViewer
+from mujoco_py import MjViewer
+
 class MujocoPyRenderer():
     def __init__(self, sim):
         """
@@ -9,3 +10,5 @@ class MujocoPyRenderer():
     def render(self, *args, **kwargs):
         # safe for multiple calls
         self.viewer.render()
+
+

@@ -6,10 +6,18 @@ mujoco_robot = SawyerRobot()
 # mujoco_robot.add_gripper(PR2Gripper())
 mujoco_robot.add_gripper(TwoFingerGripper())
 mujoco_robot.place_on([0,0,0])
-mujoco_object = DefaultBallObject()
-mujoco_arena = TableArena()
-mujoco_arena.set_origin([0.56,0,0])
-task = SingleObjectTargetTask(mujoco_arena, mujoco_robot, mujoco_object)
+        
+mujoco_arena = TableArena(full_size=(0.8, 0.8, 0.8))
+# The sawyer robot has a pedestal, we want to align it with the table
+mujoco_arena.set_origin([0.16 + 0.8 / 2,0,0])
+
+mujoco_objects = [RandomCapsuleObject(size_max=[0.025, 0.03], size_min=[0.01, 0.01]) for _ in range(3)]
+mujoco_objects.extend([RandomCylinderObject(size_max=[0.025, 0.05], size_min=[0.01, 0.01]) for _ in range(5)])
+mujoco_objects.extend([RandomBoxObject(size_max=[0.025, 0.025, 0.05], size_min=[0.01, 0.01, 0.01]) for _ in range(5)])
+mujoco_objects.extend([RandomBallObject(size_max=[0.03], size_min=[0.02]) for _ in range(3)])
+task = StackerTask(mujoco_arena, mujoco_robot, mujoco_objects)
+
+# task = SingleObjectTargetTask(mujoco_arena, mujoco_robot, mujoco_object)
 model = task.get_model(mode='mujoco_py')
 # task.save_model('sample_combined_model.xml')
 sim = MjSim(model)
@@ -20,7 +28,7 @@ original = sim.data.get_body_xpos('right_hand')
 while True:
     sim.set_state(sim_state)
     target = original + np.array([0, 0, 0.1]) + 0.05 * np.random.randn(3)
-    sim.model.body_pos[sim.model.body_name2id('target')] = target
+    # sim.model.body_pos[sim.model.body_name2id('target')] = target
     for i in range(4000):
         
         jacp = sim.data.get_body_jacp('right_hand').reshape([3, -1])
