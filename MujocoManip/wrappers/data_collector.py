@@ -36,14 +36,31 @@ class DataCollector(Wrapper):
         # store logging directory for current episode
         self.ep_directory = None
 
+        # remember whether any environment interaction has occurred 
+        self.has_interaction = False
+
     def _start_new_episode(self):
         """
         Bookkeeping to do at the start of each new episode.
         """
 
-        # flush any data left over from the previous episode
-        if self.ep_directory is not None:
+        # flush any data left over from the previous episode if any interactions have happened
+        if self.has_interaction:
             self._flush()
+
+        # timesteps in current episode
+        self.t = 0
+        self.has_interaction = False
+
+    def _on_first_interaction(self):
+        """
+        Bookkeeping for first timestep of episode. 
+        This function is necessary to make sure that logging only happens after the first
+        step call to the simulation, instead of on the reset (people tend to call
+        reset more than is necessary in code).
+        """
+
+        self.has_interaction = True
 
         # create a directory with a timestamp
         t1, t2 = str(time.time()).split('.')
@@ -56,16 +73,13 @@ class DataCollector(Wrapper):
         xml_path = os.path.join(self.ep_directory, 'model.xml')
         self.env.task.save_model(xml_path)
 
-        # timesteps in current episode
-        self.t = 0
-
     def _flush(self):
         """
         Method to flush internal state to disk. 
         """
         t1, t2 = str(time.time()).split('.')
         state_path = os.path.join(self.ep_directory, "state_{}_{}.npz".format(t1, t2))
-        np.savez(state_path, *self.states)
+        np.savez(state_path, states=np.array(self.states))
         self.states = []
 
     def reset(self):
@@ -78,6 +92,10 @@ class DataCollector(Wrapper):
         ret = super().step(action)
         self.t += 1
 
+        # on the first time step, make directories for logging
+        if not self.has_interaction:
+            self._on_first_interaction()
+
         # collect the current simulation state if necessary
         if self.t % self.collect_freq == 0:
             state = self.env.physics.state()
@@ -88,6 +106,7 @@ class DataCollector(Wrapper):
             self._flush()
 
         return ret
+
 
 
 
