@@ -16,8 +16,11 @@ mujoco_objects.extend([RandomCylinderObject(size_max=[0.025, 0.05], size_min=[0.
 mujoco_objects.extend([RandomBoxObject(size_max=[0.025, 0.025, 0.05], size_min=[0.01, 0.01, 0.01]) for _ in range(5)])
 mujoco_objects.extend([RandomBallObject(size_max=[0.03], size_min=[0.02]) for _ in range(3)])
 task = StackerTask(mujoco_arena, mujoco_robot, mujoco_objects)
+task.place_objects()
 
+# mujoco_object = DefaultBallObject()
 # task = SingleObjectTargetTask(mujoco_arena, mujoco_robot, mujoco_object)
+# task.place_object()
 model = task.get_model(mode='mujoco_py')
 # task.save_model('sample_combined_model.xml')
 sim = MjSim(model)
