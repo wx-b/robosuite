@@ -105,7 +105,6 @@ class StackerTask(MujocoWorldBase):
         contact_point = np.array([target_x, target_y, 0]) + self.table_top_offset
         for index in object_ordering:
             contact_point -= self.mujoco_objects[index].get_bottom_offset()
-            print(contact_point)
             self.targets[index].set('pos', array_to_string(contact_point))
             contact_point += self.mujoco_objects[index].get_top_offset()
         
