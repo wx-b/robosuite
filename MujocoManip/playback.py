@@ -11,7 +11,7 @@ from glob import glob
 from IPython import embed
 
 from MujocoManip.model import DefaultCylinderObject, RandomCylinderObject, RandomBoxObject, DefaultBallObject, RandomBallObject, DefaultCapsuleObject, RandomCapsuleObject
-from MujocoManip.wrappers import DataCollector
+from MujocoManip import DataCollector
 
 def collect_random_data(env, timesteps=1000):
     obs = env.reset()
