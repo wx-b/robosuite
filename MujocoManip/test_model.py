@@ -10,6 +10,7 @@ mujoco_object = DefaultBallObject()
 mujoco_arena = TableArena()
 mujoco_arena.set_origin([0.56,0,0])
 task = SingleObjectTargetTask(mujoco_arena, mujoco_robot, mujoco_object)
+task.place_object()
 physics = task.get_model(mode='dm_control')
 render = DmControlRenderer(physics)
 

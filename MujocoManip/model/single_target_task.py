@@ -13,10 +13,12 @@ class SingleTargetTask(MujocoWorldBase):
         self.merge_object(mujoco_object)
 
     def merge_arena(self, mujoco_arena):
+        self.arena = mujoco_arena
         self.table_top_offset = mujoco_arena.table_top_abs
         self.merge(mujoco_arena)
 
     def merge_robot(self, mujoco_robot):
+        self.robot = mujoco_robot
         self.merge(mujoco_robot)
 
     def merge_object(self, mujoco_object):
