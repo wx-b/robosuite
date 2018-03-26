@@ -26,22 +26,24 @@ class SawyerGraspEnv(SawyerSingleObjectTargetEnv):
 
     def _reset_internal(self):
         super()._reset_internal()
+        self.model.place_object(min_target_xy_distance=self.min_target_xy_distance,
+                             target_z_range=[self.min_target_height, self.max_target_height])
 
-        table_x_half = self.table_size[0] / 2
-        table_y_half = self.table_size[1] / 2
-        target_x = np.random.uniform(high=table_x_half, low= -1 * table_x_half)
-        target_y = np.random.uniform(high=table_y_half, low= -1 * table_y_half)
-        target_z = np.random.uniform(high=self.max_target_height, low=self.min_target_height)
-        self._target_pos = np.array([target_x,target_y,target_z]) - self.target_bottom_offset
+        # table_x_half = self.table_size[0] / 2
+        # table_y_half = self.table_size[1] / 2
+        # target_x = np.random.uniform(high=table_x_half, low= -1 * table_x_half)
+        # target_y = np.random.uniform(high=table_y_half, low= -1 * table_y_half)
+        # target_z = np.random.uniform(high=self.max_target_height, low=self.min_target_height)
+        # self._target_pos = np.array([target_x,target_y,target_z]) - self.target_bottom_offset
 
-        success = False
-        for i in range(1000):
-            object_x = np.random.uniform(high=table_x_half, low= -1 * table_x_half)
-            object_y = np.random.uniform(high=table_y_half, low= -1 * table_y_half)
-            if abs(object_x - target_x) > self.min_target_xy_distance[0] and \
-                abs(object_y - target_y) > self.min_target_xy_distance[1]:
-                success = True
-                self._object_pos=[object_x,object_y,0,] - self.mujoco_object.get_bottom_offset()
-                break
-        if not success:
-            raise RandomizationError('Cannot place all objects on the desk')
+        # success = False
+        # for i in range(1000):
+        #     object_x = np.random.uniform(high=table_x_half, low= -1 * table_x_half)
+        #     object_y = np.random.uniform(high=table_y_half, low= -1 * table_y_half)
+        #     if abs(object_x - target_x) > self.min_target_xy_distance[0] and \
+        #         abs(object_y - target_y) > self.min_target_xy_distance[1]:
+        #         success = True
+        #         self._object_pos=[object_x,object_y,0,] - self.mujoco_object.get_bottom_offset()
+        #         break
+        # if not success:
+        #     raise RandomizationError('Cannot place all objects on the desk')

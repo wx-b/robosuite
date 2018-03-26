@@ -43,19 +43,21 @@ class SawyerReachEnv(SawyerEnv):
         self.target_bottom_offset = self.mujoco_object.get_bottom_offset()
         self.task = SingleTargetTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_object)
 
-        return self.task.get_model()
+        self.model = self.task
 
 
     def _reset_internal(self):
         super()._reset_internal()
-
+        print('Sawyer reach is temporarily deprecated due to change in model loading')
+        # TODO: fix reacher env
+        # 
         # table_x_half = self.table_size[0] / 2
         # table_y_half = self.table_size[1] / 2
         # target_x = np.random.uniform(high=table_x_half, low= -1 * table_x_half)
         # target_y = np.random.uniform(high=table_y_half, low= -1 * table_y_half)
         # target_z = np.random.uniform(high=self.max_target_height, low=self.min_target_height)
         # self._target_pos = np.array([target_x,target_y,target_z]) - self.target_bottom_offset
-        self._target_pos = np.array([0, 0, 0.2])
+        # self._target_pos = np.array([0, 0, 0.2])
 
     def _pre_action(self, action):
         super()._pre_action(action)

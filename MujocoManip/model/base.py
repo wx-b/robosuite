@@ -94,6 +94,10 @@ class MujocoXML(object):
                 return model
             raise ValueError('Unkown model mode: {}. Available options are: {}'.format(mode, ','.join(available_modes)))
         
+    def get_xml(self):
+        with io.StringIO() as string:
+            string.write(ET.tostring(self.root, encoding='unicode'))
+            return string.getvalue()
 
     def save_model(self, fname, pretty=False):
         """

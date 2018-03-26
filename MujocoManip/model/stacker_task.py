@@ -60,7 +60,7 @@ class StackerTask(MujocoWorldBase):
                 })
             self.max_horizontal_radius = max(self.max_horizontal_radius, mujoco_object.get_horizontal_radius())
 
-    def place_objects(self, min_target_xy_distance=None):
+    def place_objects(self):
         """
         Place objects randomly until no more collisions or max iterations hit.
         """
