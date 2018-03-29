@@ -26,10 +26,10 @@ class DataCollector(Wrapper):
         self.states = [] 
 
         # how often to save simulation state, in terms of environment steps
-        self.collect_freq = 1
+        self.collect_freq = collect_freq
 
         # how frequently to dump data to disk, in terms of environment steps
-        self.flush_freq = 1000
+        self.flush_freq = flush_freq
 
         if not os.path.exists(directory):
             print("DataCollector: making new directory at {}".format(directory))
