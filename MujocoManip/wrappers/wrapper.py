@@ -54,5 +54,21 @@ class Wrapper(MujocoEnv):
     def unwrapped(self):
         return self.env.unwrapped
 
+    # this method is a fallback option on any methods the original env might support
+    def __getattr__(self, attr):
+        orig_attr = self.env.__getattribute__(attr)
+        if callable(orig_attr):
+            def hooked(*args, **kwargs):
+                result = orig_attr(*args, **kwargs)
+                # prevent wrapped_class from becoming unwrapped
+                if result == self.env:
+                    return self
+                return result
+            return hooked
+        else:
+            return orig_attr
+        
+
+
 
 
