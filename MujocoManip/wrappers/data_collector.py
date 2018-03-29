@@ -10,10 +10,12 @@ import numpy as np
 
 class DataCollector(Wrapper):
 
-    def __init__(self, env, directory):
+    def __init__(self, env, directory, collect_freq=1, flush_freq=1000):
         """
         :param env: The environment to monitor.
         :param directory: Where to store collected data.
+        :param collect_freq: How often to save simulation state, in terms of environment steps.
+        :param flush_freq: How frequently to dump data to disk, in terms of environment steps.
         """
         super().__init__(env)
 
