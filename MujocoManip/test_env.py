@@ -25,14 +25,14 @@ if __name__ == '__main__':
 
     env = make("SawyerStackEnv", display=True, ignore_done=True)
     direct = "./"
-    env = DataCollector(env, direct)
+    # env = DataCollector(env, direct)
     # env = make("SawyerStackEnv", display=True, ignore_done=True, use_eef_ctrl=True)
     # env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
+    # env = make("SawyerGraspEnv", display=True)
 
     obs = env.reset()
 
     # rotate the gripper so we can see it easily 
-    # env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
     env.env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
     dof = env.dof()
@@ -155,8 +155,9 @@ if __name__ == '__main__':
                     pass
                     # print("collision: {} with {}".format(names.get(g1, g1), names.get(g2, g2)))
             
-            if i % 100 == 0:
+            if i % 100 == 99:
                 print(i)
+                break
             if done:
                 print('done: {}'.format(reward))
                 break

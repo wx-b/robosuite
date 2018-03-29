@@ -31,7 +31,8 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
             TODO(extension): What about control_freq = a + bN(0,1) to simulate imperfect timing
         """
-        self.physics = self._load_model()
+        self._load_model()
+        self.physics = self.model.get_model(mode='dm_control')
         self.initialize_time(control_freq)
         self.viewer = DmControlRenderer(self.physics)
         # self.sim_state_initial = self.sim.get_state()
@@ -59,8 +60,8 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.control_timestep = 1 / control_freq
 
     def _load_model(self):
-        """Returns a dm_control Physics object"""
-        pass
+        """Loads an xml model, puts it in self.model"""
+        self.model = None
 
     def _get_reference(self):
         """Set up necessary reference for objects"""
@@ -68,7 +69,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
     def reset(self):
         self._reset_internal()
-        self.physics.forward()
+        self.physics.reload_from_xml_string(self.model.get_xml())
         return self._get_observation()
 
     def _reset_internal(self):

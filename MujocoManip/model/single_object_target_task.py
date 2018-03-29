@@ -42,25 +42,37 @@ class SingleObjectTargetTask(MujocoWorldBase):
         task_target.set('name', 'target')
         self.worldbody.append(task_target)
 
-    def place_object(self, min_target_xy_distance=None):
+    def place_object(self, min_target_xy_distance=None, target_z_range=None):
         """
             Places object and target:
         Args:
             min_target_xy_distance: Minimal distance between object and target array of [x,y]
-            None: [0,0]
-            float/int r: [r,r]
-            iterable arr: [arr[0], arr[1]] 
+                None: [0,0]
+                float/int r: [r,r]
+                iterable arr: [arr[0], arr[1]] 
+            target_y_range: z offset of target
+                None: 0
+                float/int r: uniformly random among [0, r]
+                iterable arr: uniformly random among [arr[0], arr[1]]
         """
         if min_target_xy_distance is None:
             min_target_xy_distance = [0,0]
         if isinstance(min_target_xy_distance, float) or isinstance(min_target_xy_distance, int):
             min_target_xy_distance = [min_target_xy_distance, min_target_xy_distance]
-
+        
         table_x_half = self.table_size[0] / 2 - self.object_radius
         table_y_half = self.table_size[1] / 2 - self.object_radius
         target_x = np.random.uniform(high=table_x_half, low= -1 * table_x_half)
         target_y = np.random.uniform(high=table_y_half, low= -1 * table_y_half)
-        self.task_target.set('pos', array_to_string(self.object_center_offset + np.array([target_x,target_y,0])))
+        
+        if target_z_range is None:
+            target_z = 0
+        elif isinstance(target_z_range, float) or isinstance(target_z_range, int):
+            target_z = np.random.uniform(0, target_z_range)
+        else:
+            target_z = np.random.uniform(target_z_range[0], target_z_range[1])
+
+        self.task_target.set('pos', array_to_string(self.object_center_offset + np.array([target_x,target_y,target_z])))
 
         success = False
         for i in range(1000):

@@ -57,7 +57,7 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
         self.target_bottom_offset = self.mujoco_object.get_bottom_offset()
         self.task = SingleObjectTargetTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_object)
 
-        return self.task.get_model()
+        self.model = self.task
 
     def _reset_internal(self):
         super()._reset_internal()

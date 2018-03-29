@@ -69,7 +69,8 @@ class SawyerStackEnv(SawyerEnv):
 
         self.object_metadata = self.task.object_metadata
         self.n_objects = len(self.object_metadata)
-        return self.task.get_model()
+
+        self.model = self.task
 
     def _get_reference(self):
         super()._get_reference()
@@ -82,61 +83,60 @@ class SawyerStackEnv(SawyerEnv):
     
     def _reset_internal(self):
         super()._reset_internal()
-        self._place_targets()
-        self._place_objects()
+        self.model.place_objects()
 
-    def _place_targets(self):
-        object_ordering = [x for x in range(self.n_objects)]
-        np.random.shuffle(object_ordering)
-        # rest position of target
-        target_x = np.random.uniform(high=self.table_size[0]/2 - self.max_horizontal_radius, low=-1 * (self.table_size[0]/2 - self.max_horizontal_radius))
-        target_y = np.random.uniform(high=self.table_size[1]/2 - self.max_horizontal_radius, low=-1 * (self.table_size[1]/2 - self.max_horizontal_radius))
+    # def _place_targets(self):
+    #     object_ordering = [x for x in range(self.n_objects)]
+    #     np.random.shuffle(object_ordering)
+    #     # rest position of target
+    #     target_x = np.random.uniform(high=self.table_size[0]/2 - self.max_horizontal_radius, low=-1 * (self.table_size[0]/2 - self.max_horizontal_radius))
+    #     target_y = np.random.uniform(high=self.table_size[1]/2 - self.max_horizontal_radius, low=-1 * (self.table_size[1]/2 - self.max_horizontal_radius))
 
-        contact_point = np.array([target_x, target_y, 0])
+    #     contact_point = np.array([target_x, target_y, 0])
 
-        for index in object_ordering:
-            di = self.object_metadata[index]
-            self._set_target_pos(index, contact_point - di['object_bottom_offset'])
-            contact_point = contact_point - di['object_bottom_offset'] + di['object_top_offset']
+    #     for index in object_ordering:
+    #         di = self.object_metadata[index]
+    #         self._set_target_pos(index, contact_point - di['object_bottom_offset'])
+    #         contact_point = contact_point - di['object_bottom_offset'] + di['object_top_offset']
         
-    def _place_objects(self):
-        """
-        Place objects randomly until no more collisions or max iterations hit.
-        """
-        placed_objects = []
-        for index in range(self.n_objects):
-            di = self.object_metadata[index]
-            horizontal_radius = di['object_horizontal_radius']
-            bottom_offset = di['object_bottom_offset']
-            success = False
-            for i in range(100000): # 1000 retries
-                object_x = np.random.uniform(high=self.table_size[0]/2 - horizontal_radius, low=-1 * (self.table_size[0]/2 - horizontal_radius))
-                object_y = np.random.uniform(high=self.table_size[1]/2 - horizontal_radius, low=-1 * (self.table_size[1]/2 - horizontal_radius))
-                # objects cannot overlap
-                location_valid = True
-                for _, (x, y, z), r in placed_objects:
-                    if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
-                        location_valid = False
-                        break
-                if not location_valid: # bad luck, reroll
-                    continue
-                # location is valid, put the object down
-                # quarternions, later we can add random rotation
+    # def _place_objects(self):
+    #     """
+    #     Place objects randomly until no more collisions or max iterations hit.
+    #     """
+    #     placed_objects = []
+    #     for index in range(self.n_objects):
+    #         di = self.object_metadata[index]
+    #         horizontal_radius = di['object_horizontal_radius']
+    #         bottom_offset = di['object_bottom_offset']
+    #         success = False
+    #         for i in range(100000): # 1000 retries
+    #             object_x = np.random.uniform(high=self.table_size[0]/2 - horizontal_radius, low=-1 * (self.table_size[0]/2 - horizontal_radius))
+    #             object_y = np.random.uniform(high=self.table_size[1]/2 - horizontal_radius, low=-1 * (self.table_size[1]/2 - horizontal_radius))
+    #             # objects cannot overlap
+    #             location_valid = True
+    #             for _, (x, y, z), r in placed_objects:
+    #                 if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
+    #                     location_valid = False
+    #                     break
+    #             if not location_valid: # bad luck, reroll
+    #                 continue
+    #             # location is valid, put the object down
+    #             # quarternions, later we can add random rotation
 
-                pos = np.array([object_x, object_y, 0])
-                pos -= bottom_offset
-                placed_objects.append((index, pos, horizontal_radius))
-                success = True
-                break
-            if not success:
-                raise RandomizationError('Cannot place all objects on the desk')
+    #             pos = np.array([object_x, object_y, 0])
+    #             pos -= bottom_offset
+    #             placed_objects.append((index, pos, horizontal_radius))
+    #             success = True
+    #             break
+    #         if not success:
+    #             raise RandomizationError('Cannot place all objects on the desk')
 
-        # with self.physics.reset_context():
-        for index, pos, r in placed_objects:
-            self._set_object_pos(index, pos)
-            self._set_object_vel(index, np.zeros(3))
-        self.physics.forward()
-            # pos = np.array([object_x, object_y, 0])
+    #     # with self.physics.reset_context():
+    #     for index, pos, r in placed_objects:
+    #         self._set_object_pos(index, pos)
+    #         self._set_object_vel(index, np.zeros(3))
+    #     self.physics.forward()
+    #         # pos = np.array([object_x, object_y, 0])
 
     
     def _reward(self, action):
