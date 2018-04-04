@@ -1,4 +1,5 @@
 import copy
+import time
 import numpy as np
 import xml.etree.ElementTree as ET
 from MujocoManip.model.base import MujocoXML
@@ -56,7 +57,7 @@ class MujocoObject():
         """
         raise NotImplementedError
         
-    def get_visual(self):
+    def get_visual(self, name=None):
         """
             Returns a ET.Element
             It is a <body/> subtree that defines all visual related stuff of this object
@@ -64,15 +65,16 @@ class MujocoObject():
         """
         raise NotImplementedError
 
-    def get_full(self):
+    def get_full(self, name=None, site=False):
         """
             Returns a ET.Element
             It is a <body/> subtree that defines all collision and visual related stuff of this object
             Return is a copy
         """
-        collision = self.get_collision()
+        collision = self.get_collision(name=name, site=site)
         visual = self.get_visual()
         collision.append(visual)
+
         return collision
 
 class MujocoXMLObject(MujocoXML, MujocoObject):
@@ -99,7 +101,7 @@ class MujocoXMLObject(MujocoXML, MujocoObject):
         collision.attrib.pop('name')
         return collision
 
-    def get_visual(self):
+    def get_visual(self, name=None):
         visual = copy.deepcopy(self.worldbody.find("./body[@name='visual']"))
         visual.attrib.pop('name')
         return visual
@@ -131,6 +133,55 @@ class MujocoGeneratedObject(MujocoObject):
     def get_visual_attrib_template(self):
         return {'conaffinity': "0", 'contype': "0"}
 
+    def get_site_attrib_template(self):
+        return {
+                'pos': '0 0 0',
+                'size': '0.002 0.002 0.002',
+                'rgba': '1 0 0 1',
+                'type': 'sphere',
+                }
+
+    # returns a copy, Returns xml body node
+    def _get_collision(self, name=None, site=False, ob_type='box'):
+        body = ET.Element('body')
+        if name is not None:
+            body.set('name', name)
+        template = self.get_collision_attrib_template()
+        template['type'] = ob_type
+        template['rgba'] = array_to_string(self.rgba)
+        template['size'] = array_to_string(self.size)
+        body.append(ET.Element('geom', attrib=template))
+        if site:
+            # add a site as well
+            template = self.get_site_attrib_template()
+            if name is not None:
+                template['name'] = name
+            body.append(ET.Element('site', attrib=template))
+        return body
+
+    # returns a copy, Returns xml body node
+    def _get_visual(self, name=None, site=False, ob_type='box'):
+        body = ET.Element('body')
+        if name is not None:
+            body.set('name', name)
+        template = self.get_visual_attrib_template()
+        template['type'] = ob_type
+        template['rgba'] = array_to_string(self.rgba)
+        # shrink so that we don't see flickering when showing both visual and collision
+        template['size'] = array_to_string(self.size * visual_size_shrink_ratio) 
+        template['group'] = '0'
+        body.append(ET.Element('geom', attrib=template))
+        template_gp1 = copy.deepcopy(template)
+        template_gp1['group'] = '1'
+        body.append(ET.Element('geom', attrib=template_gp1))
+        if site:
+            # add a site as well
+            template = self.get_site_attrib_template()
+            if name is not None:
+                template['name'] = name
+            body.append(ET.Element('site', attrib=template))
+        return body
+
 class BoxObject(MujocoGeneratedObject):
     """
         An object that is a box
@@ -152,29 +203,12 @@ class BoxObject(MujocoGeneratedObject):
         return np.linalg.norm(self.size[0:2], 2)
 
     # returns a copy, Returns xml body node
-    def get_collision(self):
-        body = ET.Element('body')
-        template = self.get_collision_attrib_template()
-        template['type'] = 'box'
-        template['rgba'] = array_to_string(self.rgba)
-        template['size'] = array_to_string(self.size)
-        body.append(ET.Element('geom', attrib=template))
-        return body
+    def get_collision(self, name=None, site=False):
+        return self._get_collision(name=name, site=site, ob_type='box')
     
     # returns a copy, Returns xml body node
-    def get_visual(self):
-        body = ET.Element('body')
-        template = self.get_visual_attrib_template()
-        template['type'] = 'box'
-        template['rgba'] = array_to_string(self.rgba)
-        # shrink so that we don't see flickering when showing both visual and collision
-        template['size'] = array_to_string(self.size * visual_size_shrink_ratio) 
-        template['group'] = '0'
-        body.append(ET.Element('geom', attrib=template))
-        template_gp1 = copy.deepcopy(template)
-        template_gp1['group'] = '1'
-        body.append(ET.Element('geom', attrib=template_gp1))
-        return body
+    def get_visual(self, name=None, site=False):
+        return self._get_visual(name=name, site=site, ob_type='box')
 
 class CylinderObject(MujocoGeneratedObject):
     """
@@ -197,29 +231,12 @@ class CylinderObject(MujocoGeneratedObject):
         return self.size[0]
 
     # returns a copy, Returns xml body node
-    def get_collision(self):
-        body = ET.Element('body')
-        template = self.get_collision_attrib_template()
-        template['type'] = 'cylinder'
-        template['rgba'] = array_to_string(self.rgba)
-        template['size'] = array_to_string(self.size)
-        body.append(ET.Element('geom', attrib=template))
-        return body
+    def get_collision(self, name=None, site=False):
+        return self._get_collision(name=name, site=site, ob_type='cylinder')
     
     # returns a copy, Returns xml body node
-    def get_visual(self):
-        body = ET.Element('body')
-        template = self.get_visual_attrib_template()
-        template['type'] = 'cylinder'
-        template['rgba'] = array_to_string(self.rgba)
-        # shrink so that we don't see flickering when showing both visual and collision
-        template['size'] = array_to_string(self.size * visual_size_shrink_ratio) 
-        template['group'] = '0'
-        body.append(ET.Element('geom', attrib=template))
-        template_gp1 = copy.deepcopy(template)
-        template_gp1['group'] = '1'
-        body.append(ET.Element('geom', attrib=template_gp1))
-        return body
+    def get_visual(self, name=None, site=False):
+        return self._get_visual(name=name, site=site, ob_type='cylinder')
 
 class BallObject(MujocoGeneratedObject):
     """
@@ -242,29 +259,12 @@ class BallObject(MujocoGeneratedObject):
         return self.size[0]
 
     # returns a copy, Returns xml body node
-    def get_collision(self):
-        body = ET.Element('body')
-        template = self.get_collision_attrib_template()
-        template['type'] = 'sphere'
-        template['rgba'] = array_to_string(self.rgba)
-        template['size'] = array_to_string(self.size)
-        body.append(ET.Element('geom', attrib=template))
-        return body
+    def get_collision(self, name=None, site=False):
+        return self._get_collision(name=name, site=site, ob_type='sphere')
     
     # returns a copy, Returns xml body node
-    def get_visual(self):
-        body = ET.Element('body')
-        template = self.get_visual_attrib_template()
-        template['type'] = 'sphere'
-        template['rgba'] = array_to_string(self.rgba)
-        # shrink so that we don't see flickering when showing both visual and collision
-        template['size'] = array_to_string(self.size * visual_size_shrink_ratio) 
-        template['group'] = '0'
-        body.append(ET.Element('geom', attrib=template))
-        template_gp1 = copy.deepcopy(template)
-        template_gp1['group'] = '1'
-        body.append(ET.Element('geom', attrib=template_gp1))
-        return body
+    def get_visual(self, name=None, site=False):
+        return self._get_visual(name=name, site=site, ob_type='sphere')
 
 class CapsuleObject(MujocoGeneratedObject):
     """
@@ -287,29 +287,12 @@ class CapsuleObject(MujocoGeneratedObject):
         return self.size[0]
 
     # returns a copy, Returns xml body node
-    def get_collision(self):
-        body = ET.Element('body')
-        template = self.get_collision_attrib_template()
-        template['type'] = 'capsule'
-        template['rgba'] = array_to_string(self.rgba)
-        template['size'] = array_to_string(self.size)
-        body.append(ET.Element('geom', attrib=template))
-        return body
+    def get_collision(self, name=None, site=False):
+        return self._get_collision(name=name, site=site, ob_type='capsule')
     
     # returns a copy, Returns xml body node
-    def get_visual(self):
-        body = ET.Element('body')
-        template = self.get_visual_attrib_template()
-        template['type'] = 'capsule'
-        template['rgba'] = array_to_string(self.rgba)
-        # shrink so that we don't see flickering when showing both visual and collision
-        template['size'] = array_to_string(self.size * visual_size_shrink_ratio) 
-        template['group'] = '0'
-        body.append(ET.Element('geom', attrib=template))
-        template_gp1 = copy.deepcopy(template)
-        template_gp1['group'] = '1'
-        body.append(ET.Element('geom', attrib=template_gp1))
-        return body
+    def get_visual(self, name=None, site=False):
+        return self._get_visual(name=name, site=site, ob_type='capsule')
 
 
 class RandomBoxObject(BoxObject):
@@ -321,6 +304,11 @@ class RandomBoxObject(BoxObject):
             np.random.seed(seed)
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(3)])
         rgba = np.array([np.random.uniform(0, 1) for i in range(3)] + [1])
+        
+        # # create a custom name depending on system time
+        # t1, t2 = str(time.time()).split('.')
+        # name = "random_box_{}_{}".format(t1, t2)
+        # print("creating object with name: {}".format(name))
         super().__init__(size, rgba)
 
 class RandomCylinderObject(CylinderObject):
@@ -332,6 +320,11 @@ class RandomCylinderObject(CylinderObject):
             np.random.seed(seed)
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(2)])
         rgba = np.array([np.random.uniform(0, 1) for i in range(3)] + [1])
+
+        # # create a custom name depending on system time
+        # t1, t2 = str(time.time()).split('.')
+        # name = "random_cylinder_{}_{}".format(t1, t2)
+        # print("creating object with name: {}".format(name))
         super().__init__(size, rgba)
 
 class RandomBallObject(BallObject):
@@ -343,6 +336,11 @@ class RandomBallObject(BallObject):
             np.random.seed(seed)
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(1)])
         rgba = np.array([np.random.uniform(0, 1) for i in range(3)] + [1])
+        
+        # # create a custom name depending on system time
+        # t1, t2 = str(time.time()).split('.')
+        # name = "random_ball_{}_{}".format(t1, t2)
+        # print("creating object with name: {}".format(name))
         super().__init__(size, rgba)
 
 class RandomCapsuleObject(CapsuleObject):
@@ -354,6 +352,10 @@ class RandomCapsuleObject(CapsuleObject):
             np.random.seed(seed)
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(2)])
         rgba = np.array([np.random.uniform(0, 1) for i in range(3)] + [1])
+        
+        # # create a custom name depending on system time
+        # t1, t2 = str(time.time()).split('.')
+        # name = "random_capsule_{}_{}".format(t1, t2)
+        # print("creating object with name: {}".format(name))
         super().__init__(size, rgba)
-
 

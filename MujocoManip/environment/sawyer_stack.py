@@ -57,6 +57,13 @@ class SawyerStackEnv(SawyerEnv):
         self.max_horizontal_radius = max([di['object_horizontal_radius'] for di in self.object_metadata])
         self._pos_offset = np.copy(self.physics.named.data.site_xpos['table_top'])
 
+        # bookkeeping for objects and their sites
+        self.object_names = [di['object_name'] for di in self.object_metadata]
+        self.site_id2name = self.physics.named.model.site_pos.axes.row.names
+        self.site_name2id = {}
+        for i, site_name in enumerate(self.site_id2name):
+            self.site_name2id[site_name] = i
+
     def _load_model(self):
         super()._load_model()
         self.mujoco_robot.place_on([0,0,0])
@@ -184,6 +191,37 @@ class SawyerStackEnv(SawyerEnv):
         high=np.ones(28 + 9 * self.n_objects) * 100.
         # )
         return low, high
+
+    def _gripper_visualization(self):
+        """
+        Do any needed visualization here.
+
+        Overrides superclass implementations.
+        """
+
+        # color the gripper site appropriately based on distance to nearest object
+
+        # find closest object
+        square_dist = lambda x : np.sum(np.square(x - self.physics.named.data.site_xpos['grip_site']))
+        dists = list(map(square_dist, self.physics.data.site_xpos))
+        dists[self.site_name2id['grip_site']] = np.inf # make sure we don't pick the same site
+        dists[self.site_name2id['grip_site_cylinder']] = np.inf
+        min_dist = np.min(dists)
+        ob_id = np.argmin(dists)
+        ob_name = self.site_id2name[ob_id]
+        print("closest object is {} at distance {}".format(ob_name, min_dist))
+
+        # set RGBA for the EEF site here
+        max_dist = 0.1 
+        scaled = (1.0 - min(min_dist / max_dist, 1.)) ** 15
+        rgba = np.zeros(4)
+        rgba[0] = 1 - scaled
+        rgba[1] = scaled
+        rgba[3] = 0.5
+
+        # rgba = np.random.rand(4)
+        # rgba[-1] = 0.5
+        self.physics.named.model.site_rgba['grip_site'] = rgba
 
     ####
     # Properties for objects

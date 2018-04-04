@@ -15,6 +15,7 @@ from MujocoManip import DataCollector
 
 def collect_random_data(env, timesteps=1000):
     obs = env.reset()
+    dof = env.dof()
 
     # rotate the gripper so we can see it easily 
     env.env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
@@ -27,7 +28,7 @@ def collect_random_data(env, timesteps=1000):
             print(t + 1)
 
 
-def playback_data(ep_dir):
+def playback_data(env, ep_dir):
     """
     Playback data from an episode. 
 
@@ -85,7 +86,7 @@ if __name__ == '__main__':
 
     # direct = "./ep_1521078227_647896"
     direct = env.ep_directory
-    playback_data(direct)
+    playback_data(env, direct)
 
 
 

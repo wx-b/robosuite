@@ -15,6 +15,8 @@ class SawyerEnv(MujocoEnv):
 
         ### TODO: any joint positions need to be set here? ###
 
+        # self.physics.model.name2id('grip_site', 'site') # can get IDs this way
+
         # setup mocap stuff if necessary
         if self.use_eef_ctrl:
             self._setup_mocap()
@@ -113,6 +115,11 @@ class SawyerEnv(MujocoEnv):
 
                 # gravity compensation
                 self.physics.named.data.qfrc_applied[self.mujoco_robot.joints] = self.physics.named.data.qfrc_bias[self.mujoco_robot.joints]
+
+    def _post_action(self, action):
+        ret = super()._post_action(action)
+        self._gripper_visualization()
+        return ret
 
     def _get_observation(self):
         obs = super()._get_observation()
@@ -283,5 +290,13 @@ class SawyerEnv(MujocoEnv):
     def _joint_velocities(self):
         #return self.sim.data.qvel[self.mujoco_robot.joints]
         return self.physics.named.data.qvel[self.mujoco_robot.joints]
+
+    def _gripper_visualization(self):
+        """
+        Do any needed visualization here.
+        """
+        
+        # By default, don't do any coloring.
+        self.physics.named.model.site_rgba['grip_site'] = [0., 0., 0., 0.]
 
 

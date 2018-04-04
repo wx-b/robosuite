@@ -37,15 +37,15 @@ class StackerTask(MujocoWorldBase):
 
             self.merge_asset(mujoco_object)
             # Load object
-            stacker_object = mujoco_object.get_full()
-            stacker_object.set('name', object_name)
+            stacker_object = mujoco_object.get_full(name=object_name, site=True)
+            # stacker_object.set('name', object_name)
             stacker_object.append(joint(name=joint_name, type='free'))
             self.objects.append(stacker_object)
             self.worldbody.append(stacker_object)
 
             # Load target
-            stacker_target = mujoco_object.get_visual()
-            stacker_target.set('name', target_name)
+            stacker_target = mujoco_object.get_visual(name=target_name, site=False)
+            # stacker_target.set('name', target_name)
             set_alpha(stacker_target, 0.2)
             self.targets.append(stacker_target)
             self.worldbody.append(stacker_target)
