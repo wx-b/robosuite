@@ -209,7 +209,7 @@ class SawyerStackEnv(SawyerEnv):
         min_dist = np.min(dists)
         ob_id = np.argmin(dists)
         ob_name = self.site_id2name[ob_id]
-        print("closest object is {} at distance {}".format(ob_name, min_dist))
+        # print("closest object is {} at distance {}".format(ob_name, min_dist))
 
         # set RGBA for the EEF site here
         max_dist = 0.1 

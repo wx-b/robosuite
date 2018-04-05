@@ -3,6 +3,7 @@ from MujocoManip.miscellaneous import MujocoPyRenderer
 from MujocoManip.miscellaneous.utils import *
 
 from mujoco_py import MjSim
+import mujoco_py
 import numpy as np
 
 
@@ -16,6 +17,7 @@ class SawyerViewer(object):
 
         # make the environment
         self._env = MM.make(env_name, **kwargs)
+        self._env.reset()
 
         # grab the xml description of the environment
         self._model = self._env.task.get_model(mode='mujoco_py')
