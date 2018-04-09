@@ -47,4 +47,12 @@ def joint(**kwargs):
     """
     element = ET.Element('joint', attrib=kwargs)
     return element
+
+def actuator(joint, act_type, **kwargs):
+    """
+        Create a joint tag with attributes specified by @**kwargs
+    """
+    element = ET.Element(act_type, attrib=kwargs)
+    element.set('joint', joint)
+    return element
     
