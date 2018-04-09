@@ -55,14 +55,7 @@ class SawyerStackEnv(SawyerEnv):
 
         super().__init__(gripper=gripper, **kwargs)
         self.max_horizontal_radius = max([di['object_horizontal_radius'] for di in self.object_metadata])
-        self._pos_offset = np.copy(self.physics.named.data.site_xpos['table_top'])
-
-        # bookkeeping for objects and their sites
-        self.object_names = [di['object_name'] for di in self.object_metadata]
-        self.site_id2name = self.physics.named.model.site_pos.axes.row.names
-        self.site_name2id = {}
-        for i, site_name in enumerate(self.site_id2name):
-            self.site_name2id[site_name] = i
+        self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
 
     def _load_model(self):
         super()._load_model()
@@ -78,15 +71,15 @@ class SawyerStackEnv(SawyerEnv):
         self.n_objects = len(self.object_metadata)
 
         self.model = self.task
+        self.model.place_objects()
 
     def _get_reference(self):
         super()._get_reference()
-        # self._ref_object_pos_indexes = []
+        self._ref_object_pos_indexes = []
         self._ref_object_vel_indexes = []
         for di in self.object_metadata:
-            self._ref_object_pos_indexes.append(self.model.get_joint_qpos_addr(di['joint_name']))
-            self._ref_object_vel_indexes.append(self.model.get_joint_qvel_addr(di['joint_name']))
-
+            self._ref_object_pos_indexes.append(self.sim.model.get_joint_qpos_addr(di['joint_name']))
+            self._ref_object_vel_indexes.append(self.sim.model.get_joint_qvel_addr(di['joint_name']))
     
     def _reset_internal(self):
         super()._reset_internal()
@@ -202,13 +195,13 @@ class SawyerStackEnv(SawyerEnv):
         # color the gripper site appropriately based on distance to nearest object
 
         # find closest object
-        square_dist = lambda x : np.sum(np.square(x - self.physics.named.data.site_xpos['grip_site']))
-        dists = list(map(square_dist, self.physics.data.site_xpos))
-        dists[self.site_name2id['grip_site']] = np.inf # make sure we don't pick the same site
-        dists[self.site_name2id['grip_site_cylinder']] = np.inf
+        square_dist = lambda x : np.sum(np.square(x - self.sim.data.get_site_xpos('grip_site')))
+        dists = list(map(square_dist, self.sim.data.site_xpos))
+        dists[self.eef_site_id] = np.inf # make sure we don't pick the same site
+        dists[self.eef_cylinder_id] = np.inf
         min_dist = np.min(dists)
         ob_id = np.argmin(dists)
-        ob_name = self.site_id2name[ob_id]
+        ob_name = self.sim.model.site_id2name(ob_id)
         # print("closest object is {} at distance {}".format(ob_name, min_dist))
 
         # set RGBA for the EEF site here
@@ -221,7 +214,7 @@ class SawyerStackEnv(SawyerEnv):
 
         # rgba = np.random.rand(4)
         # rgba[-1] = 0.5
-        self.physics.named.model.site_rgba['grip_site'] = rgba
+        self.sim.model.site_rgba[self.eef_site_id] = rgba = rgba
 
     ####
     # Properties for objects

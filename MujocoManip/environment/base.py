@@ -1,5 +1,6 @@
 import numpy as np
 from MujocoManip.miscellaneous import SimulationError, XMLError, MujocoPyRenderer
+from mujoco_py import MjSim
 from collections import OrderedDict
 
 REGISTERED_ENVS = {}
@@ -31,8 +32,11 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
             TODO(extension): What about control_freq = a + bN(0,1) to simulate imperfect timing
         """
+
+        ### TODO: fix @_load_model if needed ###
         self._load_model()
-        self.sim = self.model.get_model(mode='mujoco_py')
+        self.mjpy_model = self.model.get_model(mode='mujoco_py')
+        self.sim = MjSim(self.mjpy_model)
         self.initialize_time(control_freq)
         self.viewer = MujocoPyRenderer(self.sim)
         self.sim_state_initial = self.sim.get_state()

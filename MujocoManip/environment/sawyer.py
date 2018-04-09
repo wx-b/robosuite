@@ -51,14 +51,23 @@ class SawyerEnv(MujocoEnv):
 
     def _get_reference(self):
         super()._get_reference()
-        self.joint_pos_actuators = [actuator for actuator in self.physics.named.model.actuator_gear if actuator.startswith("pos")]
-        self.joint_vel_actuators = [actuator for actuator in self.physics.named.model.actuator_gear if actuator.startswith("vel")]
+        # indices for joints in qpos, qvel
+        self._ref_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr('right_j{}'.format(x)) for x in range(7)]
+        self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr('right_j{}'.format(x)) for x in range(7)]
+
         # indices for joint pos actuation, joint vel actuation, gripper actuation
-        self._ref_joint_pos_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
+        self._ref_joint_pos_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
                                                                                       if actuator.startswith("pos")]
-        self._ref_joint_vel_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
+        self._ref_joint_vel_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
                                                                                       if actuator.startswith("vel")]
 
+        if self.has_gripper:
+            self._ref_joint_gripper_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
+                                                                                              if actuator.startswith("gripper")]
+
+        # IDs of sites for gripper visualization
+        self.eef_site_id = self.sim.model.site_name2id('grip_site')
+        self.eef_cylinder_id = self.sim.model.site_name2id('grip_site_cylinder')
 
     # Note: Overrides super
     def _pre_action(self, action):
@@ -290,6 +299,6 @@ class SawyerEnv(MujocoEnv):
         """
         
         # By default, don't do any coloring.
-        self.physics.named.model.site_rgba['grip_site'] = [0., 0., 0., 0.]
+        self.sim.model.site_rgba[self.eef_site_id] = [0., 0., 0., 0.]
 
 
