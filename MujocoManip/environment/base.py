@@ -2,6 +2,7 @@ import numpy as np
 from MujocoManip.miscellaneous import SimulationError, XMLError, MujocoPyRenderer
 from mujoco_py import MjSim
 from collections import OrderedDict
+import glfw
 
 REGISTERED_ENVS = {}
 
@@ -24,9 +25,10 @@ class EnvMeta(type):
         return cls
 
 class MujocoEnv(object, metaclass=EnvMeta):
-    def __init__(self, control_freq=100, horizon=500, ignore_done=False, **kwargs):
+    def __init__(self, display=True, control_freq=100, horizon=500, ignore_done=False, **kwargs):
         """
             Initialize a Mujoco Environment
+            @display: If true, render the simulation state in a viewer instead of headless mode.
             @control_freq in Hz, how many control signals to receive in every second
             @ignore_done: if True, never terminate the env
 
@@ -34,17 +36,21 @@ class MujocoEnv(object, metaclass=EnvMeta):
         """
 
         ### TODO: fix @_load_model if needed ###
-        self._load_model()
-        self.mjpy_model = self.model.get_model(mode='mujoco_py')
-        self.sim = MjSim(self.mjpy_model)
-        self.initialize_time(control_freq)
-        self.viewer = MujocoPyRenderer(self.sim)
-        self.sim_state_initial = self.sim.get_state()
-        self._get_reference()
-        self.done = False
-        self.t = 0
+        # self._load_model()
+        # self.mjpy_model = self.model.get_model(mode='mujoco_py')
+        # self.sim = MjSim(self.mjpy_model)
+        # self.initialize_time(control_freq)
+        # self.viewer = MujocoPyRenderer(self.sim)
+        # self.sim_state_initial = self.sim.get_state()
+        # self._get_reference()
+        # self.done = False
+        # self.t = 0
+        self.display = display
+        self.control_freq = control_freq
         self.horizon = horizon
         self.ignore_done = ignore_done
+        self.viewer = None
+        self._reset_internal()
 
         # for key in kwargs:
         #     print('Warning: Parameter {} not recognized'.format(key))
@@ -72,11 +78,24 @@ class MujocoEnv(object, metaclass=EnvMeta):
         pass
 
     def reset(self):
+
+        # if there is an active viewer window, destroy it
+        if self.viewer is not None:
+            self.viewer.close()
+        self.viewer = None
         self._reset_internal()
         return self._get_observation()
 
     def _reset_internal(self):
-        self.sim.set_state(self.sim_state_initial)
+        # self.sim.set_state(self.sim_state_initial)
+        self._load_model()
+        self.mjpy_model = self.model.get_model(mode='mujoco_py')
+        self.sim = MjSim(self.mjpy_model)
+        self.initialize_time(self.control_freq)
+        if self.display:
+            self.viewer = MujocoPyRenderer(self.sim)
+        self.sim_state_initial = self.sim.get_state()
+        self._get_reference()
         self.cur_time = 0
         self.t = 0
         self.done = False
@@ -120,3 +139,15 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
     def action_spec(self):
         raise NotImplementedError
+
+    def close(self):
+        """
+        Do any cleanup necessary here.
+        """
+        
+        # if there is an active viewer window, destroy it
+        if self.viewer is not None:
+            glfw.destroy_window(self.viewer.window)
+        self.viewer = None
+
+

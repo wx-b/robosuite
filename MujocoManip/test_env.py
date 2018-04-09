@@ -38,7 +38,7 @@ if __name__ == '__main__':
         env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
         # env.env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
-        for i in range(20000):
+        for i in range(1000):
             # print(obs[len(obs) - 6: len(obs) - 3])
             # print(obs[len(obs) - 9: len(obs) - 6])
             # action = obs[len(obs) - 3: len(obs)]
@@ -55,9 +55,9 @@ if __name__ == '__main__':
             env.render()
             # time.sleep(0.2)
 
-            if i % 100 == 99:
+            if i % 100 == 0:
                 print(i)
-                break
+                # break
             if done:
                 print('done: {}'.format(reward))
                 break
