@@ -96,12 +96,12 @@ class MujocoXMLObject(MujocoXML, MujocoObject):
         horizontal_radius_site = self.worldbody.find("./site[@name='horizontal_radius_site']")
         return string_to_array(horizontal_radius_site.get('pos'))[0]
 
-    def get_collision(self):
+    def get_collision(self, name=None, site=False):
         collision = copy.deepcopy(self.worldbody.find("./body[@name='collision']"))
         collision.attrib.pop('name')
         return collision
 
-    def get_visual(self, name=None):
+    def get_visual(self, name=None, site=False):
         visual = copy.deepcopy(self.worldbody.find("./body[@name='visual']"))
         visual.attrib.pop('name')
         return visual
