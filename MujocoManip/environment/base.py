@@ -1,5 +1,5 @@
 import numpy as np
-from MujocoManip.miscellaneous import SimulationError, XMLError, DmControlRenderer
+from MujocoManip.miscellaneous import SimulationError, XMLError, MujocoPyRenderer
 from collections import OrderedDict
 
 REGISTERED_ENVS = {}
@@ -32,10 +32,10 @@ class MujocoEnv(object, metaclass=EnvMeta):
             TODO(extension): What about control_freq = a + bN(0,1) to simulate imperfect timing
         """
         self._load_model()
-        self.physics = self.model.get_model(mode='dm_control')
+        self.sim = self.model.get_model(mode='mujoco_py')
         self.initialize_time(control_freq)
-        self.viewer = DmControlRenderer(self.physics)
-        # self.sim_state_initial = self.sim.get_state()
+        self.viewer = MujocoPyRenderer(self.sim)
+        self.sim_state_initial = self.sim.get_state()
         self._get_reference()
         self.done = False
         self.t = 0
@@ -51,7 +51,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
             Initialize the time constants used for simulation
         """
         self.cur_time = 0
-        self.model_timestep = self.physics.model.opt.timestep
+        self.model_timestep = self.sim.model.opt.timestep
         if self.model_timestep <= 0:
             raise XMLError('xml model defined non-positive time step')
         self.control_freq = control_freq
@@ -69,11 +69,10 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
     def reset(self):
         self._reset_internal()
-        self.physics.reload_from_xml_string(self.model.get_xml())
         return self._get_observation()
 
     def _reset_internal(self):
-        # self.sim.set_state(self.sim_state_initial)
+        self.sim.set_state(self.sim_state_initial)
         self.cur_time = 0
         self.t = 0
         self.done = False
@@ -90,7 +89,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
             self._pre_action(action)
             end_time = self.cur_time + self.control_timestep
             while self.cur_time < end_time:
-                self.physics.step()
+                self.sim.step()
                 self.cur_time += self.model_timestep
             reward, done, info = self._post_action(action)
             return self._get_observation(), reward, done, info
@@ -98,7 +97,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
             return self._get_observation(), 0, True, None
 
     def _pre_action(self, action):
-        self.physics.data.ctrl[:] = action
+        self.sim.data.ctrl[:] = action
 
     def _post_action(self, action):
         self.done = (self._check_lose() or self._check_win() or self.t >= self.horizon) and (not self.ignore_done)

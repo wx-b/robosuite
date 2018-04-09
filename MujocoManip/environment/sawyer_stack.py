@@ -82,10 +82,10 @@ class SawyerStackEnv(SawyerEnv):
     def _get_reference(self):
         super()._get_reference()
         # self._ref_object_pos_indexes = []
-        # self._ref_object_vel_indexes = []
-        # for di in self.object_metadata:
-        #     self._ref_object_pos_indexes.append(self.model.get_joint_qpos_addr(di['joint_name']))
-        #     self._ref_object_vel_indexes.append(self.model.get_joint_qvel_addr(di['joint_name']))
+        self._ref_object_vel_indexes = []
+        for di in self.object_metadata:
+            self._ref_object_pos_indexes.append(self.model.get_joint_qpos_addr(di['joint_name']))
+            self._ref_object_vel_indexes.append(self.model.get_joint_qvel_addr(di['joint_name']))
 
     
     def _reset_internal(self):
@@ -229,22 +229,24 @@ class SawyerStackEnv(SawyerEnv):
 
     def _object_pos(self, i):
         object_name = self.object_metadata[i]['object_name']
-        return self.physics.named.data.xpos[object_name] - self._pos_offset
+        return self.sim.data.get_body_xpos(object_name) - self._pos_offset
 
     def _set_object_pos(self, i, pos):
-        self.physics.named.data.qpos[self.object_metadata[i]['joint_name']][0:3] = pos + self._pos_offset
+        low, high = self._ref_object_pos_indexes[i]
+        self.sim.data.qpos[low:high] = pos + self._pos_offset
 
     def _object_vel(self, i):
         object_name = self.object_metadata[i]['object_name']
-        return self.physics.named.data.subtree_linvel[object_name]
+        return self.sim.data.get_body_xvelp(object_name)
 
     def _set_object_vel(self, i, vel):
-        self.physics.named.data.qvel[self.object_metadata[i]['joint_name']][0:3] = vel
+        low, high = self._ref_object_vel_indexes[i]
+        self.sim.data.qvel[low:high] = vel
 
     def _target_pos(self, i):
         target_name = self.object_metadata[i]['target_name']
-        return self.physics.named.data.xpos[target_name] - self._pos_offset
+        return self.sim.model.body_pos[self.sim.model.body_name2id(target_name)] - self._pos_offset
 
     def _set_target_pos(self, i, pos):
         target_name = self.object_metadata[i]['target_name']
-        self.physics.named.model.body_pos[target_name] = pos + self._pos_offset
+        self.sim.model.body_pos[self.sim.model.body_name2id(target_name)] = pos + self._pos_offset

@@ -94,11 +94,11 @@ class SawyerReachEnv(SawyerEnv):
 
     @property
     def _target_pos(self):
-        return self.physics.named.data.xpos['target'] - self._pos_offset
+        return self.sim.model.body_pos[self.sim.model.body_name2id('target')] - self._pos_offset
 
     @_target_pos.setter
     def _target_pos(self, pos):
-        self.physics.named.model.body_pos['target'] = pos + self._pos_offset
+        self.sim.model.body_pos[self.sim.model.body_name2id('target')] = pos + self._pos_offset
 
     def observation_space(self):
         low=np.ones(self.robot.dof() + 3) * -100.

@@ -537,7 +537,7 @@ def mjpy_mocap_set_action(sim, action):
 
         mjpy_reset_mocap2body_xpos(sim)
         sim.data.mocap_pos[:] = sim.data.mocap_pos + pos_delta
-        sim.data.mocap_quat[:] = sim.data.mocap_quat + quat_delta
+        sim.data.mocap_quat[:] = quat_delta #sim.data.mocap_quat + quat_delta
 
 
 def mjpy_reset_mocap_welds(sim):
