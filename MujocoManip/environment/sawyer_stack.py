@@ -54,8 +54,13 @@ class SawyerStackEnv(SawyerEnv):
         self.win_rel_tolerance = win_rel_tolerance
 
         super().__init__(gripper=gripper, **kwargs)
+
+        # some bookkeeping
         self.max_horizontal_radius = max([di['object_horizontal_radius'] for di in self.object_metadata])
         self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
+
+        self.object_names = [di['object_name'] for di in self.object_metadata]
+        self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
     def _load_model(self):
         super()._load_model()
@@ -194,14 +199,18 @@ class SawyerStackEnv(SawyerEnv):
 
         # color the gripper site appropriately based on distance to nearest object
 
+        ### TODO: we could probably clean this up. Also should probably include the table site. ###
+
         # find closest object
         square_dist = lambda x : np.sum(np.square(x - self.sim.data.get_site_xpos('grip_site')))
-        dists = list(map(square_dist, self.sim.data.site_xpos))
+        dists = np.array(list(map(square_dist, self.sim.data.site_xpos)))
         dists[self.eef_site_id] = np.inf # make sure we don't pick the same site
         dists[self.eef_cylinder_id] = np.inf
-        min_dist = np.min(dists)
-        ob_id = np.argmin(dists)
-        ob_name = self.sim.model.site_id2name(ob_id)
+        ob_dists = dists[self.object_site_ids] # filter out object sites we care about
+        min_dist = np.min(ob_dists)
+        ob_id = np.argmin(ob_dists)
+        # ob_name = self.sim.model.site_id2name(ob_id)
+        ob_name = self.object_names[ob_id]
         # print("closest object is {} at distance {}".format(ob_name, min_dist))
 
         # set RGBA for the EEF site here
@@ -214,7 +223,7 @@ class SawyerStackEnv(SawyerEnv):
 
         # rgba = np.random.rand(4)
         # rgba[-1] = 0.5
-        self.sim.model.site_rgba[self.eef_site_id] = rgba = rgba
+        self.sim.model.site_rgba[self.eef_site_id] = rgba
 
     ####
     # Properties for objects

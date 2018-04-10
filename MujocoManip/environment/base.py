@@ -3,6 +3,7 @@ from MujocoManip.miscellaneous import SimulationError, XMLError, MujocoPyRendere
 from mujoco_py import MjSim
 from collections import OrderedDict
 import glfw
+from mujoco_py import load_model_from_path, load_model_from_xml
 
 REGISTERED_ENVS = {}
 
@@ -151,8 +152,6 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.viewer = None
 
         # load model from xml
-        self._load_model()
-        from mujoco_py import load_model_from_path, load_model_from_xml
         self.mjpy_model = load_model_from_xml(xml_string)
 
         self.sim = MjSim(self.mjpy_model)
