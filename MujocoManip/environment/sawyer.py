@@ -22,19 +22,18 @@ class SawyerEnv(MujocoEnv):
             self._setup_mocap()
         
     def _setup_mocap(self):
-        reset_mocap_welds(self.physics)
-        self.physics.forward()
+        mjpy_reset_mocap_welds(self.sim)
+        self.sim.forward()
 
         # Move end effector into position.
-        gripper_target = self.physics.named.data.xpos['right_hand']
-        gripper_rotation = self.physics.named.data.xquat['right_hand']
-        # gripper_target = np.array([-0.498, 0.005, -0.431]) + self.sim.data.get_site_xpos('robot0:grip')
-        # gripper_rotation = np.array([0., 0., 1., 0.])
+        gripper_target = self.sim.data.get_body_xpos('right_hand')
+        gripper_rotation = self.sim.data.get_body_quat('right_hand')
 
-        self.physics.named.data.mocap_pos['mocap'] = gripper_target
-        self.physics.named.data.mocap_quat['mocap'] = gripper_rotation
+        self.sim.data.set_mocap_pos('mocap', gripper_target)
+        self.sim.data.set_mocap_quat('mocap', gripper_rotation)
+
         for _ in range(10):
-            self.physics.step()
+            self.sim.step()
 
     def _load_model(self):
         super()._load_model()
@@ -45,22 +44,30 @@ class SawyerEnv(MujocoEnv):
 
     def _reset_internal(self):
         super()._reset_internal()
-        self.physics.named.data.qpos[self.mujoco_robot.joints] = self.mujoco_robot.rest_pos
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.rest_pos
 
         if self.has_gripper:
-            self.physics.named.data.qpos[self.gripper.joints] = self.gripper.rest_pos
+            self.sim.data.qpos[self._ref_joint_gripper_actuator_indexes] = self.gripper.rest_pos
 
     def _get_reference(self):
         super()._get_reference()
-        # self.joint_pos_actuators = [actuator for actuator in self.physics.named.model.actuator_gear if actuator.startswith("pos")]
-        # self.joint_vel_actuators = [actuator for actuator in self.physics.named.model.actuator_gear if actuator.startswith("vel")]
-        # # indices for joint pos actuation, joint vel actuation, gripper actuation
-        # self._ref_joint_pos_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
-        #                                                                               if actuator.startswith("pos")]
-        # self._ref_joint_vel_actuator_indexes = [self.model.actuator_name2id(actuator) for actuator in self.model.actuator_names 
-        #                                                                               if actuator.startswith("vel")]
-        
-                                                                                          # if actuator.startswith("gripper")]
+        # indices for joints in qpos, qvel
+        self._ref_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr('right_j{}'.format(x)) for x in range(7)]
+        self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr('right_j{}'.format(x)) for x in range(7)]
+
+        # indices for joint pos actuation, joint vel actuation, gripper actuation
+        self._ref_joint_pos_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
+                                                                                      if actuator.startswith("pos")]
+        self._ref_joint_vel_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
+                                                                                      if actuator.startswith("vel")]
+
+        if self.has_gripper:
+            self._ref_joint_gripper_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
+                                                                                              if actuator.startswith("gripper")]
+
+        # IDs of sites for gripper visualization
+        self.eef_site_id = self.sim.model.site_name2id('grip_site')
+        self.eef_cylinder_id = self.sim.model.site_name2id('grip_site_cylinder')
 
     # Note: Overrides super
     def _pre_action(self, action):
@@ -81,14 +88,16 @@ class SawyerEnv(MujocoEnv):
             action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
 
             # Apply action to simulation.
-            ctrl_set_action(self.physics, action)
-            mocap_set_action(self.physics, action)
+            mjpy_ctrl_set_action(self.sim, action)
+            mjpy_mocap_set_action(self.sim, action)
 
             # gravity compensation
-            self.physics.named.data.qfrc_applied[self.mujoco_robot.joints] = self.physics.named.data.qfrc_bias[self.mujoco_robot.joints]
+            self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
 
         else:
             if self.use_force_ctrl:
+
+                ### TODO: convert the following in mujoco_py??? ###
 
                 ### TODO: is this force acting in the end effector frame? If so, we need to translate to base coords... ###
 
@@ -97,7 +106,7 @@ class SawyerEnv(MujocoEnv):
                 self.physics.named.data.xfrc_applied['right_hand'] = action[:6]
 
                 # gravity compensation
-                self.physics.named.data.qfrc_applied[self.mujoco_robot.joints] = self.physics.named.data.qfrc_bias[self.mujoco_robot.joints]
+                self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
             else:
                 action = np.clip(action, -1, 1)    
                 if self.has_gripper:
@@ -107,14 +116,14 @@ class SawyerEnv(MujocoEnv):
                     action = np.concatenate([arm_action, gripper_action_actual])
 
                 # rescale normalized action to control ranges
-                ctrl_range = self.physics.model.actuator_ctrlrange
+                ctrl_range = self.sim.model.actuator_ctrlrange
                 bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
                 weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
                 applied_action = bias + weight * action
-                self.physics.data.ctrl[:] = applied_action
+                self.sim.data.ctrl[:] = applied_action
 
                 # gravity compensation
-                self.physics.named.data.qfrc_applied[self.mujoco_robot.joints] = self.physics.named.data.qfrc_bias[self.mujoco_robot.joints]
+                self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
 
     def _post_action(self, action):
         ret = super()._post_action(action)
@@ -124,14 +133,10 @@ class SawyerEnv(MujocoEnv):
     def _get_observation(self):
         obs = super()._get_observation()
         # TODO: make sure no overwriting is happening
-        joint_pos = self.physics.named.data.qpos[self.mujoco_robot.joints]
+        joint_pos = [self.sim.data.qpos[x] for x in self._ref_joint_pos_indexes]
         joint_pos_sin = np.sin(joint_pos)
         joint_pos_cos = np.cos(joint_pos)
-        joint_vel = self.physics.named.data.qvel[self.mujoco_robot.joints]
-        # obs['joint_pos'] = [self.phycis.named.data.qpos[joint] for joint in self.joints]
-        # obs['joint_pos_sin'] = np.sin(obs['joint_pos'])
-        # obs['joint_pos_cos'] = np.cos(obs['joint_pos'])
-        # obs['joint_vel'] = [self.phycis.named.data.qvel[joint] for joint in self.joints]
+        joint_vel = [self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes]
         return np.concatenate([obs, joint_pos, joint_pos_sin, joint_pos_cos, joint_vel])
 
     def dof(self):
@@ -149,14 +154,14 @@ class SawyerEnv(MujocoEnv):
         object in the base frame.
         """
 
-        pos_in_world = self.physics.named.data.xpos[name]
-        rot_in_world = self.physics.named.data.xmat[name].reshape((3, 3))
+        pos_in_world = self.sim.data.get_body_xpos(name)
+        rot_in_world = self.sim.data.get_body_xmat(name).reshape((3, 3))
         # # note we convert (w, x, y, z) quat to (x, y, z, w)
         # eef_rot_in_world = quat2mat(self.physics.named.data.xquat['right_hand'][[1, 2, 3, 0]])
         pose_in_world = make_pose(pos_in_world, rot_in_world)
 
-        base_pos_in_world = self.physics.named.data.xpos['base']
-        base_rot_in_world = self.physics.named.data.xmat['base'].reshape((3, 3))
+        base_pos_in_world = self.sim.data.get_body_xpos('base')
+        base_rot_in_world = self.sim.data.get_body_xmat('base').reshape((3, 3))
         # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
         base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
         world_pose_in_base = pose_inv(base_pose_in_world)
@@ -168,8 +173,8 @@ class SawyerEnv(MujocoEnv):
         """
         Helper method to force robot joint positions to the passed values.
         """
-        self.physics.named.data.qpos[self.mujoco_robot.joints] = jpos
-        self.physics.forward()
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = jpos
+        self.sim.forward()
 
     @property
     #TODO: fix it
@@ -216,17 +221,16 @@ class SawyerEnv(MujocoEnv):
 
         ### TODO: check this function for correctness... ###
 
-        base_pos_in_world = self.physics.named.data.xpos['base']
-        base_rot_in_world = self.physics.named.data.xmat['base'].reshape((3, 3))
+        base_pos_in_world = self.sim.data.get_body_xpos('base')
+        base_rot_in_world = self.sim.data.get_body_xmat('base').reshape((3, 3))
         # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
         base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
         world_pose_in_base = pose_inv(base_pose_in_world)
 
-
         ### TODO: convert COM velocity to frame velocity here... ###
-        total_vel = self.physics.named.data.cvel['right_hand']
-        eef_vel_in_world = total_vel[3:]
-        eef_ang_vel_in_world = total_vel[:3]
+
+        eef_vel_in_world = self.sim.data.get_body_xvelp('right_hand')
+        eef_ang_vel_in_world = self.sim.data.get_body_xvelr('right_hand')
 
         ### TODO: should we just rotate the axis? Or is this velocity conversion below correct? ###
         return vel_in_A_to_vel_in_B(vel_A=eef_vel_in_world, ang_vel_A=eef_ang_vel_in_world, pose_A_in_B=world_pose_in_base)
@@ -238,8 +242,8 @@ class SawyerEnv(MujocoEnv):
         to the base frame but all simulation happens with respect to the world frame.
         """
 
-        base_pos_in_world = self.physics.named.data.xpos['base']
-        base_rot_in_world = self.physics.named.data.xmat['base'].reshape((3, 3))
+        base_pos_in_world = self.sim.data.get_body_xpos('base')
+        base_rot_in_world = self.sim.data.get_body_xmat('base').reshape((3, 3))
         # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
         base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
 
@@ -283,13 +287,11 @@ class SawyerEnv(MujocoEnv):
 
     @property
     def _joint_positions(self):
-        #return self.sim.data.qpos[self.mujoco_robot.joints]
-        return self.physics.named.data.qpos[self.mujoco_robot.joints]
+        return self.sim.data.qpos[self._ref_joint_pos_indexes]
 
     @property
     def _joint_velocities(self):
-        #return self.sim.data.qvel[self.mujoco_robot.joints]
-        return self.physics.named.data.qvel[self.mujoco_robot.joints]
+        return self.sim.data.qvel[self._ref_joint_vel_indexes]
 
     def _gripper_visualization(self):
         """
@@ -297,6 +299,6 @@ class SawyerEnv(MujocoEnv):
         """
         
         # By default, don't do any coloring.
-        self.physics.named.model.site_rgba['grip_site'] = [0., 0., 0., 0.]
+        self.sim.model.site_rgba[self.eef_site_id] = [0., 0., 0., 0.]
 
 

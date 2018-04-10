@@ -1,6 +1,9 @@
 import numpy as np
-from MujocoManip.miscellaneous import SimulationError, XMLError, DmControlRenderer
+from MujocoManip.miscellaneous import SimulationError, XMLError, MujocoPyRenderer
+from mujoco_py import MjSim
 from collections import OrderedDict
+import glfw
+from mujoco_py import load_model_from_path, load_model_from_xml
 
 REGISTERED_ENVS = {}
 
@@ -23,24 +26,32 @@ class EnvMeta(type):
         return cls
 
 class MujocoEnv(object, metaclass=EnvMeta):
-    def __init__(self, control_freq=100, horizon=500, ignore_done=False, **kwargs):
+    def __init__(self, display=True, control_freq=100, horizon=500, ignore_done=False, **kwargs):
         """
             Initialize a Mujoco Environment
+            @display: If true, render the simulation state in a viewer instead of headless mode.
             @control_freq in Hz, how many control signals to receive in every second
             @ignore_done: if True, never terminate the env
 
             TODO(extension): What about control_freq = a + bN(0,1) to simulate imperfect timing
         """
-        self._load_model()
-        self.physics = self.model.get_model(mode='dm_control')
-        self.initialize_time(control_freq)
-        self.viewer = DmControlRenderer(self.physics)
+
+        ### TODO: fix @_load_model if needed ###
+        # self._load_model()
+        # self.mjpy_model = self.model.get_model(mode='mujoco_py')
+        # self.sim = MjSim(self.mjpy_model)
+        # self.initialize_time(control_freq)
+        # self.viewer = MujocoPyRenderer(self.sim)
         # self.sim_state_initial = self.sim.get_state()
-        self._get_reference()
-        self.done = False
-        self.t = 0
+        # self._get_reference()
+        # self.done = False
+        # self.t = 0
+        self.display = display
+        self.control_freq = control_freq
         self.horizon = horizon
         self.ignore_done = ignore_done
+        self.viewer = None
+        self._reset_internal()
 
         # for key in kwargs:
         #     print('Warning: Parameter {} not recognized'.format(key))
@@ -51,7 +62,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
             Initialize the time constants used for simulation
         """
         self.cur_time = 0
-        self.model_timestep = self.physics.model.opt.timestep
+        self.model_timestep = self.sim.model.opt.timestep
         if self.model_timestep <= 0:
             raise XMLError('xml model defined non-positive time step')
         self.control_freq = control_freq
@@ -68,12 +79,24 @@ class MujocoEnv(object, metaclass=EnvMeta):
         pass
 
     def reset(self):
+
+        # if there is an active viewer window, destroy it
+        if self.viewer is not None:
+            self.viewer.close()
+        self.viewer = None
         self._reset_internal()
-        self.physics.reload_from_xml_string(self.model.get_xml())
         return self._get_observation()
 
     def _reset_internal(self):
         # self.sim.set_state(self.sim_state_initial)
+        self._load_model()
+        self.mjpy_model = self.model.get_model(mode='mujoco_py')
+        self.sim = MjSim(self.mjpy_model)
+        self.initialize_time(self.control_freq)
+        if self.display:
+            self.viewer = MujocoPyRenderer(self.sim)
+        self.sim_state_initial = self.sim.get_state()
+        self._get_reference()
         self.cur_time = 0
         self.t = 0
         self.done = False
@@ -90,7 +113,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
             self._pre_action(action)
             end_time = self.cur_time + self.control_timestep
             while self.cur_time < end_time:
-                self.physics.step()
+                self.sim.step()
                 self.cur_time += self.model_timestep
             reward, done, info = self._post_action(action)
             return self._get_observation(), reward, done, info
@@ -98,7 +121,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
             return self._get_observation(), 0, True, None
 
     def _pre_action(self, action):
-        self.physics.data.ctrl[:] = action
+        self.sim.data.ctrl[:] = action
 
     def _post_action(self, action):
         self.done = (self._check_lose() or self._check_win() or self.t >= self.horizon) and (not self.ignore_done)
@@ -117,3 +140,40 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
     def action_spec(self):
         raise NotImplementedError
+
+    def reset_from_xml_string(self, xml_string):
+        """
+        Reloads the environment from an XML description of the environment.
+        """
+
+        # if there is an active viewer window, destroy it
+        if self.viewer is not None:
+            self.viewer.close()
+        self.viewer = None
+
+        # load model from xml
+        self.mjpy_model = load_model_from_xml(xml_string)
+
+        self.sim = MjSim(self.mjpy_model)
+        self.initialize_time(self.control_freq)
+        if self.display:
+            self.viewer = MujocoPyRenderer(self.sim)
+        self.sim_state_initial = self.sim.get_state()
+        self._get_reference()
+        self.cur_time = 0
+        self.t = 0
+        self.done = False
+
+        # return self._get_observation()
+
+    def close(self):
+        """
+        Do any cleanup necessary here.
+        """
+        
+        # if there is an active viewer window, destroy it
+        if self.viewer is not None:
+            self.viewer.close()
+        self.viewer = None
+
+

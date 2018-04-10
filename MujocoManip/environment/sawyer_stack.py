@@ -54,15 +54,13 @@ class SawyerStackEnv(SawyerEnv):
         self.win_rel_tolerance = win_rel_tolerance
 
         super().__init__(gripper=gripper, **kwargs)
-        self.max_horizontal_radius = max([di['object_horizontal_radius'] for di in self.object_metadata])
-        self._pos_offset = np.copy(self.physics.named.data.site_xpos['table_top'])
 
-        # bookkeeping for objects and their sites
+        # some bookkeeping
+        self.max_horizontal_radius = max([di['object_horizontal_radius'] for di in self.object_metadata])
+        self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
+
         self.object_names = [di['object_name'] for di in self.object_metadata]
-        self.site_id2name = self.physics.named.model.site_pos.axes.row.names
-        self.site_name2id = {}
-        for i, site_name in enumerate(self.site_id2name):
-            self.site_name2id[site_name] = i
+        self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
     def _load_model(self):
         super()._load_model()
@@ -78,15 +76,15 @@ class SawyerStackEnv(SawyerEnv):
         self.n_objects = len(self.object_metadata)
 
         self.model = self.task
+        self.model.place_objects()
 
     def _get_reference(self):
         super()._get_reference()
-        # self._ref_object_pos_indexes = []
-        # self._ref_object_vel_indexes = []
-        # for di in self.object_metadata:
-        #     self._ref_object_pos_indexes.append(self.model.get_joint_qpos_addr(di['joint_name']))
-        #     self._ref_object_vel_indexes.append(self.model.get_joint_qvel_addr(di['joint_name']))
-
+        self._ref_object_pos_indexes = []
+        self._ref_object_vel_indexes = []
+        for di in self.object_metadata:
+            self._ref_object_pos_indexes.append(self.sim.model.get_joint_qpos_addr(di['joint_name']))
+            self._ref_object_vel_indexes.append(self.sim.model.get_joint_qvel_addr(di['joint_name']))
     
     def _reset_internal(self):
         super()._reset_internal()
@@ -201,14 +199,18 @@ class SawyerStackEnv(SawyerEnv):
 
         # color the gripper site appropriately based on distance to nearest object
 
+        ### TODO: we could probably clean this up. Also should probably include the table site. ###
+
         # find closest object
-        square_dist = lambda x : np.sum(np.square(x - self.physics.named.data.site_xpos['grip_site']))
-        dists = list(map(square_dist, self.physics.data.site_xpos))
-        dists[self.site_name2id['grip_site']] = np.inf # make sure we don't pick the same site
-        dists[self.site_name2id['grip_site_cylinder']] = np.inf
-        min_dist = np.min(dists)
-        ob_id = np.argmin(dists)
-        ob_name = self.site_id2name[ob_id]
+        square_dist = lambda x : np.sum(np.square(x - self.sim.data.get_site_xpos('grip_site')))
+        dists = np.array(list(map(square_dist, self.sim.data.site_xpos)))
+        dists[self.eef_site_id] = np.inf # make sure we don't pick the same site
+        dists[self.eef_cylinder_id] = np.inf
+        ob_dists = dists[self.object_site_ids] # filter out object sites we care about
+        min_dist = np.min(ob_dists)
+        ob_id = np.argmin(ob_dists)
+        # ob_name = self.sim.model.site_id2name(ob_id)
+        ob_name = self.object_names[ob_id]
         # print("closest object is {} at distance {}".format(ob_name, min_dist))
 
         # set RGBA for the EEF site here
@@ -221,7 +223,7 @@ class SawyerStackEnv(SawyerEnv):
 
         # rgba = np.random.rand(4)
         # rgba[-1] = 0.5
-        self.physics.named.model.site_rgba['grip_site'] = rgba
+        self.sim.model.site_rgba[self.eef_site_id] = rgba
 
     ####
     # Properties for objects
@@ -229,22 +231,24 @@ class SawyerStackEnv(SawyerEnv):
 
     def _object_pos(self, i):
         object_name = self.object_metadata[i]['object_name']
-        return self.physics.named.data.xpos[object_name] - self._pos_offset
+        return self.sim.data.get_body_xpos(object_name) - self._pos_offset
 
     def _set_object_pos(self, i, pos):
-        self.physics.named.data.qpos[self.object_metadata[i]['joint_name']][0:3] = pos + self._pos_offset
+        low, high = self._ref_object_pos_indexes[i]
+        self.sim.data.qpos[low:high] = pos + self._pos_offset
 
     def _object_vel(self, i):
         object_name = self.object_metadata[i]['object_name']
-        return self.physics.named.data.subtree_linvel[object_name]
+        return self.sim.data.get_body_xvelp(object_name)
 
     def _set_object_vel(self, i, vel):
-        self.physics.named.data.qvel[self.object_metadata[i]['joint_name']][0:3] = vel
+        low, high = self._ref_object_vel_indexes[i]
+        self.sim.data.qvel[low:high] = vel
 
     def _target_pos(self, i):
         target_name = self.object_metadata[i]['target_name']
-        return self.physics.named.data.xpos[target_name] - self._pos_offset
+        return self.sim.model.body_pos[self.sim.model.body_name2id(target_name)] - self._pos_offset
 
     def _set_target_pos(self, i, pos):
         target_name = self.object_metadata[i]['target_name']
-        self.physics.named.model.body_pos[target_name] = pos + self._pos_offset
+        self.sim.model.body_pos[self.sim.model.body_name2id(target_name)] = pos + self._pos_offset

@@ -41,10 +41,12 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
         self.reward_objective_factor = reward_objective_factor
 
         super().__init__(**kwargs)
-        self._pos_offset = np.copy(self.physics.named.data.site_xpos['table_top'])
+        self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
 
     def _get_reference(self):
         super()._get_reference()
+        self._ref_object_pos_indexes = self.model.get_joint_qpos_addr('object_free_joint')
+        self._ref_object_vel_indexes = self.model.get_joint_qvel_addr('object_free_joint')
 
     def _load_model(self):
         super()._load_model()
@@ -121,22 +123,22 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
 
     @property
     def _object_pos(self):
-        return self.physics.named.data.xpos['object'] - self._pos_offset
+        return self.sim.data.get_body_xpos('object') - self._pos_offset
 
     @_object_pos.setter
     def _object_pos(self, pos):
-        pos += self._pos_offset
-        self.physics.named.data.qpos['object_free_joint'][0:3] = pos 
+        low, high = self._ref_object_pos_indexes
+        self.sim.data.qpos[low:high] = pos + self._pos_offset
 
     @property
     def _target_pos(self):
-        return self.physics.named.data.xpos['target'] - self._pos_offset
+        return self.sim.model.body_pos[self.sim.model.body_name2id('target')] - self._pos_offset
 
     @_target_pos.setter
     def _target_pos(self, pos):
-        self.physics.named.model.body_pos['target'] = pos + self._pos_offset
+        self.sim.model.body_pos[self.sim.model.body_name2id('target')] = pos + self._pos_offset
 
     @property
     def _object_vel(self):
-        return self.physics.named.data.subtree_linvel['object']
+        return self.sim.data.get_body_xvelp('object')
 
