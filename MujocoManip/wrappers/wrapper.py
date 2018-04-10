@@ -10,9 +10,6 @@ class Wrapper(MujocoEnv):
 
     def __init__(self, env):
         self.env = env
-        self.physics = self.env.physics
-        self.done = False
-        self.horizon = self.env.horizon
 
     @classmethod
     def class_name(cls):

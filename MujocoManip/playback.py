@@ -38,7 +38,7 @@ def playback_data(env, ep_dir):
     # first reload the model from the xml
     xml_path = os.path.join(ep_dir, 'model.xml')
     with open(xml_path, 'r') as f:
-        env.physics.reload_from_xml_string(f.read())
+        env.reset_from_xml_string(f.read())
 
     state_paths = os.path.join(ep_dir, "state_*.npz")
 
@@ -49,8 +49,8 @@ def playback_data(env, ep_dir):
         dic = np.load(state_file)
         states = dic['states']
         for state in states:
-            env.physics.set_state(state)
-            env.physics.forward()
+            env.sim.set_state_from_flattened(state)
+            env.sim.forward()
             env.render()
             t += 1
             if t % 100 == 0:

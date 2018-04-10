@@ -140,6 +140,33 @@ class MujocoEnv(object, metaclass=EnvMeta):
     def action_spec(self):
         raise NotImplementedError
 
+    def reset_from_xml_string(self, xml_string):
+        """
+        Reloads the environment from an XML description of the environment.
+        """
+
+        # if there is an active viewer window, destroy it
+        if self.viewer is not None:
+            self.viewer.close()
+        self.viewer = None
+
+        # load model from xml
+        self._load_model()
+        from mujoco_py import load_model_from_path, load_model_from_xml
+        self.mjpy_model = load_model_from_xml(xml_string)
+
+        self.sim = MjSim(self.mjpy_model)
+        self.initialize_time(self.control_freq)
+        if self.display:
+            self.viewer = MujocoPyRenderer(self.sim)
+        self.sim_state_initial = self.sim.get_state()
+        self._get_reference()
+        self.cur_time = 0
+        self.t = 0
+        self.done = False
+
+        # return self._get_observation()
+
     def close(self):
         """
         Do any cleanup necessary here.
@@ -147,7 +174,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
         
         # if there is an active viewer window, destroy it
         if self.viewer is not None:
-            glfw.destroy_window(self.viewer.window)
+            self.viewer.close()
         self.viewer = None
 
 

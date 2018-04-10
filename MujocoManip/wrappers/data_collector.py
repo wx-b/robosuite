@@ -100,7 +100,7 @@ class DataCollector(Wrapper):
 
         # collect the current simulation state if necessary
         if self.t % self.collect_freq == 0:
-            state = self.env.physics.state()
+            state = self.env.sim.get_state().flatten()
             self.states.append(state)
 
         # flush collected data to disk if necessary
@@ -108,6 +108,14 @@ class DataCollector(Wrapper):
             self._flush()
 
         return ret
+
+    def reset_from_xml_string(self, xml_string):
+        """
+        TODO: for some reason we need this definition here and can't fall back
+              on the __getattr__ in wrapper.py. Same for reset function. 
+              Need to find out why.
+        """
+        return self.env.reset_from_xml_string(xml_string)
 
 
 
