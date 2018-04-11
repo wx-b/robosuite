@@ -11,31 +11,49 @@ import io
 
 
 class MujocoXML(object):
-    def __init__(self, name=None):
-        if name is None:
-            name = 'mujoco_xml'
-        self.root = ET.Element('mujoco')
-        self.root.set('model', name)
-        self.name = name
-        self.create_default_elements()
-
-    def create_default_elements(self):
+    """
+        Base class of Mujoco xml file
+        Wraps around ElementTree and provides additional functionality for merging different models.
+        Specially, we keep track of <worldbody/>, <actuator/> and <asset/>
+    """
+    def __init__(self, fname):
+        """
+            Loads a mujoco xml from file specified by fname
+        """
+        self.file = fname
+        self.folder = os.path.dirname(fname)
+        self.tree = ET.parse(fname)
+        self.root = self.tree.getroot()
+        self.name = self.root.get('model')
         self.worldbody = self.create_default_element('worldbody')
         self.actuator = self.create_default_element('actuator')
         self.asset = self.create_default_element('asset')
         self.equality = self.create_default_element('equality')
         self.contact = self.create_default_element('contact')
+        self.resolve_asset_dependency()
 
-    def create_default_element(self, element_name):
+    def resolve_asset_dependency(self):
+        """
+            Convert every file dependency into absolute path so when we merge we don't break things.
+        """
+        for node in self.asset.findall('./*[@file]'):
+            file = node.get('file')
+            abs_path = os.path.abspath(self.folder)
+            abs_path = os.path.join(abs_path, file)
+            node.set('file', abs_path)
+
+
+    def create_default_element(self, name):
         """
             Create a <@name/> tag under root if there is none
         """
-        found = self.root.find(element_name)
+        found = self.root.find(name)
         if found is not None:
             return found
-        ele = ET.Element(element_name)
+        ele = ET.Element(name)
         self.root.append(ele)
         return ele
+
 
     def merge(self, other, merge_body=True):
         """
@@ -57,7 +75,7 @@ class MujocoXML(object):
         for one_contact in other.contact:
             self.contact.append(one_contact)
         # self.config.append(other.config)
-    
+
     def get_model(self, mode='dm_control'):
         """
             Returns a MJModel instance from the current xml tree
@@ -106,61 +124,18 @@ class MujocoXML(object):
             if self.asset.find(pattern) is None:
                 self.asset.append(asset)
 
-    def update_from_string(self, string):
-        self.root = ET.fromstring(string)
-        self.name = self.root.get('model')
-        self.create_default_elements()
-
-    def copy(self):
+    # Subclass should also define it as a property
+    @property
+    def joints(self):
         """
-            Returns an identical copy of self
+            Returns the names of Joints
         """
-        obj = type(self)()
-        obj.update_from_string(self.get_xml())
-        return obj
+        raise NotImplementedError
 
-    # # Subclass should also define it as a property
-    # @property
-    # def joints(self):
-    #     """
-    #         Returns the names of Joints
-    #     """
-    #     raise NotImplementedError
-
-    # # Subclass should also define it as a property
-    # @property
-    # def rest_pos(self):
-    #     """
-    #         Returns the rest position of joints, in raw actuation units
-    #     """
-    #     raise NotImplementedError
-
-
-class MujocoXMLFile(MujocoXML):
-    """
-        Base class of Mujoco xml file
-        Wraps around ElementTree and provides additional functionality for merging different models.
-        Specially, we keep track of <worldbody/>, <actuator/> and <asset/>
-    """
-    def __init__(self, fname):
+    # Subclass should also define it as a property
+    @property
+    def rest_pos(self):
         """
-            Loads a mujoco xml from file specified by fname
+            Returns the rest position of joints, in raw actuation units
         """
-        self.file = fname
-        self.folder = os.path.dirname(fname)
-        tree = ET.parse(fname)
-        self.root = tree.getroot()
-        self.name = self.root.get('model')
-        self.create_default_elements()
-        self.resolve_asset_dependency()
-
-    def resolve_asset_dependency(self):
-        """
-            Convert every file dependency into absolute path so when we merge we don't break things.
-        """
-        for node in self.asset.findall('./*[@file]'):
-            file = node.get('file')
-            abs_path = os.path.abspath(self.folder)
-            abs_path = os.path.join(abs_path, file)
-            node.set('file', abs_path)
-
+        raise NotImplementedError

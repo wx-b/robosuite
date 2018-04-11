@@ -1,10 +1,10 @@
 import numpy as np
 import xml.etree.ElementTree as ET
-from MujocoManip.model.base import MujocoXMLFile
+from MujocoManip.model.base import MujocoXML
 from MujocoManip.model.model_util import *
 from MujocoManip.miscellaneous import XMLError
 
-class Arena(MujocoXMLFile):
+class Arena(MujocoXML):
 	def set_origin(self, pos):
 		pos = np.array(pos)
 		for node in self.worldbody.findall('./*[@pos]'):
