@@ -52,6 +52,7 @@ if __name__ == '__main__':
             # action[:6] = [0, 0, 1.0, 0, 0, 0]
             # action[7] = 1
             obs, reward, done, info = env.step(action)
+            # print(obs)
             env.render()
             # time.sleep(0.2)
 

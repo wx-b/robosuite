@@ -2,12 +2,12 @@ import copy
 import time
 import numpy as np
 import xml.etree.ElementTree as ET
-from MujocoManip.model.base import MujocoXML
+from MujocoManip.model.base import MujocoXML, MujocoXMLFile
 from MujocoManip.miscellaneous import XMLError
 from MujocoManip.model.model_util import *
 
 
-class MujocoObject():
+class MujocoObject(MujocoXML):
     """
         Base class for all objects
         We use Mujoco Objects to implement all objects that 
@@ -15,8 +15,12 @@ class MujocoObject():
         2) can be swapped between different tasks
         Typical methods return copy so the caller can all joints/attributes as wanted
     """
-    def __init__(self):
-        self.asset = ET.Element('asset')
+    def __init__(self, name=None):
+        """creates a root directory <mujoco model="sawyer">"""
+        if name is None:
+            name = 'mujoco_object_{}'.format(np.random.randint(0,1000))
+        self.site_appended = False
+        super().__init__(name)
 
     def get_bottom_offset(self):
         """
@@ -48,150 +52,144 @@ class MujocoObject():
         """
         raise NotImplementedError
         # return 2
+    
+    def set_name(self, name):
+        """
+            Changes the name of this object to something else
+        """
 
-    def get_collision(self):
-        """
-            Returns a ET.Element
-            It is a <body/> subtree that defines all collision related stuff of this object
-            Return is a copy
-        """
-        raise NotImplementedError
-        
-    def get_visual(self, name=None):
-        """
-            Returns a ET.Element
-            It is a <body/> subtree that defines all visual related stuff of this object
-            Return is a copy
-        """
-        raise NotImplementedError
-
-    def get_full(self, name=None, site=False):
-        """
-            Returns a ET.Element
-            It is a <body/> subtree that defines all collision and visual related stuff of this object
-            Return is a copy
-        """
-        collision = self.get_collision(name=name, site=site)
-        visual = self.get_visual()
-        collision.append(visual)
-
-        return collision
-
-class MujocoXMLObject(MujocoXML, MujocoObject):
+class MujocoFileObject(MujocoXMLFile, MujocoObject): 
     """
         MujocoObjects that are loaded from xml files
     """
     def __init__(self, fname):
-        MujocoXML.__init__(self, fname)
+        """
+            The object must follow the following structure:
+            <mujoco model="box">
+            ...
+            <worldbody>
+                <body name="main_body">
+                    <site name=bottom_site/>
+                    <site name=top_site/>
+                    <site name=horizontal_radius_site/>
+                    <site name="main_site">
+                <body/>
+            <worldbody/>
+        """
+        MujocoXMLFile.__init__(self, fname)
+        self.build()
+
+    def build(self):
+        self.bottom_site = self.worldbody.find("../site[@name='bottom_site']")
+        self.bottom_offset = string_to_array(bottom_site.get('pos'))
+        self.top_site = self.worldbody.find("../site[@name='top_site']")
+        self.top_offset = string_to_array(top_site.get('pos'))
+        self.horizontal_radius_site = self.worldbody.find("../site[@name='horizontal_radius_site']")
+        self.horizontal_radius = string_to_array(horizontal_radius_site.get('pos'))[0]
+        self.main_site = self.worldbody.find("../site[@name='main_site']")
+        self.body = self.worldbody.find("./body[@name='main_body']")
+
+        self.set_name(self.name)
 
     def get_bottom_offset(self):
-        bottom_site = self.worldbody.find("./site[@name='bottom_site']")
-        return string_to_array(bottom_site.get('pos'))
+        return self.bottom_offset
 
     def get_top_offset(self):
-        top_site = self.worldbody.find("./site[@name='top_site']")
-        return string_to_array(top_site.get('pos'))
+        return self.top_offset
 
     def get_horizontal_radius(self):
-        horizontal_radius_site = self.worldbody.find("./site[@name='horizontal_radius_site']")
-        return string_to_array(horizontal_radius_site.get('pos'))[0]
+        return self.horizontal_radius
 
-    def get_collision(self, name=None, site=False):
-        collision = copy.deepcopy(self.worldbody.find("./body[@name='collision']"))
-        collision.attrib.pop('name')
-        return collision
+    def set_name(self, name):
+        """
+            Rename all named elements to follow the new name
+        """
+        old_name = self.name
+        self.name = name
+        self.bottom_site.set('name', '{}_{}'.format(self.name, 'bottom_site'))
+        self.top_site.set('name', '{}_{}'.format(self.name, 'top_site'))
+        self.horizontal_radius_site.set('name', '{}_{}'.format(self.name, 'horizontal_radius_site'))
+        self.center_cite.set('name', self.name)
+        self.body.set('name', self.name)
 
-    def get_visual(self, name=None, site=False):
-        visual = copy.deepcopy(self.worldbody.find("./body[@name='visual']"))
-        visual.attrib.pop('name')
-        return visual
-
-class DefaultBoxObject(MujocoXMLObject):
+class DefaultBoxObject(MujocoFileObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_box.xml'))
 
-class DefaultBallObject(MujocoXMLObject):
+class DefaultBallObject(MujocoFileObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_ball.xml'))
 
-class DefaultCylinderObject(MujocoXMLObject):
+class DefaultCylinderObject(MujocoFileObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_cylinder.xml'))
 
-class DefaultCapsuleObject(MujocoXMLObject):
+class DefaultCapsuleObject(MujocoFileObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_capsule.xml'))
+
 
 class MujocoGeneratedObject(MujocoObject):
     """
         Base class for all programmatically generated mujoco object
         i.e., every MujocoObject that does not have an corresponding xml file 
+
+        Every generated object must have a name, which will be used to index 
+        the enclosing body, and the cite at the center (pos = "0 0 0") of the body
     """
-    def get_collision_attrib_template(self):
-        return {'pos': '0 0 0'}
+    def __init__(self, name=None):
+        if name is None:
+            name = 'mujoco_generated_object_{}'.format(np.random.randint(0,1000))
+        super().__init__(name)
+        self.body = ET.Element('body', attrib={'name': self.name})
+        self.worldbody.append(self.body)
+        self.build()
+        self.append_site()
 
-    def get_visual_attrib_template(self):
-        return {'conaffinity': "0", 'contype': "0"}
+    # returns a copy, Returns xml body node
+    def build(self):
+        """
+            Build the object under <worldbody>
+                                        <body>
+        """
+        raise NotImplementedError
 
-    def get_site_attrib_template(self):
-        return {
+    def append_site(self):
+        if self.site_appended:
+            return
+        site_attributes = {
                 'pos': '0 0 0',
                 'size': '0.002 0.002 0.002',
                 'rgba': '1 0 0 1',
                 'type': 'sphere',
                 }
+        site_attributes['name'] = self.name
+        self.site = ET.Element('site', attrib=site_attributes)
+        self.body.append(self.site)
+        self.site_appended = True
 
-    # returns a copy, Returns xml body node
-    def _get_collision(self, name=None, site=False, ob_type='box'):
-        body = ET.Element('body')
-        if name is not None:
-            body.set('name', name)
-        template = self.get_collision_attrib_template()
-        template['type'] = ob_type
-        template['rgba'] = array_to_string(self.rgba)
-        template['size'] = array_to_string(self.size)
-        body.append(ET.Element('geom', attrib=template))
-        if site:
-            # add a site as well
-            template = self.get_site_attrib_template()
-            if name is not None:
-                template['name'] = name
-            body.append(ET.Element('site', attrib=template))
-        return body
+    def set_name(self, name):
+        self.name = name
+        self.body.set('name', name)
+        self.site.set('name', name)
 
-    # returns a copy, Returns xml body node
-    def _get_visual(self, name=None, site=False, ob_type='box'):
-        body = ET.Element('body')
-        if name is not None:
-            body.set('name', name)
-        template = self.get_visual_attrib_template()
-        template['type'] = ob_type
-        template['rgba'] = array_to_string(self.rgba)
-        # shrink so that we don't see flickering when showing both visual and collision
-        template['size'] = array_to_string(self.size * visual_size_shrink_ratio) 
-        template['group'] = '0'
-        body.append(ET.Element('geom', attrib=template))
-        template_gp1 = copy.deepcopy(template)
-        template_gp1['group'] = '1'
-        body.append(ET.Element('geom', attrib=template_gp1))
-        if site:
-            # add a site as well
-            template = self.get_site_attrib_template()
-            if name is not None:
-                template['name'] = name
-            body.append(ET.Element('site', attrib=template))
-        return body
 
 class BoxObject(MujocoGeneratedObject):
     """
         An object that is a box
     """
     # TODO: friction, etc
-    def __init__(self, size, rgba):
-        super().__init__()
+    def __init__(self, name=None, size=None, rgba=None):
+        if name is None:
+            name = 'box_{}'.format(np.random.randint(0,1000))
+        if size is None:
+            size = [0.01, 0.01, 0.01]
+        if rgba is None:
+            rgba = [1, 0, 0, 1]
         assert(len(size) == 3)
         self.size = np.array(size)
         self.rgba = np.array(rgba)
+        super().__init__(name)
 
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size[2]])
@@ -203,23 +201,31 @@ class BoxObject(MujocoGeneratedObject):
         return np.linalg.norm(self.size[0:2], 2)
 
     # returns a copy, Returns xml body node
-    def get_collision(self, name=None, site=False):
-        return self._get_collision(name=name, site=site, ob_type='box')
-    
-    # returns a copy, Returns xml body node
-    def get_visual(self, name=None, site=False):
-        return self._get_visual(name=name, site=site, ob_type='box')
+    def build(self):
+        template = {}
+        template['pos']  = '0 0 0'
+        template['type'] = 'box'
+        template['rgba'] = array_to_string(self.rgba)
+        template['size'] = array_to_string(self.size)
+        self.body.append(ET.Element('geom', attrib=template))
+
 
 class CylinderObject(MujocoGeneratedObject):
     """
         An object that is a cylinder
     """
     # TODO: friction, etc
-    def __init__(self, size, rgba):
-        super().__init__()
+    def __init__(self, name=None, size=None, rgba=None):
+        if size is None:
+            size = [0.01, 0.01]
+        if rgba is None:
+            rgba = [1, 0, 0, 1]
+        if name is None:
+            name = 'cylinder_{}'.format(np.random.randint(0,1000))
         assert(len(size) == 2)
         self.size = np.array(size)
         self.rgba = np.array(rgba)
+        super().__init__(name)
 
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size[1]])
@@ -230,24 +236,34 @@ class CylinderObject(MujocoGeneratedObject):
     def get_horizontal_radius(self):
         return self.size[0]
 
-    # returns a copy, Returns xml body node
-    def get_collision(self, name=None, site=False):
-        return self._get_collision(name=name, site=site, ob_type='cylinder')
-    
-    # returns a copy, Returns xml body node
-    def get_visual(self, name=None, site=False):
-        return self._get_visual(name=name, site=site, ob_type='cylinder')
+    def build(self):
+        template = {}
+        template['pos']  = '0 0 0'
+        template['type'] = 'cylinder'
+        template['rgba'] = array_to_string(self.rgba)
+        template['size'] = array_to_string(self.size)
+        self.body.append(ET.Element('geom', attrib=template))
+
 
 class BallObject(MujocoGeneratedObject):
     """
         An object that is a ball (sphere)
     """
     # TODO: friction, etc
-    def __init__(self, size, rgba):
-        super().__init__()
+    def __init__(self, name=None, size=None, rgba=None):
+        print('---')
+        print(size)
+        print('---')
+        if size is None:
+            size = [0.01]
+        if rgba is None:
+            rgba = [1, 0, 0, 1]
+        if name is None:
+            name = 'ball_{}'.format(np.random.randint(0,1000))
         assert(len(size) == 1)
         self.size = np.array(size)
         self.rgba = np.array(rgba)
+        super().__init__(name)
 
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size[0]])
@@ -258,24 +274,31 @@ class BallObject(MujocoGeneratedObject):
     def get_horizontal_radius(self):
         return self.size[0]
 
-    # returns a copy, Returns xml body node
-    def get_collision(self, name=None, site=False):
-        return self._get_collision(name=name, site=site, ob_type='sphere')
-    
-    # returns a copy, Returns xml body node
-    def get_visual(self, name=None, site=False):
-        return self._get_visual(name=name, site=site, ob_type='sphere')
+    def build(self):
+        template = {}
+        template['pos']  = '0 0 0'
+        template['type'] = 'sphere'
+        template['rgba'] = array_to_string(self.rgba)
+        template['size'] = array_to_string(self.size)
+        self.body.append(ET.Element('geom', attrib=template))
+
 
 class CapsuleObject(MujocoGeneratedObject):
     """
         An object that is a capsule 
     """
     # TODO: friction, etc
-    def __init__(self, size, rgba):
-        super().__init__()
+    def __init__(self, name=None, size=None, rgba=None):
+        if size is None:
+            size = [0.01, 0.01]
+        if rgba is None:
+            rgba = [1, 0, 0, 1]
+        if name is None:
+            name = 'capsule_{}'.format(np.random.randint(0,1000))
         assert(len(size) == 2)
         self.size = np.array(size)
         self.rgba = np.array(rgba)
+        super().__init__(name)
 
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * (self.size[0] + self.size[1])])
@@ -286,20 +309,20 @@ class CapsuleObject(MujocoGeneratedObject):
     def get_horizontal_radius(self):
         return self.size[0]
 
-    # returns a copy, Returns xml body node
-    def get_collision(self, name=None, site=False):
-        return self._get_collision(name=name, site=site, ob_type='capsule')
-    
-    # returns a copy, Returns xml body node
-    def get_visual(self, name=None, site=False):
-        return self._get_visual(name=name, site=site, ob_type='capsule')
+    def build(self):
+        template = {}
+        template['pos']  = '0 0 0'
+        template['type'] = 'capsule'
+        template['rgba'] = array_to_string(self.rgba)
+        template['size'] = array_to_string(self.size)
+        self.body.append(ET.Element('geom', attrib=template))
 
 
 class RandomBoxObject(BoxObject):
     """
         A random box
     """
-    def __init__(self, size_max=[0.07, 0.07, 0.07], size_min=[0.03, 0.03, 0.03], seed=None):
+    def __init__(self, name=None, size_max=[0.07, 0.07, 0.07], size_min=[0.03, 0.03, 0.03], seed=None):
         if seed is not None:
             np.random.seed(seed)
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(3)])
@@ -309,13 +332,13 @@ class RandomBoxObject(BoxObject):
         # t1, t2 = str(time.time()).split('.')
         # name = "random_box_{}_{}".format(t1, t2)
         # print("creating object with name: {}".format(name))
-        super().__init__(size, rgba)
+        super().__init__(name, size, rgba)
 
 class RandomCylinderObject(CylinderObject):
     """
         A random cylinder
     """
-    def __init__(self, size_max=[0.07, 0.07], size_min=[0.03, 0.03], seed=None):
+    def __init__(self, name=None, size_max=[0.07, 0.07], size_min=[0.03, 0.03], seed=None):
         if seed is not None:
             np.random.seed(seed)
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(2)])
@@ -325,13 +348,13 @@ class RandomCylinderObject(CylinderObject):
         # t1, t2 = str(time.time()).split('.')
         # name = "random_cylinder_{}_{}".format(t1, t2)
         # print("creating object with name: {}".format(name))
-        super().__init__(size, rgba)
+        super().__init__(name, size, rgba)
 
 class RandomBallObject(BallObject):
     """
         A random ball (sphere)
     """
-    def __init__(self, size_max=[0.07], size_min=[0.03], seed=None):
+    def __init__(self, name=None, size_max=[0.07], size_min=[0.03], seed=None):
         if seed is not None:
             np.random.seed(seed)
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(1)])
@@ -341,13 +364,13 @@ class RandomBallObject(BallObject):
         # t1, t2 = str(time.time()).split('.')
         # name = "random_ball_{}_{}".format(t1, t2)
         # print("creating object with name: {}".format(name))
-        super().__init__(size, rgba)
+        super().__init__(size, name, rgba)
 
 class RandomCapsuleObject(CapsuleObject):
     """
         A random ball (sphere)
     """
-    def __init__(self, size_max=[0.07, 0.07], size_min=[0.03, 0.03], seed=None):
+    def __init__(self, name=None, size_max=[0.07, 0.07], size_min=[0.03, 0.03], seed=None):
         if seed is not None:
             np.random.seed(seed)
         size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(2)])
@@ -357,5 +380,5 @@ class RandomCapsuleObject(CapsuleObject):
         # t1, t2 = str(time.time()).split('.')
         # name = "random_capsule_{}_{}".format(t1, t2)
         # print("creating object with name: {}".format(name))
-        super().__init__(size, rgba)
+        super().__init__(name, size, rgba)
 

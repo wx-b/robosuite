@@ -1,12 +1,12 @@
 import numpy as np
 import xml.etree.ElementTree as ET
-from MujocoManip.model.base import MujocoXML
+from MujocoManip.model.base import MujocoXMLFile
 from MujocoManip.miscellaneous import XMLError
 from MujocoManip.model.model_util import *
 
 
 
-class MujocoGripper(MujocoXML):
+class MujocoGripper(MujocoXMLFile):
     """Base class for grippers"""
 
     def __init__(self, fname):

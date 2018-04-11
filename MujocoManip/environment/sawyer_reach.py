@@ -1,7 +1,7 @@
 import numpy as np
 from MujocoManip.environment.sawyer import SawyerEnv
 from MujocoManip.model.model_util import xml_path_completion
-from MujocoManip.model import MujocoXMLObject, SingleTargetTask, TableArena
+from MujocoManip.model import MujocoFileObject, SingleTargetTask, TableArena
 
 class SawyerReachEnv(SawyerEnv):
     def __init__(self,
@@ -18,7 +18,7 @@ class SawyerReachEnv(SawyerEnv):
         """
         
         if mujoco_object is None:
-            mujoco_object = MujocoXMLObject(xml_path_completion('object/object_ball.xml'))
+            mujoco_object = MujocoFileObject(xml_path_completion('object/object_ball.xml'))
         self.mujoco_object = mujoco_object
         self.table_size = table_size
         self.table_friction = table_friction
@@ -29,7 +29,7 @@ class SawyerReachEnv(SawyerEnv):
         self.win_rel_tolerance=win_rel_tolerance
         self.max_target_height=max_target_height
         self.min_target_height=min_target_height
-        self._pos_offset = np.copy(self.physics.named.data.site_xpos['table_top'])
+        self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
 
 
     def _load_model(self):
@@ -63,8 +63,8 @@ class SawyerReachEnv(SawyerEnv):
         super()._pre_action(action)
         self.pre_action_hand_target_dist = np.linalg.norm(self._target_pos - self._right_hand_pos)
 
-    def _reward(self, action):
-        reward = super()._reward(action)
+    def reward(self, action):
+        reward = super().reward(action)
         self.post_action_hand_target_dist = np.linalg.norm(self._target_pos - self._right_hand_pos)
         reward += self.reward_objective_factor * (self.pre_action_hand_target_dist - self.post_action_hand_target_dist)
         # reward = np.exp(-1 * np.linalg.norm(self._target_pos - self._right_hand_pos))
@@ -72,18 +72,10 @@ class SawyerReachEnv(SawyerEnv):
         return reward
 
     def _get_observation(self):
-
-        obs = super()._get_observation()
-
-        hand_pos = self._right_hand_pos
-        target_pos = self._target_pos
-        target_pos_rel = target_pos - hand_pos
-
-        obs = np.concatenate([ obs,
-                                target_pos_rel,
-                                ])
-        # return target_pos_rel
-        return obs
+        di = super()._get_observation()
+        di['low-level'] = np.concatenate([self._right_hand_pos,
+                              self._target_pos])
+        return di
 
 
     def _check_win(self):

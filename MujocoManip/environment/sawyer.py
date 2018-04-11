@@ -131,13 +131,12 @@ class SawyerEnv(MujocoEnv):
         return ret
 
     def _get_observation(self):
-        obs = super()._get_observation()
-        # TODO: make sure no overwriting is happening
+        di = super()._get_observation()
         joint_pos = [self.sim.data.qpos[x] for x in self._ref_joint_pos_indexes]
-        joint_pos_sin = np.sin(joint_pos)
-        joint_pos_cos = np.cos(joint_pos)
         joint_vel = [self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes]
-        return np.concatenate([obs, joint_pos, joint_pos_sin, joint_pos_cos, joint_vel])
+        # TODO: add gripper related
+        di['proprioception'] = np.concatenate([joint_pos, joint_vel])
+        return di
 
     def dof(self):
         if self.use_eef_ctrl:

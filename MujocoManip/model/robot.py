@@ -1,11 +1,11 @@
 import numpy as np
 import xml.etree.ElementTree as ET
-from MujocoManip.model.base import MujocoXML
+from MujocoManip.model.base import MujocoXMLFile
 from MujocoManip.miscellaneous import XMLError
 from MujocoManip.model.gripper import MujocoGripper
 from MujocoManip.model.model_util import *
 
-class MujocoRobot(MujocoXML):
+class MujocoRobot(MujocoXMLFile):
     """
         Base class for all robots
     """

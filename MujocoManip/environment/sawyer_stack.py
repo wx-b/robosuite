@@ -39,10 +39,11 @@ class SawyerStackEnv(SawyerEnv):
             # self.mujoco_objects.extend([RandomCylinderObject(size_max=[0.025, 0.05], size_min=[0.01, 0.01]) for _ in range(1)])
             # self.mujoco_objects.extend([RandomBoxObject(size_max=[0.025, 0.025, 0.05], size_min=[0.01, 0.01, 0.01]) for _ in range(1)])
             # self.mujoco_objects.extend([RandomBallObject(size_max=[0.03], size_min=[0.02]) for _ in range(1)])
-            self.mujoco_objects = [RandomCapsuleObject(size_max=[0.025, 0.03], size_min=[0.01, 0.01]) for _ in range(3)]
+            self.mujoco_objects = []
+            # self.mujoco_objects = [RandomCapsuleObject(size_max=[0.025, 0.03], size_min=[0.01, 0.01]) for _ in range(3)]
             self.mujoco_objects.extend([RandomCylinderObject(size_max=[0.025, 0.05], size_min=[0.01, 0.01]) for _ in range(5)])
-            self.mujoco_objects.extend([RandomBoxObject(size_max=[0.025, 0.025, 0.05], size_min=[0.01, 0.01, 0.01]) for _ in range(5)])
-            self.mujoco_objects.extend([RandomBallObject(size_max=[0.03], size_min=[0.02]) for _ in range(3)])
+            # self.mujoco_objects.extend([RandomBoxObject(size_max=[0.025, 0.025, 0.05], size_min=[0.01, 0.01, 0.01]) for _ in range(5)])
+            # self.mujoco_objects.extend([RandomBallObject(size_max=[0.03], size_min=[0.02]) for _ in range(3)])
         self.n_mujoco_objects = len(self.mujoco_objects)
         self.table_size = table_size
         self.table_friction = table_friction
@@ -90,61 +91,7 @@ class SawyerStackEnv(SawyerEnv):
         super()._reset_internal()
         self.model.place_objects()
 
-    # def _place_targets(self):
-    #     object_ordering = [x for x in range(self.n_objects)]
-    #     np.random.shuffle(object_ordering)
-    #     # rest position of target
-    #     target_x = np.random.uniform(high=self.table_size[0]/2 - self.max_horizontal_radius, low=-1 * (self.table_size[0]/2 - self.max_horizontal_radius))
-    #     target_y = np.random.uniform(high=self.table_size[1]/2 - self.max_horizontal_radius, low=-1 * (self.table_size[1]/2 - self.max_horizontal_radius))
-
-    #     contact_point = np.array([target_x, target_y, 0])
-
-    #     for index in object_ordering:
-    #         di = self.object_metadata[index]
-    #         self._set_target_pos(index, contact_point - di['object_bottom_offset'])
-    #         contact_point = contact_point - di['object_bottom_offset'] + di['object_top_offset']
-        
-    # def _place_objects(self):
-    #     """
-    #     Place objects randomly until no more collisions or max iterations hit.
-    #     """
-    #     placed_objects = []
-    #     for index in range(self.n_objects):
-    #         di = self.object_metadata[index]
-    #         horizontal_radius = di['object_horizontal_radius']
-    #         bottom_offset = di['object_bottom_offset']
-    #         success = False
-    #         for i in range(100000): # 1000 retries
-    #             object_x = np.random.uniform(high=self.table_size[0]/2 - horizontal_radius, low=-1 * (self.table_size[0]/2 - horizontal_radius))
-    #             object_y = np.random.uniform(high=self.table_size[1]/2 - horizontal_radius, low=-1 * (self.table_size[1]/2 - horizontal_radius))
-    #             # objects cannot overlap
-    #             location_valid = True
-    #             for _, (x, y, z), r in placed_objects:
-    #                 if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
-    #                     location_valid = False
-    #                     break
-    #             if not location_valid: # bad luck, reroll
-    #                 continue
-    #             # location is valid, put the object down
-    #             # quarternions, later we can add random rotation
-
-    #             pos = np.array([object_x, object_y, 0])
-    #             pos -= bottom_offset
-    #             placed_objects.append((index, pos, horizontal_radius))
-    #             success = True
-    #             break
-    #         if not success:
-    #             raise RandomizationError('Cannot place all objects on the desk')
-
-    #     # with self.physics.reset_context():
-    #     for index, pos, r in placed_objects:
-    #         self._set_object_pos(index, pos)
-    #         self._set_object_vel(index, np.zeros(3))
-    #     self.physics.forward()
-    #         # pos = np.array([object_x, object_y, 0])
-
-    
-    def _reward(self, action):
+    def reward(self, action):
         reward = 0
         if self._check_win():
             reward += self.reward_win
@@ -159,17 +106,24 @@ class SawyerStackEnv(SawyerEnv):
         return reward
 
     def _get_observation(self):
-        obs = super()._get_observation()
-        all_observations = [obs]
+        """
+            Adds hand_position, hand_velocity or 
+            (current_position, current_velocity, target_velocity) of all targets
+        """
+        di = super()._get_observation()
+        all_observations = []
 
         hand_pos = self._right_hand_pos
         hand_vel = self._right_hand_vel
-        for i in range(self.n_objects):
-            all_observations += [self._object_pos(i) - hand_pos,
-                                self._object_vel(i) - hand_vel,
-                                self._target_pos(i) - hand_pos]
+        all_observations += [hand_pos, hand_vel]
 
-        return np.concatenate(all_observations)
+        for i in range(self.n_objects):
+            all_observations += [self._object_pos(i),
+                                self._object_vel(i),
+                                self._target_pos(i)]
+
+        di['low-level'] = np.concatenate(all_observations)
+        return di
         
     def _check_lose(self):
         object_z = np.concatenate([self._object_pos(i)[2:3] for i in range(self.n_objects)])
