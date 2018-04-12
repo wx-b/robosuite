@@ -1,6 +1,6 @@
 import numpy as np
 from MujocoManip.environment.sawyer_single_object_target import SawyerSingleObjectTargetEnv
-from MujocoManip.model import MujocoObject
+from MujocoManip.model import MujocoXMLObject
 from MujocoManip.model.model_util import xml_path_completion
 
 
@@ -19,7 +19,7 @@ class SawyerPushEnv(SawyerSingleObjectTargetEnv):
             @use_torque_ctrl: if True, actions are joint torques, not joint velocities
         """
         if mujoco_object is None:
-            mujoco_object = MujocoObject(xml_path_completion('object/object_ball.xml'))
+            mujoco_object = MujocoXMLObject(xml_path_completion('object/object_ball.xml'))
 
         super().__init__(gripper=gripper, mujoco_object=mujoco_object, **kwargs)
         self.min_target_xy_distance = min_target_xy_distance
