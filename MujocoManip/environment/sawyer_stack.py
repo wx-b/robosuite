@@ -63,9 +63,7 @@ class SawyerStackEnv(SawyerEnv):
         self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
         # id of grippers for contact checking
-        self.l_finger_geom_id = self.sim.model.geom_name2id("r_gripper_l_finger")
-        self.r_finger_geom_id = self.sim.model.geom_name2id("r_gripper_r_finger")
-        self.finger_names = ["r_gripper_l_finger", "r_gripper_r_finger"]
+        self.finger_names = ["r_finger_g0", "r_finger_g1", "l_finger_g0", "l_finger_g1", "r_fingertip_g0", "l_fingertip_g0"]
 
         # self.sim.data.contact # list, geom1, geom2
         # self.sim.model._geom_name2id # keys for named shit
@@ -180,20 +178,26 @@ class SawyerStackEnv(SawyerEnv):
                                 self._object_vel(i) - hand_vel,
                                 self._target_pos(i) - hand_pos]
 
-        # add in collision information
-        collision = False
-        for contact in self.sim.data.contact:
-            print("geom1: {}".format(self.sim.model.geom_id2name(contact.geom1)))
-            print("geom2: {}".format(self.sim.model.geom_id2name(contact.geom2)))
-            if self.sim.model.geom_id2name(contact.geom1) in self.finger_names or \
-               self.sim.model.geom_id2name(contact.geom2) in self.finger_names:
-                collision = True
-                print("GOT COLLISION")
-                break
-        all_observations += [[int(collision)]]
+        # add in contact information
+        contact = self._check_contact()
+        all_observations += [[int(contact)]]
 
         return np.concatenate(all_observations)
         
+    def _check_contact(self):
+        """
+        Returns True if gripper is in contact with an object.
+        """
+        collision = False
+        for contact in self.sim.data.contact:
+            # print("geom1: {}".format(self.sim.model.geom_id2name(contact.geom1)))
+            # print("geom2: {}".format(self.sim.model.geom_id2name(contact.geom2)))
+            if self.sim.model.geom_id2name(contact.geom1) in self.finger_names or \
+               self.sim.model.geom_id2name(contact.geom2) in self.finger_names:
+                collision = True
+                break
+        return collision
+
     def _check_lose(self):
         object_z = np.concatenate([self._object_pos(i)[2:3] for i in range(self.n_objects)])
         # Object falls off the table
