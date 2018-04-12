@@ -63,7 +63,7 @@ class SawyerStackEnv(SawyerEnv):
         self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
         # id of grippers for contact checking
-        self.finger_names = ["r_finger_g0", "r_finger_g1", "l_finger_g0", "l_finger_g1", "r_fingertip_g0", "l_fingertip_g0"]
+        self.finger_names = self.gripper.contact_geoms()
 
         # self.sim.data.contact # list, geom1, geom2
         # self.sim.model._geom_name2id # keys for named shit
