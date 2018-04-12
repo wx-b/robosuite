@@ -19,13 +19,26 @@ gripper_body.set('quat', '0 0 1 0') # flip z
 gripper_body.append(joint(name='gripper_z_joint', type='slide', axis='0 0 1', damping='50'))
 world.merge(gripper, merge_body=False)
 world.worldbody.append(gripper_body)
-world.actuator.append(actuator(joint='gripper_z_joint', act_type='position', name='gripper_z', kp='100'))
+world.actuator.append(actuator(joint='gripper_z_joint', act_type='position', name='gripper_z', kp='500'))
 
 # Add an object for grasping
-mujoco_object = BoxObject(size=[0.01, 0.01, 0.01], rgba=[1, 0, 0, 1]).get_full()
+mujoco_object = BoxObject(size=[0.02, 0.02, 0.02], rgba=[1, 0, 0, 1]).get_full()
 mujoco_object.append(joint(name='object_free_joint', type='free'))
 mujoco_object.set('pos', '0 0 0.11')
+geoms = mujoco_object.findall('./geom')
+for geom in geoms:
+    if geom.get('contype'):
+        pass
+    geom.set('name', 'object')
+    geom.set('density', '10000') # 1000 for water
 world.worldbody.append(mujoco_object)
+
+x_ref = BoxObject(size=[0.01, 0.01, 0.01], rgba=[0, 1, 0, 1]).get_visual()
+x_ref.set('pos', '0.2 0 0.105')
+world.worldbody.append(x_ref)
+y_ref = BoxObject(size=[0.01, 0.01, 0.01], rgba=[0, 0, 1, 1]).get_visual()
+y_ref.set('pos', '0 0.2 0.105')
+world.worldbody.append(y_ref)
 
 # Start simulation
 model = world.get_model(mode='mujoco_py')
@@ -48,7 +61,7 @@ gripper_open = [0.0115, -0.0115]
 gripper_closed = [-0.020833, 0.020833]
 gripper_is_closed = True
 
-seq = [(False, False), (True, False), (True, True), (False, True), (False, False)]
+seq = [(False, False), (True, False), (True, True), (False, True)] + [(False, True)] * 20 + [(False, False)]
 
 sim.set_state(sim_state)
 step = 0
@@ -56,6 +69,14 @@ T = 1000
 while True:
     if step % 100 == 0:
         print('step: {}'.format(step))
+    if step % T == 0:
+        for contact in sim.data.contact:
+            if sim.model.geom_id2name(contact.geom1) == 'floor' and sim.model.geom_id2name(contact.geom2) == 'floor':
+                continue
+            print("geom1: {}".format(sim.model.geom_id2name(contact.geom1)))
+            print("geom2: {}".format(sim.model.geom_id2name(contact.geom2)))
+            print("friction: {}".format(contact.friction))
+            print("normal: {}".format(contact.frame[0:3]))
     if step % T == 0:
         plan = seq[int(step / T) % len(seq)]
         gripper_z_is_low, gripper_is_closed = plan
