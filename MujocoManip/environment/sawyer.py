@@ -27,7 +27,7 @@ class SawyerEnv(MujocoEnv):
 
         # Move end effector into position.
         gripper_target = self.sim.data.get_body_xpos('right_hand')
-        gripper_rotation = self.sim.data.get_body_quat('right_hand')
+        gripper_rotation = self.sim.data.get_body_xquat('right_hand')
 
         self.sim.data.set_mocap_pos('mocap', gripper_target)
         self.sim.data.set_mocap_quat('mocap', gripper_rotation)
