@@ -52,8 +52,14 @@ class SawyerEnv(MujocoEnv):
     def _get_reference(self):
         super()._get_reference()
         # indices for joints in qpos, qvel
-        self._ref_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr('right_j{}'.format(x)) for x in range(7)]
-        self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr('right_j{}'.format(x)) for x in range(7)]
+        self.robot_joints = list(self.mujoco_robot.joints)
+        self._ref_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.robot_joints]
+        self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.robot_joints]
+        if self.has_gripper:
+            self.gripper_joints = list(self.gripper.joints)
+            self._ref_gripper_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.gripper_joints]
+            self._ref_gripper_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.gripper_joints]
+
 
         # indices for joint pos actuation, joint vel actuation, gripper actuation
         self._ref_joint_pos_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
@@ -131,13 +137,14 @@ class SawyerEnv(MujocoEnv):
         return ret
 
     def _get_observation(self):
-        obs = super()._get_observation()
-        # TODO: make sure no overwriting is happening
+        di = super()._get_observation()
         joint_pos = [self.sim.data.qpos[x] for x in self._ref_joint_pos_indexes]
-        joint_pos_sin = np.sin(joint_pos)
-        joint_pos_cos = np.cos(joint_pos)
         joint_vel = [self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes]
-        return np.concatenate([obs, joint_pos, joint_pos_sin, joint_pos_cos, joint_vel])
+        if self.has_gripper:
+            joint_pos += [self.sim.data.qpos[x] for x in self._ref_gripper_joint_pos_indexes]
+            joint_vel += [self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes]
+        di['proprioception'] = np.concatenate([joint_pos, joint_vel])
+        return di
 
     def dof(self):
         if self.use_eef_ctrl:

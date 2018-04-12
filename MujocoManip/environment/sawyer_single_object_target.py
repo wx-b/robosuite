@@ -69,7 +69,7 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
         super()._pre_action(action)
         self.pre_action_object_target_dist = np.linalg.norm(self._target_pos - self._object_pos)
 
-    def _reward(self, action):
+    def reward(self, action):
         reward = 0
         self.post_action_object_target_dist = np.linalg.norm(self._target_pos - self._object_pos)
         
@@ -82,25 +82,14 @@ class SawyerSingleObjectTargetEnv(SawyerEnv):
         return reward
 
     def _get_observation(self):
-        obs = super()._get_observation()
-
-        hand_pos = self._right_hand_pos
-        object_pos = self._object_pos
-        target_pos = self._target_pos
-
-        hand_vel = self._right_hand_vel
-        object_vel = self._object_vel
-
-        object_pos_rel = object_pos - hand_pos
-        target_pos_rel = target_pos - hand_pos
-        object_vel_rel = object_vel - hand_vel
-
-        obs = np.concatenate([ obs,
-                                object_pos_rel,
-                                object_vel_rel,
-                                target_pos_rel,
-                                ])
-        return obs
+        di = super()._get_observation()
+        di['low-level'] = np.concatenate([self._object_pos,
+                                          self._object_vel,
+                                          self._target_pos,
+                                          self._right_hand_pos,
+                                          self._right_hand_vel
+                                        ])
+        return di
 
     def _check_lose(self):
         x_out = np.abs(self._object_pos[0]) > self.table_size[0] / 2

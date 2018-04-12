@@ -102,8 +102,10 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.done = False
 
     def _get_observation(self):
-        return []
-        #return OrderedDict()
+        """
+            Returns an OrderedDict containing observations [(name_string, np.array), ...]
+        """
+        return OrderedDict()
 
     def step(self, action):
         reward = 0
@@ -125,11 +127,11 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
     def _post_action(self, action):
         self.done = (self._check_lose() or self._check_win() or self.t >= self.horizon) and (not self.ignore_done)
-        reward = self._reward(action)
+        reward = self.reward(action)
         # TODO: how to manage info?
         return reward, self.done, {}
 
-    def _reward(self, action):
+    def reward(self, action):
         return 0
 
     def render(self, camera_id=0):
