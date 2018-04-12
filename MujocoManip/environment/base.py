@@ -168,6 +168,12 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
         # return self._get_observation()
 
+    def _check_contact(self):
+        """
+        Returns True if gripper is in contact with an object.
+        """
+        return False
+
     def close(self):
         """
         Do any cleanup necessary here.

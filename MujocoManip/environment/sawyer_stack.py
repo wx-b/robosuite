@@ -63,6 +63,15 @@ class SawyerStackEnv(SawyerEnv):
         self.object_names = [di['object_name'] for di in self.object_metadata]
         self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
+        # id of grippers for contact checking
+        self.finger_names = self.gripper.contact_geoms()
+
+        # self.sim.data.contact # list, geom1, geom2
+        # self.sim.model._geom_name2id # keys for named shit
+
+        self.collision_check_geom_names = self.sim.model._geom_name2id.keys()
+        self.collision_check_geom_ids = [self.sim.model._geom_name2id[k] for k in self.collision_check_geom_names]
+
     def _load_model(self):
         super()._load_model()
         self.mujoco_robot.place_on([0,0,0])
@@ -121,10 +130,24 @@ class SawyerStackEnv(SawyerEnv):
             all_observations += [self._object_pos(i),
                                 self._object_vel(i),
                                 self._target_pos(i)]
-
+            
         di['low-level'] = np.concatenate(all_observations)
         return di
         
+    def _check_contact(self):
+        """
+        Returns True if gripper is in contact with an object.
+        """
+        collision = False
+        for contact in self.sim.data.contact:
+            # print("geom1: {}".format(self.sim.model.geom_id2name(contact.geom1)))
+            # print("geom2: {}".format(self.sim.model.geom_id2name(contact.geom2)))
+            if self.sim.model.geom_id2name(contact.geom1) in self.finger_names or \
+               self.sim.model.geom_id2name(contact.geom2) in self.finger_names:
+                collision = True
+                break
+        return collision
+
     def _check_lose(self):
         object_z = np.concatenate([self._object_pos(i)[2:3] for i in range(self.n_objects)])
         # Object falls off the table
