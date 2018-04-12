@@ -1,7 +1,7 @@
 import numpy as np
 from MujocoManip.environment.sawyer import SawyerEnv
 from MujocoManip.model.model_util import xml_path_completion
-from MujocoManip.model import MujocoObject, SingleTargetTask, TableArena
+from MujocoManip.model import MujocoXMLObject, SingleTargetTask, TableArena
 
 class SawyerReachEnv(SawyerEnv):
     def __init__(self,
@@ -18,7 +18,7 @@ class SawyerReachEnv(SawyerEnv):
         """
         
         if mujoco_object is None:
-            mujoco_object = MujocoObject(xml_path_completion('object/object_ball.xml'))
+            mujoco_object = MujocoXMLObject(xml_path_completion('object/object_ball.xml'))
         self.mujoco_object = mujoco_object
         self.table_size = table_size
         self.table_friction = table_friction
