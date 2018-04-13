@@ -25,6 +25,7 @@ class EnvMeta(type):
         register_env(cls)
         return cls
 
+
 class MujocoEnv(object, metaclass=EnvMeta):
     def __init__(self, display=True, control_freq=100, horizon=500, ignore_done=False, **kwargs):
         """
@@ -79,11 +80,8 @@ class MujocoEnv(object, metaclass=EnvMeta):
         pass
 
     def reset(self):
-
         # if there is an active viewer window, destroy it
-        if self.viewer is not None:
-            self.viewer.close()
-        self.viewer = None
+        self.close()
         self._reset_internal()
         return self._get_observation()
 
@@ -102,8 +100,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.done = False
 
     def _get_observation(self):
-        return []
-        #return OrderedDict()
+        return OrderedDict()
 
     def step(self, action):
         reward = 0
@@ -118,7 +115,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
             reward, done, info = self._post_action(action)
             return self._get_observation(), reward, done, info
         else:
-            return self._get_observation(), 0, True, None
+            raise ValueError('executing action in terminated episode')
 
     def _pre_action(self, action):
         self.sim.data.ctrl[:] = action
@@ -129,8 +126,8 @@ class MujocoEnv(object, metaclass=EnvMeta):
         # TODO: how to manage info?
         return reward, self.done, {}
 
-    def _reward(self, action):
-        return 0
+    def reward(self, action):
+        raise NotImplementedError
 
     def render(self, camera_id=0):
         self.viewer.render(camera_id=camera_id)
@@ -147,9 +144,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
         """
 
         # if there is an active viewer window, destroy it
-        if self.viewer is not None:
-            self.viewer.close()
-        self.viewer = None
+        self.close()
 
         # load model from xml
         self.mjpy_model = load_model_from_xml(xml_string)
@@ -164,16 +159,11 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.t = 0
         self.done = False
 
-        # return self._get_observation()
-
     def close(self):
         """
         Do any cleanup necessary here.
         """
-        
         # if there is an active viewer window, destroy it
         if self.viewer is not None:
-            self.viewer.close()
-        self.viewer = None
-
-
+            self.viewer.close() # change this to viewer.finish()?
+            self.viewer = None

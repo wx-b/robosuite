@@ -1,10 +1,12 @@
 import numpy as np
+from collections import OrderedDict
 from MujocoManip.environment.base import MujocoEnv
 from MujocoManip.model import SawyerRobot, gripper_factory
 from MujocoManip.miscellaneous.utils import *
 
 
 class SawyerEnv(MujocoEnv):
+
     def __init__(self, gripper=None, use_eef_ctrl=False, use_torque_ctrl=False, use_force_ctrl=False, **kwargs):
         self.has_gripper = not (gripper is None)
         self.gripper_name = gripper
@@ -39,15 +41,16 @@ class SawyerEnv(MujocoEnv):
         super()._load_model()
         self.mujoco_robot = SawyerRobot(use_torque_ctrl=self.use_torque_ctrl, use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
-            self.gripper = gripper_factory(self.gripper_name)
-            self.mujoco_robot.add_gripper(self.gripper)
+            # self.gripper = gripper_factory()
+            self.mujoco_robot.add_gripper('right_hand', self.gripper_name)
+            self.gripper = self.mujoco_robot.grippers['right_hand']
 
     def _reset_internal(self):
         super()._reset_internal()
-        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.rest_pos
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos
 
         if self.has_gripper:
-            self.sim.data.qpos[self._ref_joint_gripper_actuator_indexes] = self.gripper.rest_pos
+            self.sim.data.qpos[self._ref_joint_gripper_actuator_indexes] = self.gripper.init_qpos
 
     def _get_reference(self):
         super()._get_reference()
@@ -132,12 +135,12 @@ class SawyerEnv(MujocoEnv):
 
     def _get_observation(self):
         obs = super()._get_observation()
-        # TODO: make sure no overwriting is happening
-        joint_pos = [self.sim.data.qpos[x] for x in self._ref_joint_pos_indexes]
-        joint_pos_sin = np.sin(joint_pos)
-        joint_pos_cos = np.cos(joint_pos)
-        joint_vel = [self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes]
-        return np.concatenate([obs, joint_pos, joint_pos_sin, joint_pos_cos, joint_vel])
+        proprioception = OrderedDict([
+            ('joint_pos', joint_pos),
+            ('joint_vel', joint_vel)
+        ])
+        obs.update(proprioception)
+        return obs
 
     def dof(self):
         if self.use_eef_ctrl:

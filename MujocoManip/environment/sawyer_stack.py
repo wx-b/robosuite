@@ -64,7 +64,7 @@ class SawyerStackEnv(SawyerEnv):
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_robot.place_on([0,0,0])
+        self.mujoco_robot.set_base_xpos([0,0,0])
         
         self.mujoco_arena = TableArena(full_size=self.table_size)
         # The sawyer robot has a pedestal, we want to align it with the table

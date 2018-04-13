@@ -21,7 +21,7 @@ class MujocoGripper(MujocoXML):
         raise NotImplementedError
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         """
             Returns rest(open) qpos of the gripper
         """
@@ -43,7 +43,7 @@ class TwoFingerGripper(MujocoGripper):
         # return np.array([-1 * action, 1 * action])
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         return np.array([0.020833, -0.020833])
 
     @property
@@ -62,7 +62,7 @@ class PR2Gripper(MujocoGripper):
  #       return np.ones(4) * action
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         return np.zeros(4)
 
     @property
@@ -81,7 +81,7 @@ class RobotiqGripper(MujocoGripper):
 #         return -1 * np.ones(6) * action
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         return [ 3.3161, 0., 0., 0., 0., 0.]
 
     @property
@@ -116,7 +116,7 @@ class RobotiqThreeFingerGripper(MujocoGripper):
         return action
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         return np.zeros(11)
 
     @property
