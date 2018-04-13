@@ -139,12 +139,16 @@ class SawyerStackEnv(SawyerEnv):
         Returns True if gripper is in contact with an object.
         """
         collision = False
-        for contact in self.sim.data.contact:
+
+        ### TODO: try 0:self.sim.data.ncon and :
+        for contact in self.sim.data.contact[:self.sim.data.ncon]:
             # print("geom1: {}".format(self.sim.model.geom_id2name(contact.geom1)))
             # print("geom2: {}".format(self.sim.model.geom_id2name(contact.geom2)))
             if self.sim.model.geom_id2name(contact.geom1) in self.finger_names or \
                self.sim.model.geom_id2name(contact.geom2) in self.finger_names:
                 collision = True
+                # print("geom1: {}".format(self.sim.model.geom_id2name(contact.geom1)))
+                # print("geom2: {}".format(self.sim.model.geom_id2name(contact.geom2)))
                 break
         return collision
 

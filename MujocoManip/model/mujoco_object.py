@@ -147,6 +147,8 @@ class MujocoGeneratedObject(MujocoObject):
         if name is not None:
             body.set('name', name)
         template = self.get_collision_attrib_template()
+        if name is not None:
+            template['name'] = name
         template['type'] = ob_type
         template['rgba'] = array_to_string(self.rgba)
         template['size'] = array_to_string(self.size)
