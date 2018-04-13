@@ -1,10 +1,12 @@
 import numpy as np
+from collections import OrderedDict
 from MujocoManip.environment.base import MujocoEnv
 from MujocoManip.model import SawyerRobot, gripper_factory
 from MujocoManip.miscellaneous.utils import *
 
 
 class SawyerEnv(MujocoEnv):
+
     def __init__(self, gripper=None, use_eef_ctrl=False, use_torque_ctrl=False, use_force_ctrl=False, **kwargs):
         self.has_gripper = not (gripper is None)
         self.gripper_name = gripper
@@ -39,15 +41,16 @@ class SawyerEnv(MujocoEnv):
         super()._load_model()
         self.mujoco_robot = SawyerRobot(use_torque_ctrl=self.use_torque_ctrl, use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
-            self.gripper = gripper_factory(self.gripper_name)
-            self.mujoco_robot.add_gripper(self.gripper)
+            # self.gripper = gripper_factory()
+            self.mujoco_robot.add_gripper('right_hand', self.gripper_name)
+            self.gripper = self.mujoco_robot.grippers['right_hand']
 
     def _reset_internal(self):
         super()._reset_internal()
-        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.rest_pos
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos
 
         if self.has_gripper:
-            self.sim.data.qpos[self._ref_joint_gripper_actuator_indexes] = self.gripper.rest_pos
+            self.sim.data.qpos[self._ref_joint_gripper_actuator_indexes] = self.gripper.init_qpos
 
     def _get_reference(self):
         super()._get_reference()
@@ -116,8 +119,8 @@ class SawyerEnv(MujocoEnv):
         else:
             action = np.clip(action, -1, 1)    
             if self.has_gripper:
-                arm_action = action[:self.mujoco_robot.dof()]
-                gripper_action_in = action[self.mujoco_robot.dof():self.mujoco_robot.dof()+self.gripper.dof()]
+                arm_action = action[:self.mujoco_robot.dof]
+                gripper_action_in = action[self.mujoco_robot.dof:self.mujoco_robot.dof+self.gripper.dof]
                 gripper_action_actual = self.gripper.format_action(gripper_action_in)
                 action = np.concatenate([arm_action, gripper_action_actual])
 
@@ -150,9 +153,9 @@ class SawyerEnv(MujocoEnv):
         if self.use_eef_ctrl:
             dof = 3
         else:
-            dof = self.mujoco_robot.dof()
+            dof = self.mujoco_robot.dof
         if self.has_gripper:
-            dof += self.gripper.dof()
+            dof += self.gripper.dof
         return dof
 
     def pose_in_base_from_name(self, name):
@@ -184,13 +187,9 @@ class SawyerEnv(MujocoEnv):
         self.sim.forward()
 
     @property
-    #TODO: fix it
     def action_space(self):
-        # TODO: I am not sure if we want to add gym dependency just for observation space and action space
-        # return spaces.Box(
-        low=np.ones(self.dof()) * -1.
-        high=np.ones(self.dof()) * 1.
-        # )
+        low = np.ones(self.dof) * -1.
+        high = np.ones(self.dof) * 1.
         return low, high
 
     @property
@@ -313,5 +312,3 @@ class SawyerEnv(MujocoEnv):
         Returns True if the gripper is in contact with another object.
         """
         return False
-
-

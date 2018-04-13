@@ -2,7 +2,7 @@ from MujocoManip.model import *
 from mujoco_py import load_model_from_path, MjSim, MjViewer
 import xml.etree.ElementTree as ET
 from MujocoManip.model.model_util import *
-
+import gc
 world = MujocoWorldBase()
 
 # Add a table
@@ -61,7 +61,7 @@ gripper_open = [0.0115, -0.0115]
 gripper_closed = [-0.020833, 0.020833]
 gripper_is_closed = True
 
-seq = [(False, False), (True, False), (True, True), (False, True)] + [(False, True)] * 20 + [(False, False)]
+seq = [(False, False), (True, False), (True, True), (False, True)]
 
 sim.set_state(sim_state)
 step = 0
@@ -69,14 +69,16 @@ T = 1000
 while True:
     if step % 100 == 0:
         print('step: {}'.format(step))
-    if step % T == 0:
-        for contact in sim.data.contact:
+    if step % 100 == 0:
+        for contact in sim.data.contact[0:sim.data.ncon]:
             if sim.model.geom_id2name(contact.geom1) == 'floor' and sim.model.geom_id2name(contact.geom2) == 'floor':
                 continue
-            print("geom1: {}".format(sim.model.geom_id2name(contact.geom1)))
-            print("geom2: {}".format(sim.model.geom_id2name(contact.geom2)))
-            print("friction: {}".format(contact.friction))
-            print("normal: {}".format(contact.frame[0:3]))
+            # if not gripper_is_closed and sim.model.geom_id2name(contact.geom1) == 'r_finger_g0' and sim.model.geom_id2name(contact.geom2) == 'object':
+            # if sim.model.geom_id2name(contact.geom1) == 'r_finger_g0' and sim.model.geom_id2name(contact.geom2) == 'object':
+            print("geom1: {}, geom2: {}".format(sim.model.geom_id2name(contact.geom1), sim.model.geom_id2name(contact.geom2)))
+                # print("contact id {}".format(id(contact)))
+            # print("friction: {}".format(contact.friction))
+            # print("normal: {}".format(contact.frame[0:3]))
     if step % T == 0:
         plan = seq[int(step / T) % len(seq)]
         gripper_z_is_low, gripper_is_closed = plan

@@ -134,7 +134,7 @@ class MujocoXML(object):
 
     # Subclass should also define it as a property
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         """
             Returns the rest position of joints, in raw actuation units
         """

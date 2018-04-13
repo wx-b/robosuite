@@ -21,12 +21,13 @@ class MujocoGripper(MujocoXML):
         raise NotImplementedError
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         """
             Returns rest(open) qpos of the gripper
         """
         raise NotImplementedError
 
+    @property
     def dof(self):
         """
             Returns the number of DOF of the gripper
@@ -50,13 +51,14 @@ class TwoFingerGripper(MujocoGripper):
         # return np.array([-1 * action, 1 * action])
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         return np.array([0.020833, -0.020833])
 
     @property
     def joints(self):
         return ['r_gripper_l_finger_joint', 'r_gripper_r_finger_joint']
 
+    @property
     def dof(self):
         return 2
 
@@ -72,13 +74,14 @@ class PR2Gripper(MujocoGripper):
  #       return np.ones(4) * action
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         return np.zeros(4)
 
     @property
     def joints(self):
         return ['r_gripper_r_finger_joint', 'r_gripper_l_finger_joint', 'r_gripper_r_finger_tip_joint', 'r_gripper_l_finger_tip_joint']
 
+    @property
     def dof(self):
         return 4
 
@@ -94,7 +97,7 @@ class RobotiqGripper(MujocoGripper):
 #         return -1 * np.ones(6) * action
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         return [ 3.3161, 0., 0., 0., 0., 0.]
 
     @property
@@ -108,7 +111,7 @@ class RobotiqGripper(MujocoGripper):
             'robotiq_85_right_finger_tip_joint',
             ]
 
-
+    @property
     def dof(self):
         return 6
 
@@ -120,6 +123,7 @@ class PushingGripper(TwoFingerGripper):
     def format_action(self, action):
         return np.array([1, -1])
 
+    @property
     def dof(self):
         return 0
 
@@ -135,25 +139,26 @@ class RobotiqThreeFingerGripper(MujocoGripper):
         return action
 
     @property
-    def rest_pos(self):
+    def init_qpos(self):
         return np.zeros(11)
 
     @property
     def joints(self):
         return [
-        "palm_finger_1_joint",
-        "finger_1_joint_1",
-        "finger_1_joint_2", 
-        "finger_1_joint_3", 
-        "palm_finger_2_joint", 
-        "finger_2_joint_1", 
-        "finger_2_joint_2", 
-        "finger_2_joint_3", 
-        "finger_middle_joint_1", 
-        "finger_middle_joint_2", 
-        "finger_middle_joint_3"
+            "palm_finger_1_joint",
+            "finger_1_joint_1",
+            "finger_1_joint_2",
+            "finger_1_joint_3",
+            "palm_finger_2_joint",
+            "finger_2_joint_1",
+            "finger_2_joint_2",
+            "finger_2_joint_3",
+            "finger_middle_joint_1",
+            "finger_middle_joint_2",
+            "finger_middle_joint_3"
         ]
 
+    @property
     def dof(self):
         return 11
 

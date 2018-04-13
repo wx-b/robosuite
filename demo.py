@@ -2,7 +2,7 @@ import time
 from MujocoManip import make
 import numpy as np
 
-
+# env = make("SawyerEnv", display=True, ignore_done=True)
 env = make("SawyerStackEnv", display=True, ignore_done=True)
 
 while True:
