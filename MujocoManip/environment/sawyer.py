@@ -119,8 +119,8 @@ class SawyerEnv(MujocoEnv):
         else:
             action = np.clip(action, -1, 1)    
             if self.has_gripper:
-                arm_action = action[:self.mujoco_robot.dof()]
-                gripper_action_in = action[self.mujoco_robot.dof():self.mujoco_robot.dof()+self.gripper.dof()]
+                arm_action = action[:self.mujoco_robot.dof]
+                gripper_action_in = action[self.mujoco_robot.dof:self.mujoco_robot.dof+self.gripper.dof]
                 gripper_action_actual = self.gripper.format_action(gripper_action_in)
                 action = np.concatenate([arm_action, gripper_action_actual])
 
@@ -153,9 +153,9 @@ class SawyerEnv(MujocoEnv):
         if self.use_eef_ctrl:
             dof = 3
         else:
-            dof = self.mujoco_robot.dof()
+            dof = self.mujoco_robot.dof
         if self.has_gripper:
-            dof += self.gripper.dof()
+            dof += self.gripper.dof
         return dof
 
     def pose_in_base_from_name(self, name):
@@ -191,8 +191,8 @@ class SawyerEnv(MujocoEnv):
     def action_space(self):
         # TODO: I am not sure if we want to add gym dependency just for observation space and action space
         # return spaces.Box(
-        low=np.ones(self.dof()) * -1.
-        high=np.ones(self.dof()) * 1.
+        low=np.ones(self.dof) * -1.
+        high=np.ones(self.dof) * 1.
         # )
         return low, high
 

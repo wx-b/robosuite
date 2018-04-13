@@ -27,6 +27,7 @@ class MujocoGripper(MujocoXML):
         """
         raise NotImplementedError
 
+    @property
     def dof(self):
         """
             Returns the number of DOF of the gripper
@@ -57,6 +58,7 @@ class TwoFingerGripper(MujocoGripper):
     def joints(self):
         return ['r_gripper_l_finger_joint', 'r_gripper_r_finger_joint']
 
+    @property
     def dof(self):
         return 2
 
@@ -79,6 +81,7 @@ class PR2Gripper(MujocoGripper):
     def joints(self):
         return ['r_gripper_r_finger_joint', 'r_gripper_l_finger_joint', 'r_gripper_r_finger_tip_joint', 'r_gripper_l_finger_tip_joint']
 
+    @property
     def dof(self):
         return 4
 
@@ -108,7 +111,7 @@ class RobotiqGripper(MujocoGripper):
             'robotiq_85_right_finger_tip_joint',
             ]
 
-
+    @property
     def dof(self):
         return 6
 
@@ -120,6 +123,7 @@ class PushingGripper(TwoFingerGripper):
     def format_action(self, action):
         return np.array([1, -1])
 
+    @property
     def dof(self):
         return 0
 
@@ -154,6 +158,7 @@ class RobotiqThreeFingerGripper(MujocoGripper):
         "finger_middle_joint_3"
         ]
 
+    @property
     def dof(self):
         return 11
 

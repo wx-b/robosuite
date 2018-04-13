@@ -47,7 +47,7 @@ class MujocoRobot(MujocoXML):
         raise NotImplementedError
 
     @property
-    def jnt_names(self):
+    def joints(self):
         """
             Returns a list of joint names of the robot
         """
@@ -84,7 +84,7 @@ class SawyerRobot(MujocoRobot):
         return 7
 
     @property
-    def jnt_names(self):
+    def joints(self):
         return ['right_j{}'.format(x) for x in range(7)]
 
     @property
