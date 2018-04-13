@@ -7,52 +7,21 @@ from MujocoManip.model import MujocoObject, StackerTask, TableArena, DefaultCyli
 
 class SawyerStackEnv(SawyerEnv):
     def __init__(self, 
-                gripper='TwoFingerGripper',
-                mujoco_objects=None,
-                n_mujoco_objects=10,
-                table_size=(0.8, 0.8, 0.8),
-                table_friction=None,
-                reward_lose=-2,
-                reward_win=2,
-                reward_action_norm_factor=-0.1,
-                reward_objective_factor=0.1,
-                win_rel_tolerance=1e-2,
-                **kwargs):
+                 gripper='TwoFingerGripper',
+                 table_size=(0.8, 0.8, 0.8),
+                 **kwargs):
         """
-            @mujoco_objects(None), the objects to be stacked, need that is is an MujocoObject instace
-            If None, load 'object/object_ball.xml', generate n_mujoco_objects random boxes
-            @n_mujoco_objects(int), number of objects to be stacked, need an array of MujocoObject instaces
-                ignored when mujoco_objects is not None
             @table_size, the FULL size of the table 
             @friction: friction coefficient of table, None for mujoco default
-            @reward_win: reward given to the agent when it completes the task
-            @reward_lose: reward given to the agent when it fails the task
-            @reward_action_norm_factor: reward scaling factor that penalizes large actions
-            @reward_objective_factor: reward scaling factor for being close to completing the objective
-            @win_rel_tolerance: relative tolerance between object and target location 
-                used when deciding if the agent has completed the task
         """
         # Handle parameters
-        self.mujoco_objects = mujoco_objects
-        if self.mujoco_objects is None:
-            # self.mujoco_objects = [RandomCapsuleObject(size_max=[0.025, 0.03], size_min=[0.01, 0.01]) for _ in range(1)]
-            # self.mujoco_objects.extend([RandomCylinderObject(size_max=[0.025, 0.05], size_min=[0.01, 0.01]) for _ in range(1)])
-            # self.mujoco_objects.extend([RandomBoxObject(size_max=[0.025, 0.025, 0.05], size_min=[0.01, 0.01, 0.01]) for _ in range(1)])
-            # self.mujoco_objects.extend([RandomBallObject(size_max=[0.03], size_min=[0.02]) for _ in range(1)])
-            # self.mujoco_objects = []
-            self.mujoco_objects = [RandomCapsuleObject(size_max=[0.025, 0.03], size_min=[0.01, 0.01]) for _ in range(3)]
-            self.mujoco_objects.extend([RandomCylinderObject(size_max=[0.025, 0.05], size_min=[0.01, 0.01]) for _ in range(5)])
-            self.mujoco_objects.extend([RandomBoxObject(size_max=[0.025, 0.025, 0.05], size_min=[0.01, 0.01, 0.01]) for _ in range(5)])
-            self.mujoco_objects.extend([RandomBallObject(size_max=[0.03], size_min=[0.02]) for _ in range(3)])
-        self.n_mujoco_objects = len(self.mujoco_objects)
-        self.table_size = table_size
-        self.table_friction = table_friction
+        self.mujoco_objects = []
+        # self.mujoco_objects.exnted([RandomCapsuleObject(size_max=[0.025, 0.03], size_min=[0.01, 0.01]) for _ in range(3)])
+        # self.mujoco_objects.extend([RandomCylinderObject(size_max=[0.025, 0.05], size_min=[0.01, 0.01]) for _ in range(5)])
+        self.mujoco_objects.extend([RandomBoxObject(size_min=[0.025, 0.025, 0.03], size_max=[0.05, 0.05, 0.05]) for _ in range(2)])
+        # self.mujoco_objects.extend([RandomBallObject(size_max=[0.03], size_min=[0.02]) for _ in range(3)])
 
-        self.reward_lose=reward_lose
-        self.reward_win=reward_win
-        self.reward_action_norm_factor=reward_action_norm_factor
-        self.reward_objective_factor=reward_objective_factor
-        self.win_rel_tolerance = win_rel_tolerance
+        self.table_size = table_size
 
         super().__init__(gripper=gripper, **kwargs)
 
@@ -102,16 +71,7 @@ class SawyerStackEnv(SawyerEnv):
 
     def reward(self, action):
         reward = 0
-        if self._check_win():
-            reward += self.reward_win
-        elif self._check_lose():
-            reward += self.reward_lose
-        # TODO: set a good action penalty coefficient
-        # distance of object
-        for i in range(self.n_objects):
-            reward += self.reward_objective_factor * np.exp(-2. * np.linalg.norm(self._target_pos(i) - self._object_pos(i), 2))
-        # Action strength
-        reward += self.reward_action_norm_factor * np.linalg.norm(action, 2)
+        #TODO(yukez): implementing a stacking reward
         return reward
 
     def _get_observation(self):
@@ -133,7 +93,7 @@ class SawyerStackEnv(SawyerEnv):
             
         di['low-level'] = np.concatenate(all_observations)
         return di
-        
+
     def _check_contact(self):
         """
         Returns True if gripper is in contact with an object.
@@ -148,15 +108,9 @@ class SawyerStackEnv(SawyerEnv):
                 break
         return collision
 
-    def _check_lose(self):
-        object_z = np.concatenate([self._object_pos(i)[2:3] for i in range(self.n_objects)])
-        # Object falls off the table
-        return np.min(object_z) < 0
-
-    def _check_win(self):
-        object_pos = np.concatenate([self._object_pos(i) for i in range(self.n_objects)])
-        target_pos = np.concatenate([self._target_pos(i) for i in range(self.n_objects)])
-        return np.allclose(object_pos, target_pos, rtol=self.win_rel_tolerance)
+    def _check_terminated(self):
+        #TODO(yukez): define termination conditions
+        return False
 
     @property
     def observation_space(self):
@@ -205,7 +159,6 @@ class SawyerStackEnv(SawyerEnv):
     ####
     # Properties for objects
     ####
-
     def _object_pos(self, i):
         object_name = self.object_metadata[i]['object_name']
         return self.sim.data.get_body_xpos(object_name) - self._pos_offset

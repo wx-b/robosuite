@@ -187,13 +187,9 @@ class SawyerEnv(MujocoEnv):
         self.sim.forward()
 
     @property
-    #TODO: fix it
     def action_space(self):
-        # TODO: I am not sure if we want to add gym dependency just for observation space and action space
-        # return spaces.Box(
-        low=np.ones(self.dof) * -1.
-        high=np.ones(self.dof) * 1.
-        # )
+        low = np.ones(self.dof) * -1.
+        high = np.ones(self.dof) * 1.
         return low, high
 
     @property

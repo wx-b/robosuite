@@ -124,8 +124,8 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.sim.data.ctrl[:] = action
 
     def _post_action(self, action):
-        self.done = (self._check_lose() or self._check_win() or self.t >= self.horizon) and (not self.ignore_done)
         reward = self.reward(action)
+        self.done = (self._check_terminated() or self.t >= self.horizon) and (not self.ignore_done)
         # TODO: how to manage info?
         return reward, self.done, {}
 
