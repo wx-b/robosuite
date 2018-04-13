@@ -33,6 +33,13 @@ class MujocoGripper(MujocoXML):
         """
         raise NotImplementedError
 
+    def contact_geoms(self):
+        """
+            Returns a list of names corresponding to the geoms
+            used to determine contact with the gripper.
+        """
+        raise NotImplementedError
+
 
 class TwoFingerGripper(MujocoGripper):
     def __init__(self):
@@ -53,6 +60,9 @@ class TwoFingerGripper(MujocoGripper):
     def dof(self):
         return 2
 
+    def contact_geoms(self):
+        return ["r_finger_g0", "r_finger_g1", "l_finger_g0", "l_finger_g1", "r_fingertip_g0", "l_fingertip_g0"]
+
 class PR2Gripper(MujocoGripper):
     def __init__(self):
         super().__init__(xml_path_completion('gripper/pr2_gripper.xml'))
@@ -71,6 +81,9 @@ class PR2Gripper(MujocoGripper):
 
     def dof(self):
         return 4
+
+    def contact_geoms(self):
+        raise NotImplementedError
 
 class RobotiqGripper(MujocoGripper):
     def __init__(self):
@@ -99,6 +112,9 @@ class RobotiqGripper(MujocoGripper):
     def dof(self):
         return 6
 
+    def contact_geoms(self):
+        raise NotImplementedError
+
 class PushingGripper(TwoFingerGripper):
     """Same as Two FingerGripper, but always closed"""
     def format_action(self, action):
@@ -106,6 +122,9 @@ class PushingGripper(TwoFingerGripper):
 
     def dof(self):
         return 0
+
+    def contact_geoms(self):
+        raise NotImplementedError
 
 class RobotiqThreeFingerGripper(MujocoGripper):
     def __init__(self):
@@ -137,6 +156,9 @@ class RobotiqThreeFingerGripper(MujocoGripper):
 
     def dof(self):
         return 11
+
+    def contact_geoms(self):
+        raise NotImplementedError
 
 def gripper_factory(name):
     """Genreator for grippers"""

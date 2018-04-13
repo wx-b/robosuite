@@ -6,6 +6,7 @@ NOTE: convention for quaternions is (x, y, z, w)
 
 import numpy as np
 import math
+import mujoco_py
 
 pi = np.pi
 EPS = np.finfo(float).eps * 4.

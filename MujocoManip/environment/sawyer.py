@@ -29,7 +29,7 @@ class SawyerEnv(MujocoEnv):
 
         # Move end effector into position.
         gripper_target = self.sim.data.get_body_xpos('right_hand')
-        gripper_rotation = self.sim.data.get_body_quat('right_hand')
+        gripper_rotation = self.sim.data.get_body_xquat('right_hand')
 
         self.sim.data.set_mocap_pos('mocap', gripper_target)
         self.sim.data.set_mocap_quat('mocap', gripper_rotation)
@@ -55,8 +55,14 @@ class SawyerEnv(MujocoEnv):
     def _get_reference(self):
         super()._get_reference()
         # indices for joints in qpos, qvel
-        self._ref_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr('right_j{}'.format(x)) for x in range(7)]
-        self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr('right_j{}'.format(x)) for x in range(7)]
+        self.robot_joints = list(self.mujoco_robot.joints)
+        self._ref_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.robot_joints]
+        self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.robot_joints]
+        if self.has_gripper:
+            self.gripper_joints = list(self.gripper.joints)
+            self._ref_gripper_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.gripper_joints]
+            self._ref_gripper_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.gripper_joints]
+
 
         # indices for joint pos actuation, joint vel actuation, gripper actuation
         self._ref_joint_pos_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
@@ -97,36 +103,36 @@ class SawyerEnv(MujocoEnv):
             # gravity compensation
             self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
 
+        elif self.use_force_ctrl:
+
+            ### TODO: convert the following in mujoco_py??? ###
+
+            ### TODO: is this force acting in the end effector frame? If so, we need to translate to base coords... ###
+
+            # note we convert force in base frame to force in world frame
+            # self.physics.named.data.xfrc_applied['right_hand'] = self._convert_base_force_to_world_force(action[:6])
+            self.physics.named.data.xfrc_applied['right_hand'] = action[:6]
+
+            # gravity compensation
+            self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+        
         else:
-            if self.use_force_ctrl:
+            action = np.clip(action, -1, 1)    
+            if self.has_gripper:
+                arm_action = action[:self.mujoco_robot.dof()]
+                gripper_action_in = action[self.mujoco_robot.dof():self.mujoco_robot.dof()+self.gripper.dof()]
+                gripper_action_actual = self.gripper.format_action(gripper_action_in)
+                action = np.concatenate([arm_action, gripper_action_actual])
 
-                ### TODO: convert the following in mujoco_py??? ###
+            # rescale normalized action to control ranges
+            ctrl_range = self.sim.model.actuator_ctrlrange
+            bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
+            weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
+            applied_action = bias + weight * action
+            self.sim.data.ctrl[:] = applied_action
 
-                ### TODO: is this force acting in the end effector frame? If so, we need to translate to base coords... ###
-
-                # note we convert force in base frame to force in world frame
-                # self.physics.named.data.xfrc_applied['right_hand'] = self._convert_base_force_to_world_force(action[:6])
-                self.physics.named.data.xfrc_applied['right_hand'] = action[:6]
-
-                # gravity compensation
-                self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
-            else:
-                action = np.clip(action, -1, 1)    
-                if self.has_gripper:
-                    arm_action = action[:self.mujoco_robot.dof()]
-                    gripper_action_in = action[self.mujoco_robot.dof():self.mujoco_robot.dof()+self.gripper.dof()]
-                    gripper_action_actual = self.gripper.format_action(gripper_action_in)
-                    action = np.concatenate([arm_action, gripper_action_actual])
-
-                # rescale normalized action to control ranges
-                ctrl_range = self.sim.model.actuator_ctrlrange
-                bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
-                weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
-                applied_action = bias + weight * action
-                self.sim.data.ctrl[:] = applied_action
-
-                # gravity compensation
-                self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+            # gravity compensation
+            self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
 
     def _post_action(self, action):
         ret = super()._post_action(action)
@@ -134,13 +140,14 @@ class SawyerEnv(MujocoEnv):
         return ret
 
     def _get_observation(self):
-        obs = super()._get_observation()
-        proprioception = OrderedDict([
-            ('joint_pos', joint_pos),
-            ('joint_vel', joint_vel)
-        ])
-        obs.update(proprioception)
-        return obs
+        di = super()._get_observation()
+        joint_pos = [self.sim.data.qpos[x] for x in self._ref_joint_pos_indexes]
+        joint_vel = [self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes]
+        if self.has_gripper:
+            joint_pos += [self.sim.data.qpos[x] for x in self._ref_gripper_joint_pos_indexes]
+            joint_vel += [self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes]
+        di['proprioception'] = np.concatenate([joint_pos, joint_vel])
+        return di
 
     def dof(self):
         if self.use_eef_ctrl:
@@ -304,4 +311,8 @@ class SawyerEnv(MujocoEnv):
         # By default, don't do any coloring.
         self.sim.model.site_rgba[self.eef_site_id] = [0., 0., 0., 0.]
 
-
+    def _check_contact(self):
+        """
+        Returns True if the gripper is in contact with another object.
+        """
+        return False

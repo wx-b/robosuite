@@ -100,6 +100,9 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.done = False
 
     def _get_observation(self):
+        """
+            Returns an OrderedDict containing observations [(name_string, np.array), ...]
+        """
         return OrderedDict()
 
     def step(self, action):
@@ -122,12 +125,12 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
     def _post_action(self, action):
         self.done = (self._check_lose() or self._check_win() or self.t >= self.horizon) and (not self.ignore_done)
-        reward = self._reward(action)
+        reward = self.reward(action)
         # TODO: how to manage info?
         return reward, self.done, {}
 
     def reward(self, action):
-        raise NotImplementedError
+        return 0
 
     def render(self, camera_id=0):
         self.viewer.render(camera_id=camera_id)
@@ -158,6 +161,12 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.cur_time = 0
         self.t = 0
         self.done = False
+
+    def _check_contact(self):
+        """
+        Returns True if gripper is in contact with an object.
+        """
+        return False
 
     def close(self):
         """
