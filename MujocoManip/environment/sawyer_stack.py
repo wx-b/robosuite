@@ -9,19 +9,17 @@ class SawyerStackEnv(SawyerEnv):
     def __init__(self, 
                  gripper='TwoFingerGripper',
                  table_size=(0.8, 0.8, 0.8),
+                 table_friction=None,
                  **kwargs):
         """
             @table_size, the FULL size of the table 
-            @friction: friction coefficient of table, None for mujoco default
         """
         # Handle parameters
         self.mujoco_objects = []
-        # self.mujoco_objects.exnted([RandomCapsuleObject(size_max=[0.025, 0.03], size_min=[0.01, 0.01]) for _ in range(3)])
-        # self.mujoco_objects.extend([RandomCylinderObject(size_max=[0.025, 0.05], size_min=[0.01, 0.01]) for _ in range(5)])
         self.mujoco_objects.extend([RandomBoxObject(size_min=[0.025, 0.025, 0.03], size_max=[0.05, 0.05, 0.05]) for _ in range(2)])
-        # self.mujoco_objects.extend([RandomBallObject(size_max=[0.03], size_min=[0.02]) for _ in range(3)])
 
         self.table_size = table_size
+        self.table_friction = table_friction
 
         super().__init__(gripper=gripper, **kwargs)
 
@@ -45,7 +43,7 @@ class SawyerStackEnv(SawyerEnv):
         super()._load_model()
         self.mujoco_robot.set_base_xpos([0,0,0])
         
-        self.mujoco_arena = TableArena(full_size=self.table_size)
+        self.mujoco_arena = TableArena(full_size=self.table_size, friction=self.table_friction)
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
      
@@ -160,9 +158,8 @@ class SawyerStackEnv(SawyerEnv):
         # rgba[-1] = 0.5
         self.sim.model.site_rgba[self.eef_site_id] = rgba
 
-    ####
     # Properties for objects
-    ####
+
     def _object_pos(self, i):
         object_name = self.object_metadata[i]['object_name']
         return self.sim.data.get_body_xpos(object_name) - self._pos_offset
