@@ -6,7 +6,16 @@ from MujocoManip.model.world import MujocoWorldBase
 from MujocoManip.model.model_util import *
 from MujocoManip.miscellaneous.utils import *
 
-class StackerTask(MujocoWorldBase):
+class TableTopTask(MujocoWorldBase):
+
+    """
+        Table top manipulation task can be specified 
+        by three elements of the environment.
+        @mujoco_arena, MJCF robot workspace (e.g., table top)
+        @mujoco_robot, MJCF robot model
+        @mujoco_objects, a list of MJCF objects of interest
+    """
+
     def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects):
         super().__init__()
         self.object_metadata = []
@@ -31,9 +40,9 @@ class StackerTask(MujocoWorldBase):
         self.targets = [] # xml manifestation
         self.max_horizontal_radius = 0
         for i, mujoco_object in enumerate(mujoco_objects):
-            object_name = 'stacker_object_{}'.format(i)
-            joint_name = 'stacker_object_free_joint_{}'.format(i)
-            target_name = 'stacker_target_{}'.format(i)
+            object_name = 'object_{}'.format(i)
+            joint_name = 'object_free_joint_{}'.format(i)
+            target_name = 'target_{}'.format(i)
 
             self.merge_asset(mujoco_object)
             # Load object
@@ -107,4 +116,3 @@ class StackerTask(MujocoWorldBase):
             contact_point -= self.mujoco_objects[index].get_bottom_offset()
             self.targets[index].set('pos', array_to_string(contact_point))
             contact_point += self.mujoco_objects[index].get_top_offset()
-        

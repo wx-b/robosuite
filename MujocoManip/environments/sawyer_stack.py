@@ -1,7 +1,7 @@
 import numpy as np
 from MujocoManip.miscellaneous import RandomizationError
-from MujocoManip.environment.sawyer import SawyerEnv
-from MujocoManip.model import MujocoObject, StackerTask, TableArena, DefaultCylinderObject, RandomCylinderObject, RandomBoxObject, DefaultBallObject, RandomBallObject, DefaultCapsuleObject, RandomCapsuleObject
+from MujocoManip.environments.sawyer import SawyerEnv
+from MujocoManip.model import MujocoObject, TableTopTask, TableArena, DefaultCylinderObject, RandomCylinderObject, RandomBoxObject, DefaultBallObject, RandomBallObject, DefaultCapsuleObject, RandomCapsuleObject
 
 # TODO: configure table width
 
@@ -47,7 +47,7 @@ class SawyerStackEnv(SawyerEnv):
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
      
-        self.task = StackerTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
+        self.task = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
 
         self.object_metadata = self.task.object_metadata
         self.n_objects = len(self.object_metadata)
