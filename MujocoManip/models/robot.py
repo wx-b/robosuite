@@ -1,10 +1,10 @@
 import numpy as np
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
-from MujocoManip.model.base import MujocoXML
+from MujocoManip.models.base import MujocoXML
 from MujocoManip.miscellaneous import XMLError
-from MujocoManip.model.gripper import gripper_factory
-from MujocoManip.model.model_util import *
+from MujocoManip.models.gripper import gripper_factory
+from MujocoManip.models.model_util import *
 
 
 class MujocoRobot(MujocoXML):

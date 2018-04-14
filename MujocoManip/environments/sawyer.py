@@ -1,7 +1,7 @@
 import numpy as np
 from collections import OrderedDict
 from MujocoManip.environments.base import MujocoEnv
-from MujocoManip.model import SawyerRobot, gripper_factory
+from MujocoManip.models import SawyerRobot, gripper_factory
 from MujocoManip.miscellaneous.utils import *
 
 

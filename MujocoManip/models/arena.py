@@ -1,7 +1,7 @@
 import numpy as np
 import xml.etree.ElementTree as ET
-from MujocoManip.model.base import MujocoXML
-from MujocoManip.model.model_util import *
+from MujocoManip.models.base import MujocoXML
+from MujocoManip.models.model_util import *
 from MujocoManip.miscellaneous import XMLError
 
 class Arena(MujocoXML):

@@ -1,8 +1,8 @@
 import numpy as np
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.sawyer import SawyerEnv
-from MujocoManip.model import MujocoObject, TableTopTask, TableArena, DefaultCylinderObject, RandomCylinderObject, RandomBoxObject, DefaultBallObject, RandomBallObject
-from MujocoManip.model.model_util import xml_path_completion
+from MujocoManip.models import *
+from MujocoManip.models.model_util import xml_path_completion
 
 class SawyerLiftEnv(SawyerEnv):
 

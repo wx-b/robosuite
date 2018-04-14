@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import os
 import numpy as np
-import MujocoManip.model
+import MujocoManip.models
 
 visual_size_shrink_ratio = 0.99
 
@@ -14,7 +14,7 @@ def xml_path_completion(xml_path):
     if xml_path.startswith("/"):
         full_path = xml_path
     else:
-        full_path = os.path.join(MujocoManip.model.assets_root, xml_path)
+        full_path = os.path.join(MujocoManip.models.assets_root, xml_path)
     return full_path
 
 def array_to_string(array):

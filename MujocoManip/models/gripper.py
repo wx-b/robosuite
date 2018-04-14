@@ -1,8 +1,8 @@
 import numpy as np
 import xml.etree.ElementTree as ET
-from MujocoManip.model.base import MujocoXML
+from MujocoManip.models.base import MujocoXML
 from MujocoManip.miscellaneous import XMLError
-from MujocoManip.model.model_util import *
+from MujocoManip.models.model_util import *
 
 
 
