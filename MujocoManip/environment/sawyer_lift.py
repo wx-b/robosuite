@@ -45,6 +45,7 @@ class SawyerLiftEnv(SawyerEnv):
     def _reset_internal(self):
         super()._reset_internal()
         # inherited class should reset position of target and then reset position of object
+        self.model.place_object()
 
     def _pre_action(self, action):
         super()._pre_action(action)
