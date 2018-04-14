@@ -57,7 +57,7 @@ class StackerTask(MujocoWorldBase):
                 'object_bottom_offset': mujoco_object.get_bottom_offset(),
                 'object_top_offset': mujoco_object.get_top_offset(),
                 'object_horizontal_radius': mujoco_object.get_horizontal_radius(),
-                })
+            })
             self.max_horizontal_radius = max(self.max_horizontal_radius, mujoco_object.get_horizontal_radius())
 
     def place_objects(self):
