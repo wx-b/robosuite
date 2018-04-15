@@ -76,6 +76,11 @@ class SawyerStackEnv(SawyerEnv):
         self.object_metadata = self.model.object_metadata
         self.n_objects = len(self.object_metadata)
 
+    def _get_reference(self):
+        super()._get_reference()
+        self.cubeA_body_id = self.sim.model.body_name2id('cubeA')
+        self.cubeB_body_id = self.sim.model.body_name2id('cubeB')
+
     def _reset_internal(self):
         super()._reset_internal()
         # inherited class should reset positions of objects
@@ -102,16 +107,25 @@ class SawyerStackEnv(SawyerEnv):
             else:
                 di['image'] = camera_obs
 
-        # all_observations = []
-        #
-        # hand_pos = self._right_hand_pos
-        # hand_vel = self._right_hand_vel
-        # all_observations += [hand_pos, hand_vel]
-        #
-        # for i in range(self.n_objects):
-        #     all_observations += [self._object_pos(i),
-        #                         self._object_vel(i)]
-        # di['low-level'] = np.concatenate(all_observations)
+        # low-level object information
+        if self.use_object_obs:
+            # position and rotation of the first cube
+            cubeA_pos = self.sim.data.body_xpos[self.cubeA_body_id]
+            cubeA_quat = self.sim.data.body_xquat[self.cubeA_body_id]
+            di['cubeA_pos'] = cubeA_pos
+            di['cubeA_quat'] = cubeA_quat
+
+            # position and rotation of the second cube
+            cubeB_pos = self.sim.data.body_xpos[self.cubeB_body_id]
+            cubeB_quat = self.sim.data.body_xquat[self.cubeB_body_id]
+            di['cubeB_pos'] = cubeB_pos
+            di['cubeB_quat'] = cubeB_quat
+
+            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            di['gripper_to_cubeA'] = gripper_site_pos - cubeA_pos
+            di['gripper_to_cubeB'] = gripper_site_pos - cubeB_pos
+            di['cubeA_to_cubeB'] = cubeA_pos - cubeB_pos
+
         return di
 
     def _check_contact(self):

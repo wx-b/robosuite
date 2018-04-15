@@ -57,6 +57,10 @@ class SawyerLiftEnv(SawyerEnv):
         self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
         self.model.place_objects()
 
+    def _get_reference(self):
+        super()._get_reference()
+        self.cube_body_id = self.sim.model.body_name2id('cube')
+
     def _reset_internal(self):
         super()._reset_internal()
         # inherited class should reset positions of objects
@@ -64,11 +68,16 @@ class SawyerLiftEnv(SawyerEnv):
 
     def reward(self, action):
         reward = 0
-        #TODO(yukez): implementing a stacking reward
+        cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
+        table_height = self.table_size[2]
+        # cube is higher than the table top above a margin
+        if cube_height > table_height + 0.10:
+            reward = 1.0
         return reward
 
     def _get_observation(self):
         di = super()._get_observation()
+        # camera observations
         if self.use_camera_obs:
             camera_obs = self.sim.render(camera_name=self.camera_name,
                                          width=self.camera_width,
@@ -79,12 +88,17 @@ class SawyerLiftEnv(SawyerEnv):
             else:
                 di['image'] = camera_obs
 
-        # di['low-level'] = np.concatenate([self._object_pos,
-        #                                   self._object_vel,
-        #                                   self._target_pos,
-        #                                   self._right_hand_pos,
-        #                                   self._right_hand_vel
-        #                                 ])
+        # low-level object information
+        if self.use_object_obs:
+            # position and rotation of object
+            cube_pos = self.sim.data.body_xpos[self.cube_body_id]
+            cube_quat = self.sim.data.body_xquat[self.cube_body_id]
+            di['cube_pos'] = cube_pos
+            di['cube_quat'] = cube_quat
+
+            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            di['gripper_to_cube'] = gripper_site_pos - cube_pos
+
         return di
 
     def _check_contact(self):
