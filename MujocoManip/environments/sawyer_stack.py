@@ -1,9 +1,9 @@
 import numpy as np
+from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.sawyer import SawyerEnv
 from MujocoManip.models import *
 
-# TODO: configure table width
 
 class SawyerStackEnv(SawyerEnv):
     def __init__(self, 
@@ -22,8 +22,14 @@ class SawyerStackEnv(SawyerEnv):
             @table_size, the FULL size of the table 
         """
         # initialize objects of interest
-        self.mujoco_objects = []
-        self.mujoco_objects.extend([RandomBoxObject(size_min=[0.025, 0.025, 0.03], size_max=[0.05, 0.05, 0.05]) for _ in range(2)])
+        cubeA = RandomBoxObject(size_min=[0.025, 0.025, 0.03],
+                                size_max=[0.05, 0.05, 0.05])
+        cubeB = RandomBoxObject(size_min=[0.025, 0.025, 0.03],
+                                size_max=[0.05, 0.05, 0.05])
+        self.mujoco_objects = OrderedDict([
+            ('cubeA', cubeA),
+            ('cubeB', cubeB)
+        ])
 
         # settings for table top
         self.table_size = table_size
@@ -70,16 +76,9 @@ class SawyerStackEnv(SawyerEnv):
         self.object_metadata = self.model.object_metadata
         self.n_objects = len(self.object_metadata)
 
-    def _get_reference(self):
-        super()._get_reference()
-        self._ref_object_pos_indexes = []
-        self._ref_object_vel_indexes = []
-        for di in self.object_metadata:
-            self._ref_object_pos_indexes.append(self.sim.model.get_joint_qpos_addr(di['joint_name']))
-            self._ref_object_vel_indexes.append(self.sim.model.get_joint_qvel_addr(di['joint_name']))
-    
     def _reset_internal(self):
         super()._reset_internal()
+        # inherited class should reset positions of objects
         self.model.place_objects()
 
     def reward(self, action):
@@ -120,7 +119,6 @@ class SawyerStackEnv(SawyerEnv):
         Returns True if gripper is in contact with an object.
         """
         collision = False
-        ### TODO: try 0:self.sim.data.ncon and :
         for contact in self.sim.data.contact[:self.sim.data.ncon]:
             if self.sim.model.geom_id2name(contact.geom1) in self.finger_names or \
                self.sim.model.geom_id2name(contact.geom2) in self.finger_names:
@@ -129,6 +127,9 @@ class SawyerStackEnv(SawyerEnv):
         return collision
 
     def _check_terminated(self):
+        """
+        Returns True if task is successfully completed
+        """
         #TODO(yukez): define termination conditions
         return False
 
@@ -137,7 +138,7 @@ class SawyerStackEnv(SawyerEnv):
         Do any needed visualization here. Overrides superclass implementations.
         """
         # color the gripper site appropriately based on distance to nearest object
-        if self.self.visualize_gripper_site:
+        if self.visualize_gripper_site:
             # find closest object
             square_dist = lambda x : np.sum(np.square(x - self.sim.data.get_site_xpos('grip_site')))
             dists = np.array(list(map(square_dist, self.sim.data.site_xpos)))

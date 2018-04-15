@@ -35,32 +35,26 @@ class TableTopTask(MujocoWorldBase):
 
     def merge_objects(self, mujoco_objects):
         self.n_objects = len(mujoco_objects)
-        self.mujoco_objects = mujoco_objects # Source of object, stores information
+        self.mujoco_objects = mujoco_objects
         self.objects = [] # xml manifestation
         self.targets = [] # xml manifestation
         self.max_horizontal_radius = 0
-        for i, mujoco_object in enumerate(mujoco_objects):
-            object_name = 'object_{}'.format(i)
-            joint_name = 'object_free_joint_{}'.format(i)
-            target_name = 'target_{}'.format(i)
 
-            self.merge_asset(mujoco_object)
+        for obj_name, obj_mjcf in mujoco_objects.items():
+            self.merge_asset(obj_mjcf)
             # Load object
-            stacker_object = mujoco_object.get_full(name=object_name, site=True)
-            # stacker_object.set('name', object_name)
-            stacker_object.append(joint(name=joint_name, type='free'))
-            self.objects.append(stacker_object)
-            self.worldbody.append(stacker_object)
+            obj = obj_mjcf.get_full(name=obj_name, site=True)
+            self.objects.append(obj)
+            self.worldbody.append(obj)
 
             self.object_metadata.append({
-                'object_name': object_name,
-                'target_name': target_name,
-                'joint_name': joint_name,
-                'object_bottom_offset': mujoco_object.get_bottom_offset(),
-                'object_top_offset': mujoco_object.get_top_offset(),
-                'object_horizontal_radius': mujoco_object.get_horizontal_radius(),
+                'object_name': obj_name,
+                'object_bottom_offset': obj_mjcf.get_bottom_offset(),
+                'object_top_offset': obj_mjcf.get_top_offset(),
+                'object_horizontal_radius': obj_mjcf.get_horizontal_radius(),
             })
-            self.max_horizontal_radius = max(self.max_horizontal_radius, mujoco_object.get_horizontal_radius())
+            self.max_horizontal_radius = max(self.max_horizontal_radius,
+                                             obj_mjcf.get_horizontal_radius())
 
     def place_objects(self):
         """
@@ -68,14 +62,14 @@ class TableTopTask(MujocoWorldBase):
         """
         # Objects
         placed_objects = []
-        for index in range(self.n_objects):
-            horizontal_radius = self.mujoco_objects[index].get_horizontal_radius()
-            bottom_offset = self.mujoco_objects[index].get_bottom_offset()
+        index = 0
+        for _, obj_mjcf in self.mujoco_objects.items():
+            horizontal_radius = obj_mjcf.get_horizontal_radius()
+            bottom_offset = obj_mjcf.get_bottom_offset()
             success = False
             for i in range(1000): # 1000 retries
                 table_x_half = self.table_size[0] / 2 - horizontal_radius
                 table_y_half = self.table_size[1] / 2 - horizontal_radius
-
                 object_x = np.random.uniform(high=table_x_half, low=-table_x_half)
                 object_y = np.random.uniform(high=table_y_half, low=-1 * table_y_half)
                 # objects cannot overlap
@@ -94,3 +88,4 @@ class TableTopTask(MujocoWorldBase):
                 # quarternions, later we can add random rotation
             if not success:
                 raise RandomizationError('Cannot place all objects on the desk')
+            index += 1

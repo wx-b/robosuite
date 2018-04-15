@@ -1,8 +1,10 @@
 import numpy as np
+from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.sawyer import SawyerEnv
 from MujocoManip.models import *
 from MujocoManip.models.model_util import xml_path_completion
+
 
 class SawyerLiftEnv(SawyerEnv):
 
@@ -21,9 +23,9 @@ class SawyerLiftEnv(SawyerEnv):
             @table_size, the full dimension of the table 
         """
         # initialize objects of interest
-        self.mujoco_objects = [
-            RandomBoxObject(size_min=[0.025, 0.025, 0.03], size_max=[0.05, 0.05, 0.05])
-        ]
+        cube = RandomBoxObject(size_min=[0.025, 0.025, 0.03],
+                               size_max=[0.05, 0.05, 0.05])
+        self.mujoco_objects = OrderedDict([('cube', cube)])
 
         # settings for table top
         self.table_size = table_size
@@ -85,6 +87,21 @@ class SawyerLiftEnv(SawyerEnv):
         #                                 ])
         return di
 
+    def _check_contact(self):
+        """
+        Returns True if gripper is in contact with an object.
+        """
+        collision = False
+        for contact in self.sim.data.contact[:self.sim.data.ncon]:
+            if self.sim.model.geom_id2name(contact.geom1) in self.finger_names or \
+               self.sim.model.geom_id2name(contact.geom2) in self.finger_names:
+                collision = True
+                break
+        return collision
+
     def _check_terminated(self):
+        """
+        Returns True if task is successfully completed
+        """
         #TODO(yukez): define termination conditions
         return False
