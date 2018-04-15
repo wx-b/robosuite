@@ -8,7 +8,8 @@ from MujocoManip.models import *
 class SawyerStackEnv(SawyerEnv):
 
     def __init__(self, 
-                 gripper='TwoFingerGripper',
+                 gripper_type='TwoFingerGripper',
+                 use_eef_ctrl=False,
                  table_size=(0.8, 0.8, 0.8),
                  table_friction=None,
                  use_camera_obs=True,
@@ -47,7 +48,9 @@ class SawyerStackEnv(SawyerEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
-        super().__init__(gripper=gripper, use_eef_ctrl=True, **kwargs)
+        super().__init__(gripper_type=gripper_type,
+                         use_eef_ctrl=use_eef_ctrl,
+                         **kwargs)
 
         # information of objects
         self.object_names = [o['object_name'] for o in self.object_metadata]

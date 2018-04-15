@@ -24,7 +24,7 @@ class TableArena(Arena):
 		self.floor = self.worldbody.find("./geom[@name='floor']")
 		self.table_body = self.worldbody.find("./body[@name='table']")
 		self.table_collision = self.table_body.find("./geom[@name='table_collision']")
-		# self.table_visual = self.table_body.find("./geom[@name='table_visual']")
+		self.table_visual = self.table_body.find("./geom[@name='table_visual']")
 		self.table_top = self.table_body.find("./site[@name='table_top']")
 
 		self.configure_location()
@@ -37,7 +37,7 @@ class TableArena(Arena):
 		self.table_body.set('pos', array_to_string(self.center_pos))
 		self.table_collision.set('size', array_to_string(self.half_size))
 		self.table_collision.set('friction', array_to_string(self.friction))
-		# self.table_visual.set('size', array_to_string(self.half_size * visual_size_shrink_ratio))
+		self.table_visual.set('size', array_to_string(self.half_size))
 
 		self.table_top.set('pos', array_to_string(np.array([0,0,self.half_size[2]])))
 	

@@ -63,16 +63,14 @@ if __name__ == '__main__':
     env = make("SawyerStackEnv", display=True, ignore_done=True)
     direct = "./"
     env = DataCollector(env, direct)
-    # env = make("SawyerStackEnv", display=True, ignore_done=True, use_eef_ctrl=True)
-    # env = make("SawyerStackEnv", display=True, ignore_done=False, use_torque_ctrl=True)
 
     # testing to make sure multiple env.reset calls don't create multiple directories
     env.reset()
     env.reset()
     env.reset()
 
-    dof = env.dof()
-    # print('action space', env.action_space)
+    dof = env.dof
+    print('action space', env.action_space)
     print('DOF: {}'.format(dof))
     env.render()
 
@@ -84,7 +82,6 @@ if __name__ == '__main__':
     _ = input('Press any key to begin the playback...')
     print("Playing back the data...")
 
-    # direct = "./ep_1521078227_647896"
     direct = env.ep_directory
     playback_data(env, direct)
 

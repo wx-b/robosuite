@@ -9,7 +9,8 @@ from MujocoManip.models.model_util import xml_path_completion
 class SawyerLiftEnv(SawyerEnv):
 
     def __init__(self, 
-                 gripper='TwoFingerGripper',
+                 gripper_type='TwoFingerGripper',
+                 use_eef_ctrl=False,
                  table_size=(0.8, 0.8, 0.8),
                  table_friction=None,
                  use_camera_obs=True,
@@ -41,7 +42,9 @@ class SawyerLiftEnv(SawyerEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
-        super().__init__(gripper=gripper, **kwargs)
+        super().__init__(gripper_type=gripper_type,
+                         use_eef_ctrl=use_eef_ctrl,
+                         **kwargs)
 
     def _load_model(self):
         super()._load_model()

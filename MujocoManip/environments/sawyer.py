@@ -7,17 +7,16 @@ from MujocoManip.miscellaneous.utils import *
 
 class SawyerEnv(MujocoEnv):
 
-    def __init__(self, gripper=None, use_eef_ctrl=False, use_torque_ctrl=False, use_force_ctrl=False, **kwargs):
-        self.has_gripper = not (gripper is None)
-        self.gripper_name = gripper
+    def __init__(self, gripper_type=None, use_eef_ctrl=False, use_torque_ctrl=False, use_force_ctrl=False, **kwargs):
+
+        self.has_gripper = not (gripper_type is None)
+        self.gripper_type = gripper_type
         self.use_eef_ctrl = use_eef_ctrl
         self.use_torque_ctrl = use_torque_ctrl
         self.use_force_ctrl = use_force_ctrl
         super().__init__(**kwargs)
 
         ### TODO: any joint positions need to be set here? ###
-
-        # self.physics.model.name2id('grip_site', 'site') # can get IDs this way
 
         # setup mocap stuff if necessary
         if self.use_eef_ctrl:
@@ -41,8 +40,7 @@ class SawyerEnv(MujocoEnv):
         super()._load_model()
         self.mujoco_robot = SawyerRobot(use_torque_ctrl=self.use_torque_ctrl, use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
-            # self.gripper = gripper_factory()
-            self.mujoco_robot.add_gripper('right_hand', self.gripper_name)
+            self.mujoco_robot.add_gripper('right_hand', self.gripper_type)
             self.gripper = self.mujoco_robot.grippers['right_hand']
 
     def _reset_internal(self):
