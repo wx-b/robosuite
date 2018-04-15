@@ -10,50 +10,65 @@ class SawyerStackEnv(SawyerEnv):
                  gripper='TwoFingerGripper',
                  table_size=(0.8, 0.8, 0.8),
                  table_friction=None,
+                 use_camera_obs=True,
+                 use_object_obs=True,
+                 camera_name='frontview',
+                 camera_height=256,
+                 camera_width=256,
+                 camera_depth=True,
+                 visualize_gripper_site=False,
                  **kwargs):
         """
             @table_size, the FULL size of the table 
         """
-        # Handle parameters
+        # initialize objects of interest
         self.mujoco_objects = []
         self.mujoco_objects.extend([RandomBoxObject(size_min=[0.025, 0.025, 0.03], size_max=[0.05, 0.05, 0.05]) for _ in range(2)])
 
+        # settings for table top
         self.table_size = table_size
         self.table_friction = table_friction
 
+        # settings for camera observation
+        self.use_camera_obs = use_camera_obs
+        self.camera_name = camera_name
+        self.camera_height = camera_height
+        self.camera_width = camera_width
+        self.camera_depth = camera_depth
+        self.visualize_gripper_site = visualize_gripper_site
+
+        # whether to use ground-truth object states
+        self.use_object_obs = use_object_obs
+
         super().__init__(gripper=gripper, **kwargs)
 
-        # some bookkeeping
-        self.max_horizontal_radius = max([di['object_horizontal_radius'] for di in self.object_metadata])
-        self._pos_offset = np.copy(self.sim.data.get_site_xpos('table_top'))
-
-        self.object_names = [di['object_name'] for di in self.object_metadata]
+        # information of objects
+        self.object_names = [o['object_name'] for o in self.object_metadata]
         self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
         # id of grippers for contact checking
         self.finger_names = self.gripper.contact_geoms()
 
         # self.sim.data.contact # list, geom1, geom2
-        # self.sim.model._geom_name2id # keys for named shit
-
         self.collision_check_geom_names = self.sim.model._geom_name2id.keys()
         self.collision_check_geom_ids = [self.sim.model._geom_name2id[k] for k in self.collision_check_geom_names]
 
     def _load_model(self):
         super()._load_model()
         self.mujoco_robot.set_base_xpos([0,0,0])
-        
+
+        # load model for table top workspace
         self.mujoco_arena = TableArena(full_size=self.table_size, friction=self.table_friction)
+
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
-     
-        self.task = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
 
-        self.object_metadata = self.task.object_metadata
-        self.n_objects = len(self.object_metadata)
-
-        self.model = self.task
+        # task includes arena, robot, and objects of interest
+        self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
         self.model.place_objects()
+
+        self.object_metadata = self.model.object_metadata
+        self.n_objects = len(self.object_metadata)
 
     def _get_reference(self):
         super()._get_reference()
@@ -78,17 +93,26 @@ class SawyerStackEnv(SawyerEnv):
             (current_position, current_velocity, target_velocity) of all targets
         """
         di = super()._get_observation()
-        all_observations = []
+        if self.use_camera_obs:
+            camera_obs = self.sim.render(camera_name=self.camera_name,
+                                         width=self.camera_width,
+                                         height=self.camera_height,
+                                         depth=self.camera_depth)
+            if self.camera_depth:
+                di['image'], di['depth'] = camera_obs
+            else:
+                di['image'] = camera_obs
 
-        hand_pos = self._right_hand_pos
-        hand_vel = self._right_hand_vel
-        all_observations += [hand_pos, hand_vel]
-
-        for i in range(self.n_objects):
-            all_observations += [self._object_pos(i),
-                                self._object_vel(i)]
-            
-        di['low-level'] = np.concatenate(all_observations)
+        # all_observations = []
+        #
+        # hand_pos = self._right_hand_pos
+        # hand_vel = self._right_hand_vel
+        # all_observations += [hand_pos, hand_vel]
+        #
+        # for i in range(self.n_objects):
+        #     all_observations += [self._object_pos(i),
+        #                         self._object_vel(i)]
+        # di['low-level'] = np.concatenate(all_observations)
         return di
 
     def _check_contact(self):
@@ -96,16 +120,11 @@ class SawyerStackEnv(SawyerEnv):
         Returns True if gripper is in contact with an object.
         """
         collision = False
-
         ### TODO: try 0:self.sim.data.ncon and :
         for contact in self.sim.data.contact[:self.sim.data.ncon]:
-            # print("geom1: {}".format(self.sim.model.geom_id2name(contact.geom1)))
-            # print("geom2: {}".format(self.sim.model.geom_id2name(contact.geom2)))
             if self.sim.model.geom_id2name(contact.geom1) in self.finger_names or \
                self.sim.model.geom_id2name(contact.geom2) in self.finger_names:
                 collision = True
-                # print("geom1: {}".format(self.sim.model.geom_id2name(contact.geom1)))
-                # print("geom2: {}".format(self.sim.model.geom_id2name(contact.geom2)))
                 break
         return collision
 
@@ -113,64 +132,28 @@ class SawyerStackEnv(SawyerEnv):
         #TODO(yukez): define termination conditions
         return False
 
-    @property
-    def observation_space(self):
-        # TODO: I am not sure if we want to add gym dependency just for observation space and action space
-        # return spaces.Box(
-        low=np.ones(28 + 9 * self.n_objects) * -100.
-        high=np.ones(28 + 9 * self.n_objects) * 100.
-        # )
-        return low, high
-
     def _gripper_visualization(self):
         """
-        Do any needed visualization here.
-
-        Overrides superclass implementations.
+        Do any needed visualization here. Overrides superclass implementations.
         """
-
         # color the gripper site appropriately based on distance to nearest object
+        if self.self.visualize_gripper_site:
+            # find closest object
+            square_dist = lambda x : np.sum(np.square(x - self.sim.data.get_site_xpos('grip_site')))
+            dists = np.array(list(map(square_dist, self.sim.data.site_xpos)))
+            dists[self.eef_site_id] = np.inf # make sure we don't pick the same site
+            dists[self.eef_cylinder_id] = np.inf
+            ob_dists = dists[self.object_site_ids] # filter out object sites we care about
+            min_dist = np.min(ob_dists)
+            ob_id = np.argmin(ob_dists)
+            ob_name = self.object_names[ob_id]
 
-        ### TODO: we could probably clean this up. Also should probably include the table site. ###
+            # set RGBA for the EEF site here
+            max_dist = 0.1
+            scaled = (1.0 - min(min_dist / max_dist, 1.)) ** 15
+            rgba = np.zeros(4)
+            rgba[0] = 1 - scaled
+            rgba[1] = scaled
+            rgba[3] = 0.5
 
-        # find closest object
-        square_dist = lambda x : np.sum(np.square(x - self.sim.data.get_site_xpos('grip_site')))
-        dists = np.array(list(map(square_dist, self.sim.data.site_xpos)))
-        dists[self.eef_site_id] = np.inf # make sure we don't pick the same site
-        dists[self.eef_cylinder_id] = np.inf
-        ob_dists = dists[self.object_site_ids] # filter out object sites we care about
-        min_dist = np.min(ob_dists)
-        ob_id = np.argmin(ob_dists)
-        # ob_name = self.sim.model.site_id2name(ob_id)
-        ob_name = self.object_names[ob_id]
-        # print("closest object is {} at distance {}".format(ob_name, min_dist))
-
-        # set RGBA for the EEF site here
-        max_dist = 0.1 
-        scaled = (1.0 - min(min_dist / max_dist, 1.)) ** 15
-        rgba = np.zeros(4)
-        rgba[0] = 1 - scaled
-        rgba[1] = scaled
-        rgba[3] = 0.5
-
-        # rgba = np.random.rand(4)
-        # rgba[-1] = 0.5
-        self.sim.model.site_rgba[self.eef_site_id] = rgba
-
-    # Properties for objects
-
-    def _object_pos(self, i):
-        object_name = self.object_metadata[i]['object_name']
-        return self.sim.data.get_body_xpos(object_name) - self._pos_offset
-
-    def _set_object_pos(self, i, pos):
-        low, high = self._ref_object_pos_indexes[i]
-        self.sim.data.qpos[low:high] = pos + self._pos_offset
-
-    def _object_vel(self, i):
-        object_name = self.object_metadata[i]['object_name']
-        return self.sim.data.get_body_xvelp(object_name)
-
-    def _set_object_vel(self, i, vel):
-        low, high = self._ref_object_vel_indexes[i]
-        self.sim.data.qvel[low:high] = vel
+            self.sim.model.site_rgba[self.eef_site_id] = rgba

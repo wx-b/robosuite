@@ -58,21 +58,23 @@ class SawyerEnv(MujocoEnv):
         self.robot_joints = list(self.mujoco_robot.joints)
         self._ref_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.robot_joints]
         self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.robot_joints]
+
+        # indices for grippers in qpos, qvel
         if self.has_gripper:
             self.gripper_joints = list(self.gripper.joints)
             self._ref_gripper_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.gripper_joints]
             self._ref_gripper_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.gripper_joints]
 
-
         # indices for joint pos actuation, joint vel actuation, gripper actuation
-        self._ref_joint_pos_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
-                                                                                      if actuator.startswith("pos")]
-        self._ref_joint_vel_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
-                                                                                      if actuator.startswith("vel")]
+        self._ref_joint_pos_actuator_indexes = [self.sim.model.actuator_name2id(actuator)
+            for actuator in self.sim.model.actuator_names  if actuator.startswith("pos")]
+
+        self._ref_joint_vel_actuator_indexes = [self.sim.model.actuator_name2id(actuator)
+            for actuator in self.sim.model.actuator_names if actuator.startswith("vel")]
 
         if self.has_gripper:
-            self._ref_joint_gripper_actuator_indexes = [self.sim.model.actuator_name2id(actuator) for actuator in self.sim.model.actuator_names 
-                                                                                              if actuator.startswith("gripper")]
+            self._ref_joint_gripper_actuator_indexes = [self.sim.model.actuator_name2id(actuator)
+                for actuator in self.sim.model.actuator_names if actuator.startswith("gripper")]
 
         # IDs of sites for gripper visualization
         self.eef_site_id = self.sim.model.site_name2id('grip_site')
@@ -141,12 +143,12 @@ class SawyerEnv(MujocoEnv):
 
     def _get_observation(self):
         di = super()._get_observation()
-        joint_pos = [self.sim.data.qpos[x] for x in self._ref_joint_pos_indexes]
-        joint_vel = [self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes]
+        # proprioceptive features
+        di['joint_pos'] = np.array([self.sim.data.qpos[x] for x in self._ref_joint_pos_indexes])
+        di['joint_vel'] = np.array([self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes])
         if self.has_gripper:
-            joint_pos += [self.sim.data.qpos[x] for x in self._ref_gripper_joint_pos_indexes]
-            joint_vel += [self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes]
-        di['proprioception'] = np.concatenate([joint_pos, joint_vel])
+            di['gripper_pos'] = [self.sim.data.qpos[x] for x in self._ref_gripper_joint_pos_indexes]
+            di['gripper_vel'] = [self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes]
         return di
 
     def dof(self):
@@ -303,7 +305,6 @@ class SawyerEnv(MujocoEnv):
         """
         Do any needed visualization here.
         """
-        
         # By default, don't do any coloring.
         self.sim.model.site_rgba[self.eef_site_id] = [0., 0., 0., 0.]
 
