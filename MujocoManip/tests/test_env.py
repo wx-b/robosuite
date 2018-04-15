@@ -1,10 +1,10 @@
-from MujocoManip import SawyerStackEnv, SawyerPushEnv, SawyerGraspEnv, SawyerReachEnvEEVel, SawyerReachEnv, make
+from MujocoManip import *
 import numpy as np
 import time
 from PIL import Image
 from IPython import embed
 
-from MujocoManip.model import DefaultCylinderObject, RandomCylinderObject, RandomBoxObject, DefaultBallObject, RandomBallObject, DefaultCapsuleObject, RandomCapsuleObject
+from MujocoManip.models import *
 from MujocoManip.wrappers import DataCollector
 
 if __name__ == '__main__':
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
     dof = env.dof()
-    print('action space', env.action_space)
+    # print('action space', env.action_space)
     print('Obs: {}'.format(len(obs)))
     print('DOF: {}'.format(dof))
     env.render()

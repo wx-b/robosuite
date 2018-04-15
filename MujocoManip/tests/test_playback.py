@@ -2,7 +2,7 @@
 Testing script for playing back some data collected from the DataCollector wrapper.
 """
 
-from MujocoManip import SawyerStackEnv, SawyerPushEnv, SawyerGraspEnv, SawyerReachEnvEEVel, SawyerReachEnv, make
+from MujocoManip import SawyerStackEnv, make
 import numpy as np
 import time
 import os
@@ -10,7 +10,7 @@ from PIL import Image
 from glob import glob
 from IPython import embed
 
-from MujocoManip.model import DefaultCylinderObject, RandomCylinderObject, RandomBoxObject, DefaultBallObject, RandomBallObject, DefaultCapsuleObject, RandomCapsuleObject
+from MujocoManip.models import *
 from MujocoManip import DataCollector
 
 def collect_random_data(env, timesteps=1000):
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     env.reset()
 
     dof = env.dof()
-    print('action space', env.action_space)
+    # print('action space', env.action_space)
     print('DOF: {}'.format(dof))
     env.render()
 

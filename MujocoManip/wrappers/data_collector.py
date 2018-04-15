@@ -73,7 +73,7 @@ class DataCollector(Wrapper):
 
         # save the model xml
         xml_path = os.path.join(self.ep_directory, 'model.xml')
-        self.env.task.save_model(xml_path)
+        self.env.model.save_model(xml_path)
 
     def _flush(self):
         """

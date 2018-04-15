@@ -1,7 +1,7 @@
-from MujocoManip.model import *
+from MujocoManip.models import *
 from mujoco_py import load_model_from_path, MjSim, MjViewer
 import xml.etree.ElementTree as ET
-from MujocoManip.model.model_util import *
+from MujocoManip.models.model_util import *
 import gc
 world = MujocoWorldBase()
 
