@@ -151,9 +151,11 @@ class SawyerEnv(MujocoEnv):
             di['gripper_vel'] = [self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes]
         return di
 
+    @property
     def dof(self):
         if self.use_eef_ctrl:
-            dof = 3
+            # 3 for position and 4 for rotation
+            dof = 7
         else:
             dof = self.mujoco_robot.dof
         if self.has_gripper:

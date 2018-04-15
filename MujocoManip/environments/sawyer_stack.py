@@ -6,6 +6,7 @@ from MujocoManip.models import *
 
 
 class SawyerStackEnv(SawyerEnv):
+
     def __init__(self, 
                  gripper='TwoFingerGripper',
                  table_size=(0.8, 0.8, 0.8),
@@ -46,7 +47,7 @@ class SawyerStackEnv(SawyerEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
-        super().__init__(gripper=gripper, **kwargs)
+        super().__init__(gripper=gripper, use_eef_ctrl=True, **kwargs)
 
         # information of objects
         self.object_names = [o['object_name'] for o in self.object_metadata]
@@ -130,7 +131,7 @@ class SawyerStackEnv(SawyerEnv):
 
     def _check_contact(self):
         """
-        Returns True if gripper is in contact with an object.
+            Returns True if gripper is in contact with an object.
         """
         collision = False
         for contact in self.sim.data.contact[:self.sim.data.ncon]:
@@ -142,14 +143,14 @@ class SawyerStackEnv(SawyerEnv):
 
     def _check_terminated(self):
         """
-        Returns True if task is successfully completed
+            Returns True if task is successfully completed
         """
         #TODO(yukez): define termination conditions
         return False
 
     def _gripper_visualization(self):
         """
-        Do any needed visualization here. Overrides superclass implementations.
+            Do any needed visualization here. Overrides superclass implementations.
         """
         # color the gripper site appropriately based on distance to nearest object
         if self.visualize_gripper_site:

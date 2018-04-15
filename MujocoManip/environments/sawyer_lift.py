@@ -103,7 +103,7 @@ class SawyerLiftEnv(SawyerEnv):
 
     def _check_contact(self):
         """
-        Returns True if gripper is in contact with an object.
+            Returns True if gripper is in contact with an object.
         """
         collision = False
         for contact in self.sim.data.contact[:self.sim.data.ncon]:
@@ -115,7 +115,7 @@ class SawyerLiftEnv(SawyerEnv):
 
     def _check_terminated(self):
         """
-        Returns True if task is successfully completed
+            Returns True if task is successfully completed
         """
         #TODO(yukez): define termination conditions
         return False
