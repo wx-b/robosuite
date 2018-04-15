@@ -27,10 +27,17 @@ class EnvMeta(type):
 
 
 class MujocoEnv(object, metaclass=EnvMeta):
-    def __init__(self, display=True, control_freq=100, horizon=500, ignore_done=False, **kwargs):
+    def __init__(self,
+                 has_renderer=True,
+                 render_collision_mesh=False,
+                 render_visual_mesh=True,
+                 control_freq=100,
+                 horizon=500,
+                 ignore_done=False,
+                 **kwargs):
         """
             Initialize a Mujoco Environment
-            @display: If true, render the simulation state in a viewer instead of headless mode.
+            @has_renderer: If true, render the simulation state in a viewer instead of headless mode.
             @control_freq in Hz, how many control signals to receive in every second
             @ignore_done: if True, never terminate the env
 
@@ -47,7 +54,9 @@ class MujocoEnv(object, metaclass=EnvMeta):
         # self._get_reference()
         # self.done = False
         # self.t = 0
-        self.display = display
+        self.has_renderer = has_renderer
+        self.render_collision_mesh = render_collision_mesh
+        self.render_visual_mesh = render_visual_mesh
         self.control_freq = control_freq
         self.horizon = horizon
         self.ignore_done = ignore_done
@@ -91,8 +100,10 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.mjpy_model = self.model.get_model(mode='mujoco_py')
         self.sim = MjSim(self.mjpy_model)
         self.initialize_time(self.control_freq)
-        if self.display:
+        if self.has_renderer:
             self.viewer = MujocoPyRenderer(self.sim)
+            self.viewer.viewer.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
+            self.viewer.viewer.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
         self.sim_state_initial = self.sim.get_state()
         self._get_reference()
         self.cur_time = 0
@@ -154,7 +165,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
         self.sim = MjSim(self.mjpy_model)
         self.initialize_time(self.control_freq)
-        if self.display:
+        if self.has_renderer:
             self.viewer = MujocoPyRenderer(self.sim)
         self.sim_state_initial = self.sim.get_state()
         self._get_reference()

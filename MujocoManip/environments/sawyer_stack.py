@@ -86,8 +86,7 @@ class SawyerStackEnv(SawyerEnv):
 
         for i in range(self.n_objects):
             all_observations += [self._object_pos(i),
-                                self._object_vel(i),
-                                self._target_pos(i)]
+                                self._object_vel(i)]
             
         di['low-level'] = np.concatenate(all_observations)
         return di
@@ -175,11 +174,3 @@ class SawyerStackEnv(SawyerEnv):
     def _set_object_vel(self, i, vel):
         low, high = self._ref_object_vel_indexes[i]
         self.sim.data.qvel[low:high] = vel
-
-    def _target_pos(self, i):
-        target_name = self.object_metadata[i]['target_name']
-        return self.sim.model.body_pos[self.sim.model.body_name2id(target_name)] - self._pos_offset
-
-    def _set_target_pos(self, i, pos):
-        target_name = self.object_metadata[i]['target_name']
-        self.sim.model.body_pos[self.sim.model.body_name2id(target_name)] = pos + self._pos_offset

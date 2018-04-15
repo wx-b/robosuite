@@ -52,13 +52,6 @@ class TableTopTask(MujocoWorldBase):
             self.objects.append(stacker_object)
             self.worldbody.append(stacker_object)
 
-            # Load target
-            stacker_target = mujoco_object.get_visual(name=target_name, site=False)
-            # stacker_target.set('name', target_name)
-            set_alpha(stacker_target, 0.2)
-            self.targets.append(stacker_target)
-            self.worldbody.append(stacker_target)
-
             self.object_metadata.append({
                 'object_name': object_name,
                 'target_name': target_name,
@@ -101,18 +94,3 @@ class TableTopTask(MujocoWorldBase):
                 # quarternions, later we can add random rotation
             if not success:
                 raise RandomizationError('Cannot place all objects on the desk')
-
-        # Target
-        object_ordering = [x for x in range(self.n_objects)]
-        np.random.shuffle(object_ordering)
-        # rest position of target
-        table_x_half = self.table_size[0] / 2 - self.max_horizontal_radius
-        table_y_half = self.table_size[1] / 2 - self.max_horizontal_radius
-        target_x = np.random.uniform(high=table_x_half, low=-table_x_half)
-        target_y = np.random.uniform(high=table_y_half, low=-1 * table_y_half)
-
-        contact_point = np.array([target_x, target_y, 0]) + self.table_top_offset
-        for index in object_ordering:
-            contact_point -= self.mujoco_objects[index].get_bottom_offset()
-            self.targets[index].set('pos', array_to_string(contact_point))
-            contact_point += self.mujoco_objects[index].get_top_offset()
