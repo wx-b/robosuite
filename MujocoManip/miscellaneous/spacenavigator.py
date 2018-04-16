@@ -4,8 +4,11 @@ from __future__ import print_function
 import hid
 import time
 import threading
+import numpy as np
 
 from collections import namedtuple
+
+import MujocoManip.miscellaneous.utils as U
 
 AxisSpec = namedtuple('AxisSpec', ['channel', 'byte1', 'byte2', 'scale'])
 
@@ -56,7 +59,26 @@ class SpaceNavigator(object):
         self.thread.daemon = True
         self.thread.start()
 
-        self.control = [0, 0, 0, 0, 0, 0]
+        self._control = [0, 0, 0, 0, 0, 0]
+
+        self.rotation = np.array([[-1., 0., 0.], [0., 1., 0.], [0., 0., -1.]])
+
+    def get_controller_state(self):
+        """
+        Returns the current state of the 3d mouse, a dictionary of pos, orn, and grasp.
+        """
+        dpos = self.control[:3] * 0.005
+        roll, pitch, yaw = self.control[3:] * 0.005
+        self.grasp = self.control_gripper
+
+        # convert RPY to an absolute orientation
+        drot1 = U.rotation_matrix(angle=-pitch, direction=[1., 0., 0.], point=None)[:3, :3]
+        drot2 = U.rotation_matrix(angle=roll, direction=[0., 1., 0.], point=None)[:3, :3]
+        drot3 = U.rotation_matrix(angle=yaw, direction=[0., 0., 1.], point=None)[:3, :3]
+        self.rotation = self.rotation.dot(drot1.dot(drot2.dot(drot3)))
+
+        return dict(dpos=dpos, rotation=self.rotation, 
+                    grasp=self.grasp)
 
     def run(self):
 
@@ -69,16 +91,16 @@ class SpaceNavigator(object):
                 # print('read: "{}"'.format(d))
 
                 if d[0] == 1:
-                    self.x = convert(d[1], d[2])
-                    self.y = convert(d[3], d[4])
-                    self.z = convert(d[5], d[6])
+                    self.y = convert(d[1], d[2])
+                    self.x = convert(d[3], d[4])
+                    self.z = convert(d[5], d[6]) * -1.0
 
                     self.roll = convert(d[7], d[8])
                     self.pitch = convert(d[9], d[10])
                     self.yaw = convert(d[11], d[12])
 
-                    self.control = (self.x, self.y, self.z,
-                                    self.roll, self.pitch, self.yaw)
+                    self._control = [self.x, self.y, self.z,
+                                     self.roll, self.pitch, self.yaw]
 
                 elif d[0] == 3:
 
@@ -100,12 +122,14 @@ class SpaceNavigator(object):
                     # save right button for future purpose
                     if d[1] == 2: pass
 
+    @property
     def control(self):
         """
         Returns 6-DoF control
         """
-        return self.control
+        return np.array(self._control)
 
+    @property
     def control_gripper(self):
         if self.double_click_and_hold:
             return -1.0
