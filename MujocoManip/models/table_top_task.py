@@ -44,6 +44,7 @@ class TableTopTask(MujocoWorldBase):
             self.merge_asset(obj_mjcf)
             # Load object
             obj = obj_mjcf.get_full(name=obj_name, site=True)
+            obj.append(joint(name=obj_name, type='free'))
             self.objects.append(obj)
             self.worldbody.append(obj)
 

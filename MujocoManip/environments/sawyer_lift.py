@@ -110,8 +110,8 @@ class SawyerLiftEnv(SawyerEnv):
         """
         collision = False
         for contact in self.sim.data.contact[:self.sim.data.ncon]:
-            if self.sim.model.geom_id2name(contact.geom1) in self.finger_names or \
-               self.sim.model.geom_id2name(contact.geom2) in self.finger_names:
+            if self.sim.model.geom_id2name(contact.geom1) in self.gripper.contact_geoms() or \
+               self.sim.model.geom_id2name(contact.geom2) in self.gripper.contact_geoms():
                 collision = True
                 break
         return collision
