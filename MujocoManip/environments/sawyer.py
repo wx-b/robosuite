@@ -186,9 +186,6 @@ class SawyerEnv(MujocoEnv):
         """
         Returns eef pose in base frame of robot.
         """
-
-        ### TODO(Ajay): check this function for correctness... ###
-        ### TODO(Ajay): do we want body inertia orientation, or body frame orientation? ###
         return self.pose_in_base_from_name('right_hand')
 
     @property
