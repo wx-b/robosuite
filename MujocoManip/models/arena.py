@@ -45,3 +45,33 @@ class TableArena(Arena):
 	def table_top_abs(self):
 		"""Returns the absolute position of table top"""
 		return string_to_array(self.floor.get('pos')) + np.array([0,0,self.full_size[2]])
+class ShelfArena(Arena):
+	def __init__(self, full_size=(0.2,0.4,0.4), friction=(1, 0.005, 0.0001),shelf_height=0.2,num_shelves=3):
+		self.full_size = np.array(full_size)
+		self.shelf_height = shelf_height
+		self.num_shelves = num_shelves
+		self.half_size = self.full_size / 2
+		if friction is None:
+			friction = np.array([1, 0.005, 0.0001])
+		self.friction = friction
+
+		super().__init__(xml_path_completion('arena/shelf_arena.xml'))
+		self.floor = self.worldbody.find("./geom[@name='floor']")
+		self.shelf_body = self.worldbody.find("./body[@name='shelf']")
+		self.box_body = self.worldbody.find("./body[@name='box']")
+
+		self.configure_location()
+
+	def configure_location(self):
+		self.bottom_pos = np.array([0,0,0])
+		self.floor.set('pos', array_to_string(self.bottom_pos))
+		
+		self.center_pos = self.bottom_pos + np.array([0,0,self.half_size[2]])
+		self.shelf_body.set('pos', array_to_string(self.center_pos))
+		self.box_body.set('pos', array_to_string(self.center_pos))
+	
+	@property
+	def shelf_abs(self):
+		"""Returns the absolute position of the shelves"""
+		return [string_to_array(self.shelf_body.get('pos')) + np.array([0,0,self.full_size[2]+x*self.shelf_height]) for x in range(self.num_shelves)]
+

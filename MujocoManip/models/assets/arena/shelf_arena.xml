@@ -1,0 +1,64 @@
+<mujoco model="table_arena">
+	<asset>
+		<texture builtin="gradient" height="256" rgb1=".9 .9 1." rgb2=".2 .3 .4" type="skybox" width="256"/>
+		<texture builtin="checker" height="512" name="texplane" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" type="2d" width="512"/>
+		<material name="floorplane" reflectance="0.5" texrepeat="1 1" texture="texplane" texuniform="true"/>
+	</asset>
+	<worldbody>
+		<geom condim="3" material="floorplane" name="floor" pos="0 0 0" size="3 3 .125" type="plane"/>
+		<body name="shelf" pos="0 0 0">
+			<body name="shelf0" pos="0 0 0.4">
+				<geom pos="0 0 0" size="0.2 0.4 0.001" type="box" name="shelf0_collision" friction="1 0.005 0.0001"/>
+				<site pos="0 0 0.4" name="shelf0_top" size="0.001 0.001 0.001" rgba="0 0 0 0"/>
+			</body>
+			<body name="shelf1" pos="0 0 0.6">
+				<geom pos="0 0 0" size="0.2 0.4 0.001" type="box" name="shelf1_collision" friction="1 0.005 0.0001"/>
+				<site pos="0 0 0.4" name="shelf1_top" size="0.001 0.001 0.001" rgba="0 0 0 0"/>
+			</body>
+			<body name="shelf2" pos="0 0 0.8">
+				<geom pos="0 0 0" size="0.2 0.4 0.001" type="box" name="shelf2_collision" friction="1 0.005 0.0001"/>
+				<site pos="0 0 0.4" name="shelf2_top" size="0.001 0.001 0.001" rgba="0 0 0 0"/>
+			</body>
+			<body name="shelf3" pos="0 0 1">
+				<geom pos="0 0 0" size="0.2 0.4 0.001" type="box" name="shelf3_collision" friction="1 0.005 0.0001"/>
+				<site pos="0 0 0.4" name="shelf3_top" size="0.001 0.001 0.001" rgba="0 0 0 0"/>
+			</body>
+			<body name="back" pos="0.2 0 0.6">
+				<geom pos="0 0 0" size="0.01 0.4 0.4" type="box" name="back_collision" friction="1 0.005 0.0001"/>
+				<!-- <geom pos="0 0 0" size="0.399 0.399 0.399" type="box" conaffinity="0" contype="0" group="1" name="table_visual"/> -->
+			</body>
+			<body name="lside" pos="0 0.4 0.6">
+				<geom pos="0 0 0" size="0.2 0.001 0.4" type="box" name="lside_collision" friction="1 0.005 0.0001"/>
+			</body>
+			<body name="partition1" pos="0 0.1333333 0.6">
+				<geom pos="0 0 0" size="0.2 0.0001 0.4" type="box" name="partition1_collision" friction="1 0.005 0.0001"/>
+			</body>
+			<body name="partition2" pos="0 -0.1333333 0.6">
+				<geom pos="0 0 0" size="0.2 0.0001 0.4" type="box" name="partition2_collision" friction="1 0.005 0.0001"/>
+			</body>
+			<body name="rside" pos="0 -0.4 0.6">
+				<geom pos="0 0 0" size="0.2 0.001 0.4" type="box" name="rside_collision" friction="1 0.005 0.0001"/>
+			</body>
+	    </body>
+	    <body name="box" pos ="-0.5 0 0.3">
+	    	<geom pos="0 0 0" size="0.15 0.2 0.001" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
+	    	<geom pos="0 0.2 0.05" size="0.15 0.001 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
+	    	<geom pos="0 -0.2 0.05" size="0.15 0.001 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
+	    	<geom pos="0.15 0 0.05" size="0.001 0.2 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
+	    	<geom pos="-0.15 0 0.05" size="0.001 0.2 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
+	    </body>
+		<light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="1 1 4.0" specular="0.3 0.3 0.3"/>
+		<light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="-3. -3. 4.0" specular="0.3 0.3 0.3"/>
+		<!-- <camera mode="fixed" name="camera1" pos="1.2 0 2.2" quat="0.653 0.271 0.271 0.653"/> -->
+		<!-- original -->
+		<camera mode="fixed" name="camera1" pos="0.8 0 1.65" quat="0.653 0.271 0.271 0.653"/>
+		<!-- look down at table -->
+		<camera mode="fixed" name="camera2" pos="0.8 0 1.65" quat="0.69342629 0.1384196 0.1384196 0.69342629"/>
+		<!-- look sort of at table and robot base -->
+		<camera mode="fixed" name="camera3" pos="0.8 0 1.65" quat="0.67651976 0.20572073 0.20572073 0.67651976"/>
+		<!-- look all the way down -->
+		<camera mode="fixed" name="camera4" pos="0.8 0 1.65" quat="0.707106619 0 0 0.707106619"/>
+
+
+	</worldbody>
+</mujoco>
