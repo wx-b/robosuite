@@ -7,11 +7,14 @@ import MujocoManip.miscellaneous.utils as U
 
 class SawyerEnv(MujocoEnv):
 
-    def __init__(self, gripper_type=None, use_eef_ctrl=False, **kwargs):
+    def __init__(self, gripper_type=None, use_eef_ctrl=False, 
+                    show_gripper_visualization=True, 
+                    **kwargs):
 
         self.has_gripper = not (gripper_type is None)
         self.gripper_type = gripper_type
         self.use_eef_ctrl = use_eef_ctrl
+        self.show_gripper_visualization = show_gripper_visualization
         super().__init__(**kwargs)
 
         # setup mocap stuff if necessary
@@ -36,8 +39,10 @@ class SawyerEnv(MujocoEnv):
         super()._load_model()
         self.mujoco_robot = SawyerRobot(use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
-            self.mujoco_robot.add_gripper('right_hand', self.gripper_type)
-            self.gripper = self.mujoco_robot.grippers['right_hand']
+            self.gripper = gripper_factory(self.gripper_type)
+            if not self.show_gripper_visualization:
+                self.gripper.hide_visualization()
+            self.mujoco_robot.add_gripper('right_hand', self.gripper)
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -83,6 +88,7 @@ class SawyerEnv(MujocoEnv):
 
             pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:]
 
+            # TODO (Ajay): Are we only supporting eef control with two-finger gripper?
             assert gripper_ctrl.shape == (2,)
             action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
 
@@ -92,7 +98,7 @@ class SawyerEnv(MujocoEnv):
 
             # gravity compensation
             self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
-        
+
         else:
             action = np.clip(action, -1, 1)    
             if self.has_gripper:

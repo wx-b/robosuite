@@ -39,7 +39,29 @@ class MujocoGripper(MujocoXML):
             Returns a list of names corresponding to the geoms
             used to determine contact with the gripper.
         """
-        raise NotImplementedError
+        return []
+
+    def visualization_sites(self):
+        """
+            Returns a list of sites corresponding to the geoms
+            used to aid visualization by human. (and showed be hidden from robots)
+        """
+        return []
+
+    def visualization_geoms(self):
+        """
+            Returns a list of sites corresponding to the geoms
+            used to aid visualization by human. (and showed be hidden from robots)
+        """
+        return []
+
+    def hide_visualization(self):
+        for site_name in self.visualization_sites():
+            site = self.worldbody.find(".//site[@name='{}']".format(site_name))
+            site.set('rgba', '0 0 0 0')
+        for geom_name in self.visualization_geoms():
+            site = self.worldbody.find(".//geom[@name='{}']".format(geom_name))
+            geom.set('rgba', '0 0 0 0')
 
 
 class TwoFingerGripper(MujocoGripper):
@@ -61,6 +83,9 @@ class TwoFingerGripper(MujocoGripper):
     @property
     def dof(self):
         return 2
+
+    def visualization_sites(self):
+        return ['grip_site', 'grip_site_cylinder']
 
     def contact_geoms(self):
         return ["r_finger_g0", "r_finger_g1", "l_finger_g0", "l_finger_g1", "r_fingertip_g0", "l_fingertip_g0"]

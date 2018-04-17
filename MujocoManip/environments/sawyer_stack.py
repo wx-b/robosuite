@@ -15,9 +15,6 @@ class SawyerStackEnv(SawyerEnv):
                  use_camera_obs=True,
                  use_object_obs=True,
                  camera_name='frontview',
-                 camera_height=256,
-                 camera_width=256,
-                 camera_depth=False,
                  reward_shaping=False,
                  visualize_gripper_site=False,
                  **kwargs):
@@ -44,17 +41,13 @@ class SawyerStackEnv(SawyerEnv):
             ('cubeA', cubeA),
             ('cubeB', cubeB)
         ])
+        self.n_objects = len(self.mujoco_objects)
 
         # settings for table top
         self.table_size = table_size
         self.table_friction = table_friction
 
-        # settings for camera observation
-        self.use_camera_obs = use_camera_obs
-        self.camera_name = camera_name
-        self.camera_height = camera_height
-        self.camera_width = camera_width
-        self.camera_depth = camera_depth
+        # whether to show visual aid about where is the gripper 
         self.visualize_gripper_site = visualize_gripper_site
 
         # whether to use ground-truth object states
@@ -62,13 +55,16 @@ class SawyerStackEnv(SawyerEnv):
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
+                         use_camera_obs=use_camera_obs,
+                         camera_name=camera_name,
                          **kwargs)
 
         # reward configuration
         self.reward_shaping = reward_shaping
 
         # information of objects
-        self.object_names = [o['object_name'] for o in self.object_metadata]
+        # self.object_names = [o['object_name'] for o in self.object_metadata]
+        self.object_names = list(self.mujoco_objects.keys())
         self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
         # id of grippers for contact checking
@@ -91,9 +87,6 @@ class SawyerStackEnv(SawyerEnv):
         # task includes arena, robot, and objects of interest
         self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
         self.model.place_objects()
-
-        self.object_metadata = self.model.object_metadata
-        self.n_objects = len(self.object_metadata)
 
     def _get_reference(self):
         super()._get_reference()

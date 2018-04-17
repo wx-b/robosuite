@@ -18,7 +18,6 @@ class TableTopTask(MujocoWorldBase):
 
     def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects):
         super().__init__()
-        self.object_metadata = []
         self.merge_arena(mujoco_arena)
         self.merge_robot(mujoco_robot)
         self.merge_objects(mujoco_objects)
@@ -43,17 +42,11 @@ class TableTopTask(MujocoWorldBase):
         for obj_name, obj_mjcf in mujoco_objects.items():
             self.merge_asset(obj_mjcf)
             # Load object
-            obj = obj_mjcf.get_full(name=obj_name, site=True)
+            obj = obj_mjcf.get_collision(name=obj_name, site=True)
             obj.append(joint(name=obj_name, type='free'))
             self.objects.append(obj)
             self.worldbody.append(obj)
 
-            self.object_metadata.append({
-                'object_name': obj_name,
-                'object_bottom_offset': obj_mjcf.get_bottom_offset(),
-                'object_top_offset': obj_mjcf.get_top_offset(),
-                'object_horizontal_radius': obj_mjcf.get_horizontal_radius(),
-            })
             self.max_horizontal_radius = max(self.max_horizontal_radius,
                                              obj_mjcf.get_horizontal_radius())
 
@@ -79,14 +72,19 @@ class TableTopTask(MujocoWorldBase):
                     if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
                         location_valid = False
                         break
-                if location_valid: # bad luck, reroll
+                if location_valid: 
+                    # location is valid, put the object down
                     pos = self.table_top_offset - bottom_offset + np.array([object_x, object_y, 0])
                     placed_objects.append((pos, horizontal_radius))
+                    # random z-rotation
+                    rot_angle = np.random.uniform(high=2 * np.pi,low=0)
+                    quat = array_to_string([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
+                    self.objects[index].set('quat', quat)
                     self.objects[index].set('pos', array_to_string(pos))
                     success = True
                     break
-                # location is valid, put the object down
-                # quarternions, later we can add random rotation
+                
+                # bad luck, reroll
             if not success:
                 raise RandomizationError('Cannot place all objects on the desk')
             index += 1

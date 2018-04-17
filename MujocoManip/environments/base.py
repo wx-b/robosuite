@@ -34,6 +34,11 @@ class MujocoEnv(object, metaclass=EnvMeta):
                  control_freq=100,
                  horizon=500,
                  ignore_done=False,
+                 use_camera_obs=False,
+                 camera_name=None,
+                 camera_height=256,
+                 camera_width=256,
+                 camera_depth=False,
                  **kwargs):
         """
             Initialize a Mujoco Environment
@@ -61,6 +66,16 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.horizon = horizon
         self.ignore_done = ignore_done
         self.viewer = None
+
+        # settings for camera observation
+        self.use_camera_obs = use_camera_obs
+        self.camera_name = camera_name
+        if self.use_camera_obs and self.camera_name is None:
+            raise ValueError('Must specify camera name when using camera obs')
+        self.camera_height = camera_height
+        self.camera_width = camera_width
+        self.camera_depth = camera_depth
+
         self._reset_internal()
 
         # for key in kwargs:
