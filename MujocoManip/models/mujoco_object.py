@@ -152,6 +152,7 @@ class MujocoGeneratedObject(MujocoObject):
         template['type'] = ob_type
         template['rgba'] = array_to_string(self.rgba)
         template['size'] = array_to_string(self.size)
+        template['density'] = '0.2'
         body.append(ET.Element('geom', attrib=template))
         if site:
             # add a site as well

@@ -17,17 +17,29 @@ class SawyerStackEnv(SawyerEnv):
                  camera_name='frontview',
                  camera_height=256,
                  camera_width=256,
-                 camera_depth=True,
+                 camera_depth=False,
+                 reward_shaping=False,
                  visualize_gripper_site=False,
                  **kwargs):
         """
-            @table_size, the FULL size of the table 
+            @gripper_type, string that specifies the gripper type
+            @use_eef_ctrl, position controller or default joint controllder
+            @table_size, full dimension of the table
+            @table_friction, friction parameters of the table
+            @use_camera_obs, using camera observations
+            @use_object_obs, using object physics states
+            @camera_name, name of camera to be rendered
+            @camera_height, height of camera observation
+            @camera_width, width of camera observation
+            @camera_depth, rendering depth
+            @reward_shaping, using a shaping reward
+            @visualize_gripper_site: visualizing gripper site
         """
         # initialize objects of interest
-        cubeA = RandomBoxObject(size_min=[0.025, 0.025, 0.03],
-                                size_max=[0.05, 0.05, 0.05])
-        cubeB = RandomBoxObject(size_min=[0.025, 0.025, 0.03],
-                                size_max=[0.05, 0.05, 0.05])
+        cubeA = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
+                                size_max=[0.02, 0.02, 0.02])
+        cubeB = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
+                                size_max=[0.025, 0.025, 0.025])
         self.mujoco_objects = OrderedDict([
             ('cubeA', cubeA),
             ('cubeB', cubeB)
@@ -51,6 +63,9 @@ class SawyerStackEnv(SawyerEnv):
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
                          **kwargs)
+
+        # reward configuration
+        self.reward_shaping = reward_shaping
 
         # information of objects
         self.object_names = [o['object_name'] for o in self.object_metadata]
@@ -91,9 +106,39 @@ class SawyerStackEnv(SawyerEnv):
         self.model.place_objects()
 
     def reward(self, action):
-        reward = 0
-        #TODO(yukez): implementing a stacking reward
+        r_reach, r_lift, r_stack = self.staged_rewards()
+        if self.reward_shaping:
+            reward = max(r_reach, r_lift, r_stack)
+        else:
+            reward = 1.0 if r_stack > 0 else 0.0
         return reward
+
+    def staged_rewards(self):
+        """
+        Returns staged rewards based on current physical states
+        """
+        # reaching is successful when the gripper site is close to 
+        # the center of the cube
+        cubeA_pos = self.sim.data.body_xpos[self.cubeA_body_id]
+        gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+        dist = np.linalg.norm(gripper_site_pos - cubeA_pos)
+        r_reach = 1 - np.tanh(10.0 * dist)
+
+        # lifting is successful when the cube is above the table top
+        # by a margin
+        cubeA_height = cubeA_pos[2]
+        table_height = self.table_size[2]
+        r_lift = 1.0 if cubeA_height > table_height + 0.045 else 0.0
+
+        # stacking is successful when the block is lifted and
+        # the gripper is not holding the object
+        r_stack = 0
+        if r_reach < 0.6 and r_lift > 0:
+            r_stack = 2.0
+
+        # print("reach: %.2f lift: %.2f stack: %.2f final: %.2f"%
+        #     (r_reach, r_lift, r_stack, max(r_reach, r_lift, r_stack)))
+        return (r_reach, r_lift, r_stack)
 
     def _get_observation(self):
         """
@@ -134,7 +179,7 @@ class SawyerStackEnv(SawyerEnv):
 
     def _check_contact(self):
         """
-            Returns True if gripper is in contact with an object.
+        Returns True if gripper is in contact with an object.
         """
         collision = False
         for contact in self.sim.data.contact[:self.sim.data.ncon]:
@@ -146,14 +191,14 @@ class SawyerStackEnv(SawyerEnv):
 
     def _check_terminated(self):
         """
-            Returns True if task is successfully completed
+        Returns True if task is successfully completed
         """
-        #TODO(yukez): define termination conditions
-        return False
+        r_reach, r_lift, r_stack = self.staged_rewards()
+        return r_stack > 0
 
     def _gripper_visualization(self):
         """
-            Do any needed visualization here. Overrides superclass implementations.
+        Do any needed visualization here. Overrides superclass implementations.
         """
         # color the gripper site appropriately based on distance to nearest object
         if self.visualize_gripper_site:

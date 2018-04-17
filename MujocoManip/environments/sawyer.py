@@ -114,7 +114,6 @@ class SawyerEnv(MujocoEnv):
     def _post_action(self, action):
         ret = super()._post_action(action)
         self._gripper_visualization()
-        print("eef_vel: {}".format(self._right_hand_total_velocity[3]))
         return ret
 
     def _get_observation(self):
