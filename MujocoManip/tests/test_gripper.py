@@ -22,7 +22,7 @@ world.worldbody.append(gripper_body)
 world.actuator.append(actuator(joint='gripper_z_joint', act_type='position', name='gripper_z', kp='500'))
 
 # Add an object for grasping
-mujoco_object = BoxObject(size=[0.02, 0.02, 0.02], rgba=[1, 0, 0, 1]).get_full()
+mujoco_object = BoxObject(size=[0.02, 0.02, 0.02], rgba=[1, 0, 0, 1], friction=1).get_collision()
 mujoco_object.append(joint(name='object_free_joint', type='free'))
 mujoco_object.set('pos', '0 0 0.11')
 geoms = mujoco_object.findall('./geom')

@@ -26,12 +26,14 @@ class SawyerStackEnv(SawyerEnv):
         # initialize objects of interest
         cubeA = RandomBoxObject(size_min=[0.025, 0.025, 0.03],
                                 size_max=[0.05, 0.05, 0.05])
-        cubeB = RandomBoxObject(size_min=[0.025, 0.025, 0.03],
+        cubeB = RandomBoxObject(size_min=[0.025, 0.025, 0.03], 
                                 size_max=[0.05, 0.05, 0.05])
+        # RandomCylinderObject(size_min=[0.03, 0.02], size_max=[0.05,0.06])
         self.mujoco_objects = OrderedDict([
             ('cubeA', cubeA),
             ('cubeB', cubeB)
         ])
+        self.n_objects = len(self.mujoco_objects)
 
         # settings for table top
         self.table_size = table_size
@@ -53,7 +55,8 @@ class SawyerStackEnv(SawyerEnv):
                          **kwargs)
 
         # information of objects
-        self.object_names = [o['object_name'] for o in self.object_metadata]
+        # self.object_names = [o['object_name'] for o in self.object_metadata]
+        self.object_names = list(self.mujoco_objects.keys())
         self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
         # id of grippers for contact checking
@@ -76,9 +79,6 @@ class SawyerStackEnv(SawyerEnv):
         # task includes arena, robot, and objects of interest
         self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
         self.model.place_objects()
-
-        self.object_metadata = self.model.object_metadata
-        self.n_objects = len(self.object_metadata)
 
     def _get_reference(self):
         super()._get_reference()

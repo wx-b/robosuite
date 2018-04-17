@@ -7,13 +7,14 @@ from MujocoManip.miscellaneous.utils import *
 
 class SawyerEnv(MujocoEnv):
 
-    def __init__(self, gripper_type=None, use_eef_ctrl=False, use_torque_ctrl=False, use_force_ctrl=False, **kwargs):
+    def __init__(self, gripper_type=None, use_eef_ctrl=False, 
+                    show_gripper_visualization=True, 
+                    **kwargs):
 
         self.has_gripper = not (gripper_type is None)
         self.gripper_type = gripper_type
         self.use_eef_ctrl = use_eef_ctrl
-        self.use_torque_ctrl = use_torque_ctrl
-        self.use_force_ctrl = use_force_ctrl
+        self.show_gripper_visualization = show_gripper_visualization
         super().__init__(**kwargs)
 
         ### TODO: any joint positions need to be set here? ###
@@ -38,10 +39,12 @@ class SawyerEnv(MujocoEnv):
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_robot = SawyerRobot(use_torque_ctrl=self.use_torque_ctrl, use_eef_ctrl=self.use_eef_ctrl)
+        self.mujoco_robot = SawyerRobot(use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
-            self.mujoco_robot.add_gripper('right_hand', self.gripper_type)
-            self.gripper = self.mujoco_robot.grippers['right_hand']
+            self.gripper = gripper_factory(self.gripper_type)
+            if not self.show_gripper_visualization:
+                self.gripper.hide_visualization()
+            self.mujoco_robot.add_gripper('right_hand', self.gripper)
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -88,11 +91,7 @@ class SawyerEnv(MujocoEnv):
 
             pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:]
 
-            # pos_ctrl *= 0.05  # limit maximum change in position
-            # rot_ctrl = [0., -1./np.sqrt(2.), -1./np.sqrt(2.), 0.]
-
-            # rot_ctrl = [0., 0., 1., 0.]  # (w, x, y, z) # fixed rotation of the end effector, expressed as a quaternion
-            # gripper_ctrl = np.array([gripper_ctrl, gripper_ctrl])
+            # TODO (Ajay): Are we only supporting eef control with two-finger gripper?
             assert gripper_ctrl.shape == (2,)
             action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
 
@@ -103,19 +102,6 @@ class SawyerEnv(MujocoEnv):
             # gravity compensation
             self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
 
-        elif self.use_force_ctrl:
-
-            ### TODO: convert the following in mujoco_py??? ###
-
-            ### TODO: is this force acting in the end effector frame? If so, we need to translate to base coords... ###
-
-            # note we convert force in base frame to force in world frame
-            # self.physics.named.data.xfrc_applied['right_hand'] = self._convert_base_force_to_world_force(action[:6])
-            self.physics.named.data.xfrc_applied['right_hand'] = action[:6]
-
-            # gravity compensation
-            self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
-        
         else:
             action = np.clip(action, -1, 1)    
             if self.has_gripper:
@@ -207,8 +193,8 @@ class SawyerEnv(MujocoEnv):
         Returns eef pose in base frame of robot.
         """
 
-        ### TODO: check this function for correctness... ###
-        ### TODO: do we want body inertia orientation, or body frame orientation? ###
+        ### TODO(Ajay): check this function for correctness... ###
+        ### TODO(Ajay): do we want body inertia orientation, or body frame orientation? ###
         return self.pose_in_base_from_name('right_hand')
 
     @property

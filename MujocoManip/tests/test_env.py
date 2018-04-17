@@ -10,10 +10,9 @@ from MujocoManip.wrappers import DataCollector
 if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
-    env = make("SawyerStackEnv", display=True, ignore_done=True)
+    env = make("SawyerStackEnv", display=True, ignore_done=True, show_gripper_visualization=False)
 
     obs = env.reset()
-
     # rotate the gripper so we can see it easily 
     env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
