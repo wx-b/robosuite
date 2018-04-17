@@ -15,9 +15,6 @@ class SawyerStackEnv(SawyerEnv):
                  use_camera_obs=True,
                  use_object_obs=True,
                  camera_name='frontview',
-                 camera_height=256,
-                 camera_width=256,
-                 camera_depth=True,
                  visualize_gripper_site=False,
                  **kwargs):
         """
@@ -39,12 +36,7 @@ class SawyerStackEnv(SawyerEnv):
         self.table_size = table_size
         self.table_friction = table_friction
 
-        # settings for camera observation
-        self.use_camera_obs = use_camera_obs
-        self.camera_name = camera_name
-        self.camera_height = camera_height
-        self.camera_width = camera_width
-        self.camera_depth = camera_depth
+        # whether to show visual aid about where is the gripper 
         self.visualize_gripper_site = visualize_gripper_site
 
         # whether to use ground-truth object states
@@ -52,6 +44,8 @@ class SawyerStackEnv(SawyerEnv):
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
+                         use_camera_obs=use_camera_obs,
+                         camera_name=camera_name,
                          **kwargs)
 
         # information of objects
