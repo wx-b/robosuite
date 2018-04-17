@@ -27,9 +27,9 @@
             <body name="right_gripper" pos="0 0 0.095">
                 <inertial pos="0 0 0" mass="0.0001" diaginertia="0 0 0" />
                 <!-- This site was added for visualization. -->
-                <site name="grip_site" pos="0 0 0" size="0.01 0.01 0.01" rgba="1 0 0 1" type="sphere"></site>
+                <site name="grip_site" pos="0 0 0" size="0.01 0.01 0.01" rgba="1 0 0 1" type="sphere" group="1"></site>
                 <!-- This site was added for visualization. -->
-                <site name="grip_site_cylinder" pos="0 0 0" size="0.005 10" rgba="0 1 0 0.1" type="cylinder"></site>
+                <site name="grip_site_cylinder" pos="0 0 0" size="0.005 10" rgba="0 1 0 0.1" type="cylinder" group="1"></site>
             </body>
             <!-- TODO: Mess with y-position of fingers?? -->
             <!-- original <body name="r_gripper_l_finger" pos="0 -0.0015 0.02"> -->
@@ -51,8 +51,8 @@
                 <geom size="0.005 0.025 0.0085" pos="-0.005 -0.003 0.0083" quat="0 0 0 -1" type="box" /> -->
 
                 <!-- conaffinity, contype changes -->
-                <geom size="0.005 0.00675 0.0375" pos="0 0.01725 0.04" quat="0 0 0 -1" type="box"  conaffinity="1" contype="0" name="l_finger_g0"/>
-                <geom size="0.005 0.025 0.0085" pos="-0.005 -0.003 0.0083" quat="0 0 0 -1" type="box"  conaffinity="1" contype="0" name="l_finger_g1"/>
+                <geom size="0.005 0.00675 0.0375" pos="0 0.01725 0.04" quat="0 0 0 -1" type="box"  conaffinity="1" contype="0" name="l_finger_g0" friction="0 0 0"/>
+                <geom size="0.005 0.025 0.0085" pos="-0.005 -0.003 0.0083" quat="0 0 0 -1" type="box"  conaffinity="1" contype="0" name="l_finger_g1" friction="0 0 0"/>
 
                 <body name="r_gripper_l_finger_tip" pos="0 0.01725 0.075">
                     <inertial pos="0 0 0" quat="0 0 0 1" mass="0.01" diaginertia="0.01 0.01 0.01" />
@@ -62,7 +62,7 @@
                     <!-- <geom size="0.004 0.004 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="box" /> -->
 
                     <!-- TODO: mess with conaffinity, contype here?? -->
-                    <geom size="0.004 0.004 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="box"  conaffinity="1" contype="0" name="l_fingertip_g0" friction="1 0.05 0.01"/>
+                    <geom size="0.004 0.004 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="box"  conaffinity="1" contype="0" name="l_fingertip_g0" friction="0 0 0"/>
 
                     <!-- trying condim 4, to mirror openai -->
                     <!-- <geom size="0.004 0.004 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="box"  conaffinity="1" contype="0" condim="4" friction="1000 0.05 0.01"/> -->
@@ -92,8 +92,8 @@
                 <geom size="0.005 0.025 0.0085" pos="0.005 0.003 0.0083" type="box" /> -->
 
                 <!-- conaffinity, contype changes -->
-                <geom size="0.005 0.00675 0.0375" pos="0 -0.01725 0.04" type="box" conaffinity="1" contype="0" name="r_finger_g0"/>
-                <geom size="0.005 0.025 0.0085" pos="0.005 0.003 0.0083" type="box" conaffinity="1" contype="0" name="r_finger_g1"/>
+                <geom size="0.005 0.00675 0.0375" pos="0 -0.01725 0.04" type="box" conaffinity="1" contype="0" name="r_finger_g0" friction="0 0 0"/>
+                <geom size="0.005 0.025 0.0085" pos="0.005 0.003 0.0083" type="box" conaffinity="1" contype="0" name="r_finger_g1" friction="0 0 0"/>
 
 
                 <body name="r_gripper_r_finger_tip" pos="0 -0.01725 0.075">
@@ -104,7 +104,7 @@
                     <!-- <geom size="0.004 0.004 0.0185" pos="0 0.0045 -0.015" type="box" /> -->
 
                     <!-- TODO: mess with conaffinity, contype here?? -->
-                    <geom size="0.004 0.004 0.0185" pos="0 0.0045 -0.015" type="box"  conaffinity="1" contype="0" name="r_fingertip_g0" friction="1 0.05 0.01"/>
+                    <geom size="0.004 0.004 0.0185" pos="0 0.0045 -0.015" type="box"  conaffinity="1" contype="0" name="r_fingertip_g0" friction="0 0 0"/>
 
                     <!-- trying condim 4, to mirror openai -->
                     <!-- <geom size="0.004 0.004 0.0185" pos="0 0.0045 -0.015" type="box"  conaffinity="1" contype="0" condim="4" friction="1000 0.05 0.01"/> -->

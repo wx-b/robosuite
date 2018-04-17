@@ -18,7 +18,7 @@ class MujocoRobot(MujocoXML):
         super().__init__(fname)
         self.grippers = OrderedDict()
 
-    def add_gripper(self, arm_name, gripper_type):
+    def add_gripper(self, arm_name, gripper):
         """
             Adds a gripper (@gripper as MujocoGripper instance) to hand
             throws error if robot already has a gripper or gripper type is incorrect
@@ -27,7 +27,6 @@ class MujocoRobot(MujocoXML):
             raise ValueError('Attempts to add multiple grippers to one body')
 
         arm_subtree = self.worldbody.find(".//body[@name='{}']".format(arm_name))
-        gripper = gripper_factory(gripper_type)
 
         for actuator in gripper.actuator:
             if not (actuator.get('name') is not None and actuator.get('name').startswith('gripper')):
@@ -63,10 +62,8 @@ class MujocoRobot(MujocoXML):
 
 class SawyerRobot(MujocoRobot):
 
-    def __init__(self, use_torque_ctrl=False, use_eef_ctrl=False):
-        if use_torque_ctrl:
-            super().__init__(xml_path_completion('robot/sawyer/robot_torque.xml'))
-        elif use_eef_ctrl:
+    def __init__(self, use_eef_ctrl=False):
+        if use_eef_ctrl:
             super().__init__(xml_path_completion('robot/sawyer/robot_mocap.xml'))
         else:
             super().__init__(xml_path_completion('robot/sawyer/robot.xml'))

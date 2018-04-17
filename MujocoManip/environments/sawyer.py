@@ -2,21 +2,22 @@ import numpy as np
 from collections import OrderedDict
 from MujocoManip.environments.base import MujocoEnv
 from MujocoManip.models import SawyerRobot, gripper_factory
-from MujocoManip.miscellaneous.utils import *
+import MujocoManip.miscellaneous.utils as U
 
 
 class SawyerEnv(MujocoEnv):
 
-    def __init__(self, gripper_type=None, use_eef_ctrl=False, use_torque_ctrl=False, use_force_ctrl=False, **kwargs):
+    def __init__(self,
+                 gripper_type=None,
+                 use_eef_ctrl=False,
+                 gripper_visualization=False,
+                 **kwargs):
 
         self.has_gripper = not (gripper_type is None)
         self.gripper_type = gripper_type
         self.use_eef_ctrl = use_eef_ctrl
-        self.use_torque_ctrl = use_torque_ctrl
-        self.use_force_ctrl = use_force_ctrl
+        self.gripper_visualization = gripper_visualization
         super().__init__(**kwargs)
-
-        ### TODO: any joint positions need to be set here? ###
 
         # setup mocap stuff if necessary
         if self.use_eef_ctrl:
@@ -38,10 +39,12 @@ class SawyerEnv(MujocoEnv):
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_robot = SawyerRobot(use_torque_ctrl=self.use_torque_ctrl, use_eef_ctrl=self.use_eef_ctrl)
+        self.mujoco_robot = SawyerRobot(use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
-            self.mujoco_robot.add_gripper('right_hand', self.gripper_type)
-            self.gripper = self.mujoco_robot.grippers['right_hand']
+            self.gripper = gripper_factory(self.gripper_type)
+            if not self.gripper_visualization:
+                self.gripper.hide_visualization()
+            self.mujoco_robot.add_gripper('right_hand', self.gripper)
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -84,38 +87,20 @@ class SawyerEnv(MujocoEnv):
             # assert len(action) == 5
             assert len(action) == 9
             action = action.copy()  # ensure that we don't change the action outside of this scope
-            # pos_ctrl, gripper_ctrl = action[:3], action[3:]
 
             pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:]
 
-            # pos_ctrl *= 0.05  # limit maximum change in position
-            # rot_ctrl = [0., -1./np.sqrt(2.), -1./np.sqrt(2.), 0.]
-
-            # rot_ctrl = [0., 0., 1., 0.]  # (w, x, y, z) # fixed rotation of the end effector, expressed as a quaternion
-            # gripper_ctrl = np.array([gripper_ctrl, gripper_ctrl])
+            # TODO (Ajay): Are we only supporting eef control with two-finger gripper?
             assert gripper_ctrl.shape == (2,)
             action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
 
             # Apply action to simulation.
-            mjpy_ctrl_set_action(self.sim, action)
-            mjpy_mocap_set_action(self.sim, action)
+            U.mjpy_ctrl_set_action(self.sim, action)
+            U.mjpy_mocap_set_action(self.sim, action)
 
             # gravity compensation
             self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
 
-        elif self.use_force_ctrl:
-
-            ### TODO: convert the following in mujoco_py??? ###
-
-            ### TODO: is this force acting in the end effector frame? If so, we need to translate to base coords... ###
-
-            # note we convert force in base frame to force in world frame
-            # self.physics.named.data.xfrc_applied['right_hand'] = self._convert_base_force_to_world_force(action[:6])
-            self.physics.named.data.xfrc_applied['right_hand'] = action[:6]
-
-            # gravity compensation
-            self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
-        
         else:
             action = np.clip(action, -1, 1)    
             if self.has_gripper:
@@ -168,17 +153,14 @@ class SawyerEnv(MujocoEnv):
 
         pos_in_world = self.sim.data.get_body_xpos(name)
         rot_in_world = self.sim.data.get_body_xmat(name).reshape((3, 3))
-        # # note we convert (w, x, y, z) quat to (x, y, z, w)
-        # eef_rot_in_world = quat2mat(self.physics.named.data.xquat['right_hand'][[1, 2, 3, 0]])
-        pose_in_world = make_pose(pos_in_world, rot_in_world)
+        pose_in_world = U.make_pose(pos_in_world, rot_in_world)
 
         base_pos_in_world = self.sim.data.get_body_xpos('base')
         base_rot_in_world = self.sim.data.get_body_xmat('base').reshape((3, 3))
-        # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
-        base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
-        world_pose_in_base = pose_inv(base_pose_in_world)
+        base_pose_in_world = U.make_pose(base_pos_in_world, base_rot_in_world)
+        world_pose_in_base = U.pose_inv(base_pose_in_world)
 
-        pose_in_base = pose_in_A_to_pose_in_B(pose_in_world, world_pose_in_base)
+        pose_in_base = U.pose_in_A_to_pose_in_B(pose_in_world, world_pose_in_base)
         return pose_in_base
 
     def set_robot_joint_positions(self, jpos):
@@ -206,62 +188,25 @@ class SawyerEnv(MujocoEnv):
         """
         Returns eef pose in base frame of robot.
         """
-
-        ### TODO: check this function for correctness... ###
-        ### TODO: do we want body inertia orientation, or body frame orientation? ###
         return self.pose_in_base_from_name('right_hand')
-
-    @property
-    def _right_hand_joint_cartesian_velocity(self):
-        """
-        Returns the current cartesian velocity of the last robot joint with respect to
-        the base frame as a tuple (vel, ang_vel), each is a 3-dim numpy array
-        """
-        raise Exception("Not implemented yet...")
 
     @property
     def _right_hand_total_velocity(self):
         """
-        Returns the total eef velocity (linear + angular) in the base frame as a tuple
+        Returns the total eef velocity (linear + angular) in the base frame as a numpy
+        array of shape (6,)
         """
 
-        ### TODO: get velocity in frame, not COM (xpos vs. xipos) by translating between the orientations... ###
+        # Use jacobian to translate joint velocities to end effector velocities.
+        Jp = self.sim.data.get_body_jacp('right_hand').reshape((3, -1))
+        Jp_joint = Jp[:, self._ref_joint_vel_indexes]
 
-        ### TODO: check this function for correctness... ###
+        Jr = self.sim.data.get_body_jacr('right_hand').reshape((3, -1))
+        Jr_joint = Jr[:, self._ref_joint_vel_indexes]
 
-        base_pos_in_world = self.sim.data.get_body_xpos('base')
-        base_rot_in_world = self.sim.data.get_body_xmat('base').reshape((3, 3))
-        # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
-        base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
-        world_pose_in_base = pose_inv(base_pose_in_world)
-
-        ### TODO: convert COM velocity to frame velocity here... ###
-
-        eef_vel_in_world = self.sim.data.get_body_xvelp('right_hand')
-        eef_ang_vel_in_world = self.sim.data.get_body_xvelr('right_hand')
-
-        ### TODO: should we just rotate the axis? Or is this velocity conversion below correct? ###
-        return vel_in_A_to_vel_in_B(vel_A=eef_vel_in_world, ang_vel_A=eef_ang_vel_in_world, pose_A_in_B=world_pose_in_base)
-
-    def _convert_base_force_to_world_force(self, base_force):
-        """
-        Utility function to convert a force measured in the base frame to one in the world frame.
-        This should be used when applying force control, since all control occurs with respect
-        to the base frame but all simulation happens with respect to the world frame.
-        """
-
-        base_pos_in_world = self.sim.data.get_body_xpos('base')
-        base_rot_in_world = self.sim.data.get_body_xmat('base').reshape((3, 3))
-        # base_rot_in_world = quat2mat(self.physics.named.data.xquat['base'][[1, 2, 3, 0]])
-        base_pose_in_world = make_pose(base_pos_in_world, base_rot_in_world)
-
-        world_force = np.zeros(6)
-        lin_force_in_world, rot_force_in_world = force_in_A_to_force_in_B(force_A=base_force[:3], torque_A=base_force[3:], pose_A_in_B=base_pose_in_world)
-        world_force[:3] = lin_force_in_world
-        world_force[3:] = rot_force_in_world
-        print("world_force: {}".format(world_force))
-        print("base_rot_in_world: {}".format(base_rot_in_world))
-        return world_force
+        eef_lin_vel = Jp_joint.dot(self._joint_velocities)
+        eef_rot_vel = Jr_joint.dot(self._joint_velocities)
+        return np.concatenate([eef_lin_vel, eef_rot_vel])
 
     @property
     def _right_hand_pos(self):
@@ -284,14 +229,14 @@ class SawyerEnv(MujocoEnv):
         """
         Returns velocity of eef in base frame of robot.
         """
-        return self._right_hand_total_velocity[0]
+        return self._right_hand_total_velocity[:3]
 
     @property
     def _right_hand_ang_vel(self):
         """
         Returns angular velocity of eef in base frame of robot.
         """
-        return self._right_hand_total_velocity[1]
+        return self._right_hand_total_velocity[3:]
 
     @property
     def _joint_positions(self):
