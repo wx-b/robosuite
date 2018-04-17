@@ -16,13 +16,24 @@ class SawyerLiftEnv(SawyerEnv):
                  use_camera_obs=True,
                  use_object_obs=True,
                  camera_name='frontview',
+                 reward_shaping=False,
                  **kwargs):
         """
-            @table_size, the full dimension of the table 
+            @gripper_type, string that specifies the gripper type
+            @use_eef_ctrl, position controller or default joint controllder
+            @table_size, full dimension of the table
+            @table_friction, friction parameters of the table
+            @use_camera_obs, using camera observations
+            @use_object_obs, using object physics states
+            @camera_name, name of camera to be rendered
+            @camera_height, height of camera observation
+            @camera_width, width of camera observation
+            @camera_depth, rendering depth
+            @reward_shaping, using a shaping reward
         """
         # initialize objects of interest
-        cube = RandomBoxObject(size_min=[0.025, 0.025, 0.03],
-                               size_max=[0.05, 0.05, 0.05])
+        cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
+                               size_max=[0.025, 0.025, 0.025])
         self.mujoco_objects = OrderedDict([('cube', cube)])
 
         # settings for table top
@@ -31,6 +42,9 @@ class SawyerLiftEnv(SawyerEnv):
 
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
+
+        # reward configuration
+        self.reward_shaping = reward_shaping
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
@@ -43,7 +57,8 @@ class SawyerLiftEnv(SawyerEnv):
         self.mujoco_robot.set_base_xpos([0,0,0])
 
         # load model for table top workspace
-        self.mujoco_arena = TableArena(full_size=self.table_size, friction=self.table_friction)
+        self.mujoco_arena = TableArena(full_size=self.table_size,
+                                       friction=self.table_friction)
 
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
@@ -65,9 +80,20 @@ class SawyerLiftEnv(SawyerEnv):
         reward = 0
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
         table_height = self.table_size[2]
+
         # cube is higher than the table top above a margin
         if cube_height > table_height + 0.10:
             reward = 1.0
+
+        # use a shaping reward
+        if self.reward_shaping:
+            # reaching reward
+            cube_pos = self.sim.data.body_xpos[self.cube_body_id]
+            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            dist = np.linalg.norm(gripper_site_pos - cube_pos)
+            reaching_reward = 1 - np.tanh(10.0 * dist)
+            reward += reaching_reward
+
         return reward
 
     def _get_observation(self):
@@ -98,7 +124,7 @@ class SawyerLiftEnv(SawyerEnv):
 
     def _check_contact(self):
         """
-            Returns True if gripper is in contact with an object.
+        Returns True if gripper is in contact with an object.
         """
         collision = False
         for contact in self.sim.data.contact[:self.sim.data.ncon]:
@@ -110,7 +136,9 @@ class SawyerLiftEnv(SawyerEnv):
 
     def _check_terminated(self):
         """
-            Returns True if task is successfully completed
+        Returns True if task is successfully completed
         """
-        #TODO(yukez): define termination conditions
-        return False
+        # cube is higher than the table top above a margin
+        cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
+        table_height = self.table_size[2]
+        return (cube_height > table_height + 0.10)

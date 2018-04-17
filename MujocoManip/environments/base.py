@@ -38,7 +38,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
                  camera_name=None,
                  camera_height=256,
                  camera_width=256,
-                 camera_depth=True,
+                 camera_depth=False,
                  **kwargs):
         """
             Initialize a Mujoco Environment

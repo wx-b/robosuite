@@ -259,10 +259,10 @@ class IKController(object):
         """
         for i in range(len(velocities)):
             if velocities[i] >= 1.0:
-                print("CLIPPED joint {} at {}".format(i, velocities[i]))
+                # print("CLIPPED joint {} at {}".format(i, velocities[i]))
                 velocities[i] = 1.0
             elif velocities[i] <= -1.0:
-                print("CLIPPED joint {} at {}".format(i, velocities[i]))
+                # print("CLIPPED joint {} at {}".format(i, velocities[i]))
                 velocities[i] = -1.0
         return velocities
 
