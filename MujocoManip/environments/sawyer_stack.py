@@ -16,7 +16,7 @@ class SawyerStackEnv(SawyerEnv):
                  use_object_obs=True,
                  camera_name='frontview',
                  reward_shaping=False,
-                 visualize_gripper_site=False,
+                 gripper_visualization=False,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -30,7 +30,7 @@ class SawyerStackEnv(SawyerEnv):
             @camera_width, width of camera observation
             @camera_depth, rendering depth
             @reward_shaping, using a shaping reward
-            @visualize_gripper_site: visualizing gripper site
+            @gripper_visualization: visualizing gripper site
         """
         # initialize objects of interest
         cubeA = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
@@ -47,8 +47,8 @@ class SawyerStackEnv(SawyerEnv):
         self.table_size = table_size
         self.table_friction = table_friction
 
-        # whether to show visual aid about where is the gripper 
-        self.visualize_gripper_site = visualize_gripper_site
+        # whether to show visual aid about where is the gripper
+        self.gripper_visualization = gripper_visualization
 
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
@@ -57,6 +57,7 @@ class SawyerStackEnv(SawyerEnv):
                          use_eef_ctrl=use_eef_ctrl,
                          use_camera_obs=use_camera_obs,
                          camera_name=camera_name,
+                         gripper_visualization=gripper_visualization,
                          **kwargs)
 
         # reward configuration
@@ -110,7 +111,7 @@ class SawyerStackEnv(SawyerEnv):
         """
         Returns staged rewards based on current physical states
         """
-        # reaching is successful when the gripper site is close to 
+        # reaching is successful when the gripper site is close to
         # the center of the cube
         cubeA_pos = self.sim.data.body_xpos[self.cubeA_body_id]
         gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
@@ -194,7 +195,7 @@ class SawyerStackEnv(SawyerEnv):
         Do any needed visualization here. Overrides superclass implementations.
         """
         # color the gripper site appropriately based on distance to nearest object
-        if self.visualize_gripper_site:
+        if self.gripper_visualization:
             # find closest object
             square_dist = lambda x : np.sum(np.square(x - self.sim.data.get_site_xpos('grip_site')))
             dists = np.array(list(map(square_dist, self.sim.data.site_xpos)))

@@ -7,14 +7,16 @@ import MujocoManip.miscellaneous.utils as U
 
 class SawyerEnv(MujocoEnv):
 
-    def __init__(self, gripper_type=None, use_eef_ctrl=False, 
-                    show_gripper_visualization=True, 
-                    **kwargs):
+    def __init__(self,
+                 gripper_type=None,
+                 use_eef_ctrl=False,
+                 gripper_visualization=False,
+                 **kwargs):
 
         self.has_gripper = not (gripper_type is None)
         self.gripper_type = gripper_type
         self.use_eef_ctrl = use_eef_ctrl
-        self.show_gripper_visualization = show_gripper_visualization
+        self.gripper_visualization = gripper_visualization
         super().__init__(**kwargs)
 
         # setup mocap stuff if necessary
@@ -40,7 +42,7 @@ class SawyerEnv(MujocoEnv):
         self.mujoco_robot = SawyerRobot(use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
             self.gripper = gripper_factory(self.gripper_type)
-            if not self.show_gripper_visualization:
+            if not self.gripper_visualization:
                 self.gripper.hide_visualization()
             self.mujoco_robot.add_gripper('right_hand', self.gripper)
 

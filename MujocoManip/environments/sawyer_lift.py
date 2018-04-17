@@ -17,6 +17,7 @@ class SawyerLiftEnv(SawyerEnv):
                  use_object_obs=True,
                  camera_name='frontview',
                  reward_shaping=False,
+                 gripper_visualization=False,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -43,6 +44,9 @@ class SawyerLiftEnv(SawyerEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
+        # whether to show visual aid about where is the gripper
+        self.gripper_visualization = gripper_visualization
+
         # reward configuration
         self.reward_shaping = reward_shaping
 
@@ -50,6 +54,7 @@ class SawyerLiftEnv(SawyerEnv):
                          use_eef_ctrl=use_eef_ctrl,
                          use_camera_obs=use_camera_obs,
                          camera_name=camera_name,
+                         gripper_visualization=gripper_visualization,
                          **kwargs)
 
     def _load_model(self):

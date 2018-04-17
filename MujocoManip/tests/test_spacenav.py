@@ -13,7 +13,10 @@ from MujocoManip.miscellaneous.ik_controller import IKController
 if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
-    env = make("SawyerStackEnv", display=True, ignore_done=True)
+    env = make("SawyerStackEnv",
+               display=True,
+               ignore_done=True,
+               gripper_visualization=True)
 
     # function to return robot joint angles
     def robot_jpos_getter():
