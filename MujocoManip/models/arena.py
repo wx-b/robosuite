@@ -66,9 +66,9 @@ class ShelfArena(Arena):
 		self.bottom_pos = np.array([0,0,0])
 		self.floor.set('pos', array_to_string(self.bottom_pos))
 		
-		self.center_pos = self.bottom_pos + np.array([0,0,self.half_size[2]])
-		self.shelf_body.set('pos', array_to_string(self.center_pos))
-		self.box_body.set('pos', array_to_string(self.center_pos))
+		# self.center_pos = self.bottom_pos + np.array([0,0,self.half_size[2]])
+		# self.shelf_body.set('pos', array_to_string(self.center_pos))
+		# self.box_body.set('pos', array_to_string(self.center_pos))
 	
 	@property
 	def shelf_abs(self):
