@@ -14,8 +14,8 @@ if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
     env = make("SawyerStackEnv",
-               display=True,
                ignore_done=True,
+               use_camera_obs=False,
                gripper_visualization=True)
 
     # function to return robot joint angles
