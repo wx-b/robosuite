@@ -90,6 +90,34 @@ class TwoFingerGripper(MujocoGripper):
     def contact_geoms(self):
         return ["r_finger_g0", "r_finger_g1", "l_finger_g0", "l_finger_g1", "r_fingertip_g0", "l_fingertip_g0"]
 
+
+class LeftTwoFingerGripper(MujocoGripper):
+    def __init__(self):
+        super().__init__(xml_path_completion('gripper/left_two_finger_gripper.xml'))
+
+    def format_action(self, action):
+        return action
+        # return np.array([-1 * action, 1 * action])
+
+    @property
+    def init_qpos(self):
+        return np.array([0.020833, -0.020833])
+
+    @property
+    def joints(self):
+        return ['l_gripper_l_finger_joint', 'l_gripper_r_finger_joint']
+
+    @property
+    def dof(self):
+        return 2
+
+    def visualization_sites(self):
+        return ['l_g_grip_site', 'l_g_grip_site_cylinder']
+
+    def contact_geoms(self):
+        return ["l_g_r_finger_g0", "l_g_r_finger_g1", "l_g_l_finger_g0", "l_g_l_finger_g1", "l_g_r_fingertip_g0", "l_fingertip_g0"]
+
+
 class PR2Gripper(MujocoGripper):
     def __init__(self):
         super().__init__(xml_path_completion('gripper/pr2_gripper.xml'))
@@ -194,6 +222,8 @@ def gripper_factory(name):
     """Genreator for grippers"""
     if name == "TwoFingerGripper":
         return TwoFingerGripper()
+    if name == "LeftTwoFingerGripper":
+        return LeftTwoFingerGripper()
     if name == "PR2Gripper":
         return PR2Gripper()
     if name == "RobotiqGripper":

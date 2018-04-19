@@ -109,7 +109,7 @@ class MujocoXMLObject(MujocoXML, MujocoObject):
         collision = copy.deepcopy(self.worldbody.find("./body[@name='collision']"))
         collision.attrib.pop('name')
         if name is not None:
-            collision.attrib.set('name', name)
+            collision.attrib['name'] = name #.set('name', name)
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
@@ -130,6 +130,10 @@ class MujocoXMLObject(MujocoXML, MujocoObject):
                 template['name'] = name
             visual.append(ET.Element('site', attrib=template))
         return visual
+
+class DefaultPotObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/object_pot.xml'))
 
 class DefaultBoxObject(MujocoXMLObject):
     def __init__(self):

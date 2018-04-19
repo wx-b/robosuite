@@ -1,0 +1,19 @@
+<!-- sample of a general object defined in mujoco -->
+<mujoco model="pot">
+    <asset>
+        <mesh name="potmesh" file="meshes/handles.stl" />
+    </asset>
+    <worldbody>
+        <body name="collision">
+            <geom type="mesh" mesh="potmesh" pos="0 0 0.5" group="1" friction="10 10 10"/>
+        </body>
+        <body name="visual">
+       	    <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
+            <geom type="mesh" mesh="potmesh" pos="0 0 0.5" />
+        </body>
+        <!-- These sites are for stacking objects, for aligning objects on a table for example. -->
+	<site pos="0 0 0.4" name="bottom_site"/>
+        <site pos="0.17 0 0.17" name="top_site"/>
+	<site pos="0.17 0 0" name="horizontal_radius_site"/>
+    </worldbody>
+</mujoco>
