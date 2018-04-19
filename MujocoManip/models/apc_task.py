@@ -64,8 +64,8 @@ class ApcTask(MujocoWorldBase):
         # Objects
         # print(self.shelf_offset)
         placed_objects = []
+        index = 0
         for i in range(self.arena.num_shelves):
-            index = 0
             for _, obj_mjcf in self.mujoco_objects[i].items():
                 horizontal_radius = obj_mjcf.get_horizontal_radius()
                 bottom_offset = obj_mjcf.get_bottom_offset()
@@ -82,8 +82,7 @@ class ApcTask(MujocoWorldBase):
                             location_valid = False
                             break
                     if location_valid: # bad luck, reroll
-                        pos = self.shelf_offset[i] - bottom_offset + np.array([object_x, object_y, 1])
-                        print(pos)
+                        pos = self.shelf_offset[i] - bottom_offset + np.array([object_x, object_y, 0])
                         placed_objects.append((pos, horizontal_radius))
                         self.objects[index].set('pos', array_to_string(pos))
                         success = True

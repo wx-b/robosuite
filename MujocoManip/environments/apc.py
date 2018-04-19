@@ -98,7 +98,7 @@ class ApcEnv(SawyerEnv):
         self.mujoco_arena = ShelfArena()
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([1.16 + self.table_size[0] / 2,0,0.5])
+        self.mujoco_arena.set_origin([.86 + self.table_size[0] / 2,0,0.6])
 
         # task includes arena, robot, and objects of interest
         self.model = ApcTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)

@@ -31,10 +31,10 @@
 				<geom pos="0 0 0" size="0.2 0.001 0.4" type="box" name="lside_collision" friction="1 0.005 0.0001"/>
 			</body>
 			<body name="partition1" pos="0 0.1333333 0.6">
-				<geom pos="0 0 0" size="0.2 0.0001 0.4" type="box" name="partition1_collision" friction="1 0.005 0.0001"/>
+				<geom pos="0 0 0" size="0.2 0.00001 0.4" type="box" name="partition1_collision" friction="1 0.005 0.0001"/>
 			</body>
 			<body name="partition2" pos="0 -0.1333333 0.6">
-				<geom pos="0 0 0" size="0.2 0.0001 0.4" type="box" name="partition2_collision" friction="1 0.005 0.0001"/>
+				<geom pos="0 0 0" size="0.2 0.00001 0.4" type="box" name="partition2_collision" friction="1 0.005 0.0001"/>
 			</body>
 			<body name="rside" pos="0 -0.4 0.6">
 				<geom pos="0 0 0" size="0.2 0.001 0.4" type="box" name="rside_collision" friction="1 0.005 0.0001"/>
