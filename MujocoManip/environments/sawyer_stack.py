@@ -17,6 +17,7 @@ class SawyerStackEnv(SawyerEnv):
                  camera_name='frontview',
                  reward_shaping=False,
                  gripper_visualization=False,
+                 placement_initializer=None,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -53,6 +54,9 @@ class SawyerStackEnv(SawyerEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
+        # object placement initializer
+        self.placement_initializer = placement_initializer
+
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
                          use_camera_obs=use_camera_obs,
@@ -86,7 +90,10 @@ class SawyerStackEnv(SawyerEnv):
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
 
         # task includes arena, robot, and objects of interest
-        self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
+        self.model = TableTopTask(self.mujoco_arena, 
+                                self.mujoco_robot, 
+                                self.mujoco_objects,
+                                initializer=self.placement_initializer)
         self.model.place_objects()
 
     def _get_reference(self):
