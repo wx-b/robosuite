@@ -84,7 +84,7 @@ class BaxterStackEnv(BaxterEnv):
         self.mujoco_arena = TableArena(full_size=self.table_size, friction=self.table_friction)
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
+        self.mujoco_arena.set_origin([0.45 + self.table_size[0] / 2,0,0])
 
         # task includes arena, robot, and objects of interest
         self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
