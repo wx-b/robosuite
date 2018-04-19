@@ -147,3 +147,26 @@ class SawyerLiftEnv(SawyerEnv):
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
         table_height = self.table_size[2]
         return (cube_height > table_height + 0.10)
+
+    def _gripper_visualization(self):
+        """
+        Do any needed visualization here. Overrides superclass implementations.
+        """
+
+        # color the gripper site appropriately based on distance to cube
+        if self.gripper_visualization:
+            # get distance to cube
+            cube_site_id = self.sim.model.site_name2id('cube')
+            dist = np.sum(np.square(self.sim.data.site_xpos[cube_site_id] - self.sim.data.get_site_xpos('grip_site')))
+
+            # set RGBA for the EEF site here
+            max_dist = 0.1
+            scaled = (1.0 - min(dist / max_dist, 1.)) ** 15
+            rgba = np.zeros(4)
+            rgba[0] = 1 - scaled
+            rgba[1] = scaled
+            rgba[3] = 0.5
+
+            self.sim.model.site_rgba[self.eef_site_id] = rgba
+
+
