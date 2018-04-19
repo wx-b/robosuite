@@ -80,7 +80,7 @@ class ApcEnv(SawyerEnv):
 
         # information of objects
         # self.object_names = [o['object_name'] for o in self.object_metadata]
-        self.object_names = list(self.mujoco_objects[2].keys())
+        self.object_names = list({**self.mujoco_objects[0],**self.mujoco_objects[1],**self.mujoco_objects[2]}.keys())
         self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
         # id of grippers for contact checking

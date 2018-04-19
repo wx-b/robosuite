@@ -62,6 +62,7 @@ class ApcTask(MujocoWorldBase):
         Place objects randomly until no more collisions or max iterations hit.
         """
         # Objects
+        # print(self.shelf_offset)
         placed_objects = []
         for i in range(self.arena.num_shelves):
             index = 0
@@ -81,7 +82,8 @@ class ApcTask(MujocoWorldBase):
                             location_valid = False
                             break
                     if location_valid: # bad luck, reroll
-                        pos = self.shelf_offset[i] - bottom_offset + np.array([object_x, object_y, 0])
+                        pos = self.shelf_offset[i] - bottom_offset + np.array([object_x, object_y, 1])
+                        print(pos)
                         placed_objects.append((pos, horizontal_radius))
                         self.objects[index].set('pos', array_to_string(pos))
                         success = True

@@ -46,7 +46,7 @@ class TableArena(Arena):
 		"""Returns the absolute position of table top"""
 		return string_to_array(self.floor.get('pos')) + np.array([0,0,self.full_size[2]])
 class ShelfArena(Arena):
-	def __init__(self, full_size=(0.2,0.4,0.4), friction=(1, 0.005, 0.0001),shelf_height=0.2,num_shelves=3):
+	def __init__(self, full_size=(0.2,0.4,0.4), friction=(1, 0.005, 0.0001),shelf_height=0.201,num_shelves=3):
 		self.full_size = np.array(full_size)
 		self.shelf_height = shelf_height
 		self.num_shelves = num_shelves
