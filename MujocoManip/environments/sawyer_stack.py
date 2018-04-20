@@ -35,9 +35,11 @@ class SawyerStackEnv(SawyerEnv):
         """
         # initialize objects of interest
         cubeA = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                                size_max=[0.02, 0.02, 0.02])
+                                size_max=[0.02, 0.02, 0.02],
+                                rgba=[1,0,0,1])
         cubeB = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
-                                size_max=[0.025, 0.025, 0.025])
+                                size_max=[0.025, 0.025, 0.025],
+                                rgba=[0,1,0,1])
         self.mujoco_objects = OrderedDict([
             ('cubeA', cubeA),
             ('cubeB', cubeB)
@@ -55,7 +57,13 @@ class SawyerStackEnv(SawyerEnv):
         self.use_object_obs = use_object_obs
 
         # object placement initializer
-        self.placement_initializer = placement_initializer
+        if placement_initializer:
+            self.placement_initializer = placement_initializer
+        else:
+            self.placement_initializer = UniformRandomSampler(x_range=[-0.2, 0.2],
+                                                              y_range=[-0.2, 0.2],
+                                                              ensure_object_boundary_in_range=False,
+                                                              z_rotation=True)
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
