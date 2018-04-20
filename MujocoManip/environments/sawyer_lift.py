@@ -18,6 +18,7 @@ class SawyerLiftEnv(SawyerEnv):
                  camera_name='frontview',
                  reward_shaping=False,
                  gripper_visualization=False,
+                 placement_initializer=None,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -50,6 +51,15 @@ class SawyerLiftEnv(SawyerEnv):
         # reward configuration
         self.reward_shaping = reward_shaping
 
+        # object placement initializer
+        if placement_initializer:
+            self.placement_initializer = placement_initializer
+        else:
+            self.placement_initializer = UniformRandomSampler(x_range=[-0.2, 0.2],
+                                                              y_range=[-0.2, 0.2],
+                                                              ensure_object_boundary_in_range=False,
+                                                              z_rotation=True)
+
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
                          use_camera_obs=use_camera_obs,
@@ -69,7 +79,10 @@ class SawyerLiftEnv(SawyerEnv):
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
 
         # task includes arena, robot, and objects of interest
-        self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
+        self.model = TableTopTask(self.mujoco_arena, 
+                                self.mujoco_robot, 
+                                self.mujoco_objects,
+                                initializer=self.placement_initializer)
         self.model.place_objects()
 
     def _get_reference(self):
@@ -147,3 +160,26 @@ class SawyerLiftEnv(SawyerEnv):
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
         table_height = self.table_size[2]
         return (cube_height > table_height + 0.10)
+
+    def _gripper_visualization(self):
+        """
+        Do any needed visualization here. Overrides superclass implementations.
+        """
+
+        # color the gripper site appropriately based on distance to cube
+        if self.gripper_visualization:
+            # get distance to cube
+            cube_site_id = self.sim.model.site_name2id('cube')
+            dist = np.sum(np.square(self.sim.data.site_xpos[cube_site_id] - self.sim.data.get_site_xpos('grip_site')))
+
+            # set RGBA for the EEF site here
+            max_dist = 0.1
+            scaled = (1.0 - min(dist / max_dist, 1.)) ** 15
+            rgba = np.zeros(4)
+            rgba[0] = 1 - scaled
+            rgba[1] = scaled
+            rgba[3] = 0.5
+
+            self.sim.model.site_rgba[self.eef_site_id] = rgba
+
+

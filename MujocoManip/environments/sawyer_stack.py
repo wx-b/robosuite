@@ -17,6 +17,7 @@ class SawyerStackEnv(SawyerEnv):
                  camera_name='frontview',
                  reward_shaping=False,
                  gripper_visualization=False,
+                 placement_initializer=None,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -34,9 +35,11 @@ class SawyerStackEnv(SawyerEnv):
         """
         # initialize objects of interest
         cubeA = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                                size_max=[0.02, 0.02, 0.02])
+                                size_max=[0.02, 0.02, 0.02],
+                                rgba=[1,0,0,1])
         cubeB = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
-                                size_max=[0.025, 0.025, 0.025])
+                                size_max=[0.025, 0.025, 0.025],
+                                rgba=[0,1,0,1])
         self.mujoco_objects = OrderedDict([
             ('cubeA', cubeA),
             ('cubeB', cubeB)
@@ -52,6 +55,15 @@ class SawyerStackEnv(SawyerEnv):
 
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
+
+        # object placement initializer
+        if placement_initializer:
+            self.placement_initializer = placement_initializer
+        else:
+            self.placement_initializer = UniformRandomSampler(x_range=[-0.2, 0.2],
+                                                              y_range=[-0.2, 0.2],
+                                                              ensure_object_boundary_in_range=False,
+                                                              z_rotation=True)
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
@@ -86,7 +98,10 @@ class SawyerStackEnv(SawyerEnv):
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
 
         # task includes arena, robot, and objects of interest
-        self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
+        self.model = TableTopTask(self.mujoco_arena, 
+                                self.mujoco_robot, 
+                                self.mujoco_objects,
+                                initializer=self.placement_initializer)
         self.model.place_objects()
 
     def _get_reference(self):

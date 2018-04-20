@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     ### TODO: Handle flushing of remaining data when script terminates (i.e. freq is 1000, but we had 500 timesteps) ###
 
-    env = make("SawyerStackEnv", display=True, ignore_done=True)
+    env = make("SawyerStackEnv", ignore_done=True, use_camera_obs=False)
     direct = "./"
     env = DataCollector(env, direct)
 

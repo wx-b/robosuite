@@ -367,7 +367,8 @@ class RandomBoxObject(BoxObject):
     """
     def __init__(self, size_max=None, size_min=None,
                 density_range=None, 
-                friction_range=None):
+                friction_range=None,
+                rgba='random'):
         if size_max is None:
             size_max = [0.07, 0.07, 0.07]
         if size_min is None:
@@ -377,7 +378,7 @@ class RandomBoxObject(BoxObject):
             density_range = DEFAULT_DENSITY_RANGE
         if friction_range is None:
             friction_range = DEFAULT_FRICTION_RANGE
-        super().__init__(size=size, rgba='random', 
+        super().__init__(size=size, rgba=rgba, 
                         density_range=density_range, 
                         friction_range=friction_range)
 
@@ -388,7 +389,8 @@ class RandomCylinderObject(CylinderObject):
     """
     def __init__(self, size_max=None, size_min=None,
                 density_range=None, 
-                friction_range=None):
+                friction_range=None,
+                rgba='random'):
         if size_max is None:
             size_max = [0.07, 0.07]
         if size_min is None:
@@ -398,7 +400,7 @@ class RandomCylinderObject(CylinderObject):
             density_range = DEFAULT_DENSITY_RANGE
         if friction_range is None:
             friction_range = DEFAULT_FRICTION_RANGE
-        super().__init__(size=size, rgba='random', 
+        super().__init__(size=size, rgba=rgba, 
                         density_range=density_range, 
                         friction_range=friction_range)
 
@@ -409,7 +411,8 @@ class RandomBallObject(BallObject):
     """
     def __init__(self, size_max=None, size_min=None, 
                 density_range=None, 
-                friction_range=None):
+                friction_range=None,
+                rgba='random'):
         if size_max is None:
             size_max = [0.07]
         if size_min is None:
@@ -419,7 +422,7 @@ class RandomBallObject(BallObject):
             density_range = DEFAULT_DENSITY_RANGE
         if friction_range is None:
             friction_range = DEFAULT_FRICTION_RANGE
-        super().__init__(size=size, rgba='random', 
+        super().__init__(size=size, rgba=rgba, 
                         density_range=density_range, 
                         friction_range=friction_range)
 
@@ -428,7 +431,7 @@ class RandomCapsuleObject(CapsuleObject):
     """
         A random ball (sphere)
     """
-    def __init__(self, size_max=None, size_min=None):
+    def __init__(self, size_max=None, size_min=None, rgba='random'):
         if size_max is None:
             size_max = [0.07, 0.07]
         if size_min is None:
@@ -438,6 +441,6 @@ class RandomCapsuleObject(CapsuleObject):
             density_range = DEFAULT_DENSITY_RANGE
         if friction_range is None:
             friction_range = DEFAULT_FRICTION_RANGE
-        super().__init__(size=size, rgba='random', 
+        super().__init__(size=size, rgba=rgba, 
                         density_range=density_range, 
                         friction_range=friction_range)

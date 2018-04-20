@@ -2,8 +2,8 @@ import time
 from MujocoManip import make
 import numpy as np
 
-# env = make("SawyerStackEnv", use_camera_obs=False, ignore_done=True)
-env = make("ApcEnv", use_camera_obs=False, ignore_done=True)
+# env = make("SawyerLiftEnv", ignore_done=True, use_camera_obs=False)
+env = make("ApcEnv", ignore_done=True, use_camera_obs=False)
 
 while True:
 	env.reset()

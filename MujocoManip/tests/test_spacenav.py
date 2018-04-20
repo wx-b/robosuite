@@ -14,8 +14,8 @@ if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
     env = make("SawyerStackEnv",
-               display=True,
                ignore_done=True,
+               use_camera_obs=False,
                gripper_visualization=True)
 
     # function to return robot joint angles
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     env.render()
 
     spacenav = SpaceNavigator()
-    ik_controller = IKController(bullet_data_path="/Users/yukez/Research/bullet3/data/",
+    ik_controller = IKController(bullet_data_path="../models/assets/bullet_data",
                                  robot_jpos_getter=robot_jpos_getter)
 
     gripper_controls = [[1., -1.], [-1., 1.]] 
