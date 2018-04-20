@@ -97,10 +97,7 @@ class UniformRandomSampler(ObjectPositionSampler):
                 # objects cannot overlap
                 location_valid = True
                 for x, y, r in placed_objects:
-                    print('new', object_x, object_y, horizontal_radius)
-                    print('old', x, y, r)
                     if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
-                        print('collide')
                         location_valid = False
                         break
                 if location_valid: 
