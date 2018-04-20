@@ -47,6 +47,7 @@ class UniformRandomSampler(ObjectPositionSampler):
                     if None, default to x-range of table
             y_range(float * 2): override the y_range used to uniformly place objects
                     if None default to y-range of table
+            x_range and y_range are both with respect to (0,0) = center of table.
             ensure_object_boundary_in_range:
                 True: The center of object is at position:
                      [uniform(min x_range + radius, max x_range - radius)], [uniform(min x_range + radius, max x_range - radius)]
