@@ -10,8 +10,8 @@ from MujocoManip.wrappers import DataCollector
 if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
-    initializer = UniformRandomSampler(x_half_range_override=[0,0.1], 
-                                       y_half_range_override=[0,0.1],
+    initializer = UniformRandomSampler(x_range=[0,0.1], 
+                                       y_range=[0,0.1],
                                        ensure_object_boundary_in_range=False)
     env = make("SawyerStackEnv", 
                 ignore_done=True, 

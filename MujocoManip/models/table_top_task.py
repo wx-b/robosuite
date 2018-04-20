@@ -1,7 +1,7 @@
 import numpy as np
 import xml.etree.ElementTree as ET
 from MujocoManip.models.base import MujocoXML
-from MujocoManip.miscellaneous import XMLError
+from MujocoManip.miscellaneous import XMLError, RandomizationError
 from MujocoManip.models.world import MujocoWorldBase
 from MujocoManip.models.model_util import *
 from MujocoManip.miscellaneous.utils import *
@@ -37,45 +37,49 @@ class UniformRandomSampler(ObjectPositionSampler):
     """
         Places all objects within the table uniformly random
     """
-    def __init__(self, x_half_range_override=None, 
-                    y_half_range_override=None, 
-                    ensure_object_boundary_in_range=True):
+    def __init__(self, x_range=None, 
+                    y_range=None, 
+                    ensure_object_boundary_in_range=True,
+                    z_rotation=True):
         """
         Args:
-            x_half_range_override(float * 2): override the x_range used to uniformly place objects
-                    if None, default to table s-size
-            y_half_range_override(float * 2): override the y_range used to uniformly place objects
-            ensure_object_boundary_in_range
+            x_range(float * 2): override the x_range used to uniformly place objects
+                    if None, default to x-range of table
+            y_range(float * 2): override the y_range used to uniformly place objects
+                    if None default to y-range of table
+            ensure_object_boundary_in_range:
+                True: The center of object is at position:
+                     [uniform(min x_range + radius, max x_range - radius)], [uniform(min x_range + radius, max x_range - radius)]
+                False: 
+                    [uniform(min x_range, max x_range)], [uniform(min x_range, max x_range)]
+            z_rotation:
+                Add random z-rotation
         """
-        print('help')
-        self.x_half_range_override = x_half_range_override
-        self.y_half_range_override = y_half_range_override
+        self.x_range = x_range
+        self.y_range = y_range
         self.ensure_object_boundary_in_range = ensure_object_boundary_in_range
-
+        self.z_rotation = z_rotation
 
     def sample_x(self, object_horizontal_radius):
-        x_range = self.x_half_range_override
+        x_range = self.x_range
         if x_range is None:
             x_range = [-self.table_size[0] / 2, self.table_size[0] / 2]
         minimum = min(x_range)
         maximum = max(x_range)
         if self.ensure_object_boundary_in_range:
-            minimum -= object_horizontal_radius
-            maximum += object_horizontal_radius
-        print('min',minimum)
-        print('max',maximum)
+            minimum += object_horizontal_radius
+            maximum -= object_horizontal_radius
         return np.random.uniform(high=maximum, low=minimum)
         
-
     def sample_y(self, object_horizontal_radius):
-        y_range = self.y_half_range_override
+        y_range = self.y_range
         if y_range is None:
             y_range = [-self.table_size[0] / 2, self.table_size[0] / 2]
         minimum = min(y_range)
         maximum = max(y_range)
         if self.ensure_object_boundary_in_range:
-            minimum -= object_horizontal_radius
-            maximum += object_horizontal_radius
+            minimum += object_horizontal_radius
+            maximum -= object_horizontal_radius
         return np.random.uniform(high=maximum, low=minimum)
 
     def sample(self):
@@ -92,14 +96,17 @@ class UniformRandomSampler(ObjectPositionSampler):
                 object_y = self.sample_y(horizontal_radius)
                 # objects cannot overlap
                 location_valid = True
-                for (x, y, z), r in placed_objects:
+                for x, y, r in placed_objects:
+                    print('new', object_x, object_y, horizontal_radius)
+                    print('old', x, y, r)
                     if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
+                        print('collide')
                         location_valid = False
                         break
                 if location_valid: 
                     # location is valid, put the object down
                     pos = self.table_top_offset - bottom_offset + np.array([object_x, object_y, 0])
-                    placed_objects.append((pos, horizontal_radius))
+                    placed_objects.append((object_x, object_y, horizontal_radius))
                     # random z-rotation
                     rot_angle = np.random.uniform(high=2 * np.pi,low=0)
                     quat = [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
