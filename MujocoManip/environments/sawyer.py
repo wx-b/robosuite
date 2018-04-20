@@ -6,7 +6,6 @@ import MujocoManip.miscellaneous.utils as U
 
 
 class SawyerEnv(MujocoEnv):
-
     def __init__(self,
                  gripper_type=None,
                  use_eef_ctrl=False,
