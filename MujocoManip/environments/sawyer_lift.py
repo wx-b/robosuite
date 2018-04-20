@@ -52,7 +52,13 @@ class SawyerLiftEnv(SawyerEnv):
         self.reward_shaping = reward_shaping
 
         # object placement initializer
-        self.placement_initializer = placement_initializer
+        if placement_initializer:
+            self.placement_initializer = placement_initializer
+        else:
+            self.placement_initializer = UniformRandomSampler(x_range=[-0.2, 0.2],
+                                                              y_range=[-0.2, 0.2],
+                                                              ensure_object_boundary_in_range=False,
+                                                              z_rotation=True)
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
