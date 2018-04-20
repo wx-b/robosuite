@@ -82,6 +82,13 @@ class UniformRandomSampler(ObjectPositionSampler):
             maximum -= object_horizontal_radius
         return np.random.uniform(high=maximum, low=minimum)
 
+    def sample_quat(self):
+        if self.z_rotation:
+            rot_angle = np.random.uniform(high=2 * np.pi,low=0)
+            return [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
+        else:
+            return [1, 0, 0, 0]
+
     def sample(self):
         pos_arr = []
         quat_arr = []
@@ -105,8 +112,9 @@ class UniformRandomSampler(ObjectPositionSampler):
                     pos = self.table_top_offset - bottom_offset + np.array([object_x, object_y, 0])
                     placed_objects.append((object_x, object_y, horizontal_radius))
                     # random z-rotation
-                    rot_angle = np.random.uniform(high=2 * np.pi,low=0)
-                    quat = [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
+                    
+                    quat = self.sample_quat()
+                    
                     quat_arr.append(quat)
                     pos_arr.append(pos)
                     success = True

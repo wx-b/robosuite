@@ -12,7 +12,8 @@ if __name__ == '__main__':
     # a test case: do completely random actions at each time step
     initializer = UniformRandomSampler(x_range=[0,0.1], 
                                        y_range=[0,0.1],
-                                       ensure_object_boundary_in_range=False)
+                                       ensure_object_boundary_in_range=False,
+                                       z_rotation=False)
     env = make("SawyerStackEnv", 
                 ignore_done=True, 
                 show_gripper_visualization=True, 
