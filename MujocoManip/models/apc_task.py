@@ -43,19 +43,14 @@ class ApcTask(MujocoWorldBase):
             for obj_name, obj_mjcf in mujoco_objects[i].items():
                 self.merge_asset(obj_mjcf)
                 # Load object
-                obj = obj_mjcf.get_full(name=obj_name, site=True)
+                obj = obj_mjcf.get_collision(name=obj_name, site=True)
                 obj.append(joint(name=obj_name, type='free'))
                 self.objects.append(obj)
                 self.worldbody.append(obj)
 
-                self.object_metadata.append({
-                    'object_name': obj_name,
-                    'object_bottom_offset': obj_mjcf.get_bottom_offset(),
-                    'object_top_offset': obj_mjcf.get_top_offset(),
-                    'object_horizontal_radius': obj_mjcf.get_horizontal_radius(),
-                })
                 self.max_horizontal_radius = max(self.max_horizontal_radius,
                                                  obj_mjcf.get_horizontal_radius())
+
 
     def place_objects(self):
         """
