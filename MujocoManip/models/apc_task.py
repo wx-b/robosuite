@@ -66,8 +66,8 @@ class ApcTask(MujocoWorldBase):
                 bottom_offset = obj_mjcf.get_bottom_offset()
                 success = False
                 for _ in range(1000): # 1000 retries
-                    shelf_x_half = self.shelf_size[0] / 2 - horizontal_radius
-                    shelf_y_half = self.shelf_size[1] / 2 - horizontal_radius
+                    shelf_x_half = self.shelf_size[0]/2 - horizontal_radius
+                    shelf_y_half = self.shelf_size[1] - horizontal_radius
                     object_x = np.random.uniform(high=shelf_x_half, low=-shelf_x_half)
                     object_y = np.random.uniform(high=shelf_y_half, low=-1 * shelf_y_half)
                     # objects cannot overlap
