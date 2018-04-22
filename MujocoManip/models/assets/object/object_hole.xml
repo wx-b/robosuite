@@ -6,8 +6,6 @@
 			<geom pos="0.22 0 0" size="0.06 0.17 0.02" type="box" rgba="1 0 0 1" group="1"/>
 			<geom pos="0.11 0.11 0" size="0.05 0.06 0.02" type="box" rgba="1 0 0 1" group="1"/>
 			<geom pos="0.11 -0.11 0" size="0.05 0.06 0.02" type="box" rgba="1 0 0 1" group="1"/>
-			<!--<geom pos="0.15 0.15 0" size="0.05 0.1 0.02" type="box" rgba="1 0 0 1" group="1"/>
-			<geom pos="0.15 -0.15 0" size="0.05 0.1 0.02" type="box" rgba="1 0 0 1" group="1"/>-->
 		</body>
 		<body name="visual">
 			<!--	<geom pos="0 0 0" size="0.1 0.25 0.02" type="box" rgba="1 0 0 1"/>

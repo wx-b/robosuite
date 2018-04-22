@@ -58,6 +58,7 @@ if __name__ == '__main__':
             print(env.sim.data.qpos[env._ref_joint_pos_indexes])#sim.data.qpos)
             #print(env.model.objects[0].get('pos'))
 
+
             if i % 100 == 0:
                 print(i)
                 # break

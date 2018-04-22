@@ -36,7 +36,6 @@ class BaxterLiftEnv(BaxterEnv):
         cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
                                size_max=[0.025, 0.025, 0.025])
         pot = DefaultPotObject()
-        pot = DefaultHoleObject()
         #pot = cube
         self.mujoco_objects = OrderedDict([('pot', pot)])
 
