@@ -3,10 +3,10 @@ from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.baxter import BaxterEnv
 from MujocoManip.models import *
-from MujocoManip.models.model_util import xml_path_completion
+from MujocoManip.models.model_util import xml_path_completion, array_to_string
 
 
-class BaxterLiftEnv(BaxterEnv):
+class BaxterHoleEnv(BaxterEnv):
 
     def __init__(self, 
                  gripper_type='TwoFingerGripper',
@@ -35,10 +35,10 @@ class BaxterLiftEnv(BaxterEnv):
         # initialize objects of interest
         cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
                                size_max=[0.025, 0.025, 0.025])
-        pot = DefaultPotObject()
-        pot = DefaultHoleObject()
+        #pot = DefaultPotObject()
+        self.hole = DefaultHoleObject()
         #pot = cube
-        self.mujoco_objects = OrderedDict([('pot', pot)])
+        self.mujoco_objects = OrderedDict()
 
         # settings for table top
         self.table_size = table_size
@@ -76,14 +76,40 @@ class BaxterLiftEnv(BaxterEnv):
         self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
         self.model.place_objects()
 
+
+        self.hole_obj = self.hole.get_collision(name='hole', site=True)
+        self.hole_obj.set('quat','0 0 0.707 0.707')
+        self.hole_obj.set('pos','0.11 0 0.22')
+        #self.hole_obj.append(joint(name='hole', type='slide'))
+        self.model.merge_asset(self.hole)
+        self.model.worldbody.find(".//body[@name='left_gripper_base']").append(self.hole_obj)
+        #self.model.worldbody.append(self.hole_obj)
+
+        
     def _get_reference(self):
         super()._get_reference()
-        self.cube_body_id = self.sim.model.body_name2id('pot')
+        self.cube_body_id = self.sim.model.body_name2id('hole')
 
     def _reset_internal(self):
         super()._reset_internal()
         # inherited class should reset positions of objects
         self.model.place_objects()
+
+        return
+        self.sim.data.qpos[self._ref_gripper_left_joint_pos_indexes] = np.array([0.1, -0.1])
+        for i in range(500):
+            self.sim.step()
+        for i in range(100):
+            grip = (self.sim.data.site_xpos[self.eef_site_id])
+            print("grip",grip,type(grip))
+            hole_obj = self.model.worldbody.find(".//body[@name='hole']")
+
+            hole_obj.set('pos', grip)
+            self.sim.data.body_xpos[self.cube_body_id] = np.array([1,1,5])
+            print("hmm",self.sim.data.body_xpos[self.cube_body_id])# = grip
+            print(hole_obj)
+            #self.sim.data.qfrc_applied[self._ref_gripper_left_joint_vel_indexes] = np.array([-1, 1])
+            self.sim.step()
 
     def reward(self, action):
         reward = 0

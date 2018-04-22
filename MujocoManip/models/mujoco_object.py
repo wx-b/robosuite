@@ -135,6 +135,10 @@ class DefaultPotObject(MujocoXMLObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_pot.xml'))
 
+class DefaultHoleObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/object_hole.xml'))
+
 class DefaultBoxObject(MujocoXMLObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_box.xml'))
