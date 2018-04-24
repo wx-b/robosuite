@@ -109,7 +109,7 @@ class MujocoXMLObject(MujocoXML, MujocoObject):
         collision = copy.deepcopy(self.worldbody.find("./body[@name='collision']"))
         collision.attrib.pop('name')
         if name is not None:
-            collision.attrib.set('name', name)
+            collision.attrib['name']= name
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
