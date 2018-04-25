@@ -51,6 +51,7 @@ class ShelfArena(Arena):
 		self.shelf_height = shelf_height
 		self.num_shelves = num_shelves
 		self.half_size = self.full_size / 2
+		self.partitions = [((0, 0.2, 0.6),0.00001),((0,-0.2, 0.6),0.00001)] 
 		if friction is None:
 			friction = np.array([1, 0.005, 0.0001])
 		self.friction = friction

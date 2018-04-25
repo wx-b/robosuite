@@ -58,7 +58,7 @@ class ApcTask(MujocoWorldBase):
         """
         # Objects
         # print(self.shelf_offset)
-        placed_objects = []
+        placed_objects = self.arena.partitions
         index = 0
         for i in range(self.arena.num_shelves):
             for _, obj_mjcf in self.mujoco_objects[i].items():

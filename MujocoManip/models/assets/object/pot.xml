@@ -1,17 +1,19 @@
 <!-- sample of a general object defined in mujoco -->
-<mujoco model="bowl">
+<mujoco model="pot">
 	<asset>
-		<mesh file="meshes/pot.stl" name="mesh" scale="0.001 0.001 0.001"/>
+		<mesh file="meshes/pot.stl" name="pot_mesh" scale="0.001 0.001 0.001"/>
 	</asset>
 	<worldbody>
-		<body name="collision">
-			<geom pos="0 0 0" mesh="mesh" type="mesh" rgba="1 0 0 1" group="1"/>
+		<body>
+			<body name="collision">
+				<geom pos="0 0 0" mesh="pot_mesh" type="mesh" rgba="1 0 0 1" group="1"/>
+			</body>
+			<body name="visual">
+				<geom pos="0 0 0" mesh="pot_mesh" type="mesh" rgba="1 0 0 1"  conaffinity="0" contype="0" group="1"/>
+			</body>
+			<site pos="0 0 0" name="bottom_site"/>
+			<site pos="0 0 0.1" name="top_site"/>
+			<site pos="0.2 0.2 0" name="horizontal_radius_site"/>
 		</body>
-		<body name="visual">
-			<geom pos="0 0 0" mesh="mesh" type="mesh" rgba="1 0 0 1"  conaffinity="0" contype="0" group="1"/>
-		</body>
-		<site pos="0 0 -0.05" name="bottom_site"/>
-		<site pos="0 0 0.05" name="top_site"/>
-		<site pos="0.1 0 0" name="horizontal_radius_site"/>
 	</worldbody>
 </mujoco>

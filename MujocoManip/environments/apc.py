@@ -35,18 +35,14 @@ class ApcEnv(SawyerEnv):
         # initialize objects of interest
         # cubeA1 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
         #                         size_max=[0.02, 0.02, 0.02])
-        cubeA1 = DefaultPotObject()
-        cubeB1 = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
-                                size_max=[0.025, 0.025, 0.025])
+        cubeA1 = DefaultMugObject()
         cubeB1 = DefaultBottleObject()
-        cubeA2 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                                size_max=[0.02, 0.02, 0.02])
-        cubeB2 = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
-                                size_max=[0.025, 0.025, 0.025])
-        cubeA3 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                                size_max=[0.02, 0.02, 0.02])
-        cubeB3 = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
-                                size_max=[0.025, 0.025, 0.025])
+        cubeB1 = DefaultPotObject()
+        cubeA2 = DefaultMugObject()
+        cubeB2 = DefaultBowlObject()
+        cubeA3 = DefaultBottleObject()
+        cubeB3 = DefaultPotObject()
+
         self.mujoco_objects = [OrderedDict([
             ('cubeA1', cubeA1),
             ('cubeB1', cubeB1)
