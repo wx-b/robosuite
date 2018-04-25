@@ -88,12 +88,10 @@ class IKController(object):
         p.resetSimulation()
 
         # get paths to urdfs
-        self.robot_urdf = pjoin(self.bullet_data_path, "sawyer_robot/sawyer_description/urdf/sawyer_arm.urdf")
-        self.plane_urdf = pjoin(self.bullet_data_path, "plane.urdf")
+        self.robot_urdf = pjoin(self.bullet_data_path, "sawyer_description/urdf/sawyer_arm.urdf")
 
         # load the urdfs
         self.ik_robot = p.loadURDF(self.robot_urdf, (0, 0, 0.9), useFixedBase=1)
-        p.loadURDF(self.plane_urdf)
 
         # Simulation will update as fast as it can in real time, instead of waiting for 
         # step commands like in the non-realtime case.

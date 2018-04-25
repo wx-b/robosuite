@@ -34,7 +34,7 @@ if __name__ == '__main__':
     env.render()
 
     spacenav = SpaceNavigator()
-    ik_controller = IKController(bullet_data_path="/Users/yukez/Research/bullet3/data/",
+    ik_controller = IKController(bullet_data_path="../models/assets/bullet_data",
                                  robot_jpos_getter=robot_jpos_getter)
 
     gripper_controls = [[1., -1.], [-1., 1.]] 
