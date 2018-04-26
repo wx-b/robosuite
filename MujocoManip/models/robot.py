@@ -113,7 +113,7 @@ class BaxterRobot(MujocoRobot):
     @property
     def joints(self):
         out = []
-        for s in ['left_', 'right_']:
+        for s in ['right_', 'left_']:
             out.extend(s+a for a in ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2'])
         return out
 

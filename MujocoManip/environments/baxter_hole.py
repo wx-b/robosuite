@@ -37,6 +37,8 @@ class BaxterHoleEnv(BaxterEnv):
                                size_max=[0.025, 0.025, 0.025])
         #pot = DefaultPotObject()
         self.hole = DefaultHoleObject()
+
+        self.cylinder = CylinderObject(size=(0.01, 0.13))
         #pot = cube
         self.mujoco_objects = OrderedDict()
 
@@ -83,6 +85,12 @@ class BaxterHoleEnv(BaxterEnv):
         #self.hole_obj.append(joint(name='hole', type='slide'))
         self.model.merge_asset(self.hole)
         self.model.worldbody.find(".//body[@name='left_gripper_base']").append(self.hole_obj)
+
+        self.cyl_obj = self.cylinder.get_collision(name='cylinder', site=True)
+        #self.cyl_obj.set('quat','0 0 0.707 0.707')
+        self.cyl_obj.set('pos','0 0 0.18')
+        self.model.merge_asset(self.cylinder)
+        self.model.worldbody.find(".//body[@name='right_gripper_base']").append(self.cyl_obj)
         #self.model.worldbody.append(self.hole_obj)
 
         
