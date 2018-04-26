@@ -19,7 +19,5 @@
 		<camera mode="fixed" name="birdview" pos="-0.2 0 3.0" quat="0.7071 0 0 0.7071"/>
 		<!-- tabletop -->
 		<camera mode="fixed" name="tabletop" pos="0.8 0 1.65" quat="0.653 0.271 0.271 0.653"/>
-		<!-- firstperson -->
-		<camera mode="fixed" name="firstperson" pos="0 0 0" quat="1 0 0 0"/>
 	</worldbody>
 </mujoco>
