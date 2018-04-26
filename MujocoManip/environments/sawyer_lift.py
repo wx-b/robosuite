@@ -138,6 +138,14 @@ class SawyerLiftEnv(SawyerEnv):
             gripper_site_pos = np.array(self.sim.data.site_xpos[self.eef_site_id])
             di['gripper_to_cube'] = gripper_site_pos - cube_pos
 
+        # proprioception
+        di['proprio'] = np.concatenate([
+            np.sin(di['joint_pos']),
+            np.cos(di['joint_pos']),
+            di['gripper_pos'],
+            di['gripper_vel'],
+        ])
+
         return di
 
     def _check_contact(self):
