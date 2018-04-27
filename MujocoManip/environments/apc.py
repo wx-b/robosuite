@@ -113,12 +113,13 @@ class ApcEnv(SawyerEnv):
         self.model.place_objects()
 
     def reward(self, action):
-        r_reach, r_lift, r_stack = self.staged_rewards()
-        if self.reward_shaping:
-            reward = max(r_reach, r_lift, r_stack)
-        else:
-            reward = 1.0 if r_stack > 0 else 0.0
-        return reward
+        return 0.
+        # r_reach, r_lift, r_stack = self.staged_rewards()
+        # if self.reward_shaping:
+        #     reward = max(r_reach, r_lift, r_stack)
+        # else:
+        #     reward = 1.0 if r_stack > 0 else 0.0
+        # return reward
 
     def staged_rewards(self):
         """
