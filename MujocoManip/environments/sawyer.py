@@ -129,9 +129,16 @@ class SawyerEnv(MujocoEnv):
         di['joint_pos'] = np.array([self.sim.data.qpos[x] for x in self._ref_joint_pos_indexes])
         di['joint_vel'] = np.array([self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes])
         if self.has_gripper:
-            di['gripper_pos'] = [self.sim.data.qpos[x] for x in self._ref_gripper_joint_pos_indexes]
-            di['gripper_vel'] = [self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes]
+            di['gripper_pos'] = np.array([self.sim.data.qpos[x] for x in self._ref_gripper_joint_pos_indexes])
+            di['gripper_vel'] = np.array([self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes])
         return di
+
+    def action_spec(self):
+        # TODO: what is the range with eef control?
+        assert not self.use_eef_ctrl, 'action spec for eef control not yet supported by mujocomanip'
+        low = np.ones(self.dof) * -1.
+        high = np.ones(self.dof) * 1.
+        return low, high
 
     @property
     def dof(self):

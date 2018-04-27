@@ -43,19 +43,14 @@ class ApcTask(MujocoWorldBase):
             for obj_name, obj_mjcf in mujoco_objects[i].items():
                 self.merge_asset(obj_mjcf)
                 # Load object
-                obj = obj_mjcf.get_full(name=obj_name, site=True)
+                obj = obj_mjcf.get_collision(name=obj_name, site=True)
                 obj.append(joint(name=obj_name, type='free'))
                 self.objects.append(obj)
                 self.worldbody.append(obj)
 
-                self.object_metadata.append({
-                    'object_name': obj_name,
-                    'object_bottom_offset': obj_mjcf.get_bottom_offset(),
-                    'object_top_offset': obj_mjcf.get_top_offset(),
-                    'object_horizontal_radius': obj_mjcf.get_horizontal_radius(),
-                })
                 self.max_horizontal_radius = max(self.max_horizontal_radius,
                                                  obj_mjcf.get_horizontal_radius())
+
 
     def place_objects(self):
         """
@@ -63,7 +58,7 @@ class ApcTask(MujocoWorldBase):
         """
         # Objects
         # print(self.shelf_offset)
-        placed_objects = []
+        placed_objects = self.arena.partitions
         index = 0
         for i in range(self.arena.num_shelves):
             for _, obj_mjcf in self.mujoco_objects[i].items():
@@ -71,8 +66,8 @@ class ApcTask(MujocoWorldBase):
                 bottom_offset = obj_mjcf.get_bottom_offset()
                 success = False
                 for _ in range(1000): # 1000 retries
-                    shelf_x_half = self.shelf_size[0] / 2 - horizontal_radius
-                    shelf_y_half = self.shelf_size[1] / 2 - horizontal_radius
+                    shelf_x_half = self.shelf_size[0]/2 - horizontal_radius
+                    shelf_y_half = self.shelf_size[1] - horizontal_radius
                     object_x = np.random.uniform(high=shelf_x_half, low=-shelf_x_half)
                     object_y = np.random.uniform(high=shelf_y_half, low=-1 * shelf_y_half)
                     # objects cannot overlap

@@ -33,18 +33,16 @@ class ApcEnv(SawyerEnv):
             @gripper_visualization: visualizing gripper site
         """
         # initialize objects of interest
-        cubeA1 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                                size_max=[0.02, 0.02, 0.02])
-        cubeB1 = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
-                                size_max=[0.025, 0.025, 0.025])
-        cubeA2 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                                size_max=[0.02, 0.02, 0.02])
-        cubeB2 = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
-                                size_max=[0.025, 0.025, 0.025])
-        cubeA3 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                                size_max=[0.02, 0.02, 0.02])
-        cubeB3 = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
-                                size_max=[0.025, 0.025, 0.025])
+        # cubeA1 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
+        #                         size_max=[0.02, 0.02, 0.02])
+        cubeA1 = DefaultMugObject()
+        cubeB1 = DefaultBottleObject()
+        cubeB1 = DefaultPotObject()
+        cubeA2 = DefaultMugObject()
+        cubeB2 = DefaultBowlObject()
+        cubeA3 = DefaultBottleObject()
+        cubeB3 = DefaultPotObject()
+
         self.mujoco_objects = [OrderedDict([
             ('cubeA1', cubeA1),
             ('cubeB1', cubeB1)
@@ -98,7 +96,7 @@ class ApcEnv(SawyerEnv):
         self.mujoco_arena = ShelfArena()
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([.86 + self.table_size[0] / 2,0,0.6])
+        self.mujoco_arena.set_origin([.86 + self.table_size[0] / 2,0,0])
 
         # task includes arena, robot, and objects of interest
         self.model = ApcTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)

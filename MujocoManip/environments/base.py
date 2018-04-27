@@ -162,7 +162,12 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.viewer.render(camera_id=camera_id)
 
     def observation_spec(self):
-        return OrderedDict()
+        observation = self._get_observation()
+        return observation
+        # observation_spec = OrderedDict()
+        # for k, v in observation.items():
+        #     observation_spec[k] = v.shape
+        # return observation_spec
 
     def action_spec(self):
         raise NotImplementedError
