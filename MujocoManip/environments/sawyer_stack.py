@@ -188,8 +188,8 @@ class SawyerStackEnv(SawyerEnv):
         di['proprio'] = np.concatenate([
             np.sin(di['joint_pos']),
             np.cos(di['joint_pos']),
+            di['joint_vel'],
             di['gripper_pos'],
-            di['gripper_vel'],
         ])
 
         return di
