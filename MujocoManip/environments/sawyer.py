@@ -23,7 +23,7 @@ class SawyerEnv(MujocoEnv):
             self._setup_mocap()
         
     def _setup_mocap(self):
-        mjpy_reset_mocap_welds(self.sim)
+        U.mjpy_reset_mocap_welds(self.sim)
         self.sim.forward()
 
         # Move end effector into position.
