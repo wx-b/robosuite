@@ -27,12 +27,17 @@
 			<geom pos="0 0 0" size="0.2 0.3 0.001" type="box" conaffinity="0" contype="0" group="1" rgba="1 0 0 1"/>
 	    	<geom pos="0 0.3 0.05" size="0.2 0.001 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
 	    	<geom pos="0 0.3 0.05" size="0.2 0.001 0.05" type="box" conaffinity="0" contype="0" group="1" rgba="1 0 0 1"/>
-
+	    	<geom pos="0 0.1 0.05" size="0.2 0.001 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
+	    	<geom pos="0 0.1 0.05" size="0.2 0.001 0.05" type="box" conaffinity="0" contype="0" group="1" rgba="1 0 0 1"/>
+	    	<geom pos="0 -0.1 0.05" size="0.2 0.001 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
+	    	<geom pos="0 -0.1 0.05" size="0.2 0.001 0.05" type="box" conaffinity="0" contype="0" group="1" rgba="1 0 0 1"/>
 	    	<geom pos="0 -0.3 0.05" size="0.2 0.001 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
 	    	<geom pos="0 -0.3 0.05" size="0.2 0.001 0.05" type="box" conaffinity="0" contype="0" group="1" rgba="1 0 0 1"/>
 
 	    	<geom pos="0.2 0 0.05" size="0.001 0.3 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
 	    	<geom pos="0.2 0 0.05" size="0.001 0.3 0.05" type="box" conaffinity="0" contype="0" group="1" rgba="1 0 0 1"/>
+	    	<geom pos="0 0 0.05" size="0.001 0.3 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
+	    	<geom pos="0 0 0.05" size="0.001 0.3 0.05" type="box" conaffinity="0" contype="0" group="1" rgba="1 0 0 1"/>
 
 	    	<geom pos="-0.2 0 0.05" size="0.001 0.3 0.05" type="box" friction="1 0.005 0.0001" rgba="1 0 0 1"/>
 	    	<geom pos="-0.2 0 0.05" size="0.001 0.3 0.05" type="box" conaffinity="0" contype="0" group="1" rgba="1 0 0 1"/>
