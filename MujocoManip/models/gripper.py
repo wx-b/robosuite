@@ -94,6 +94,9 @@ class TwoFingerGripper(TwoFingerGripperBase):
     Modifies two finger base to only take one action
     """
     def format_action(self, action):
+        """
+        1 => open, -1 => closed
+        """
         assert len(action) == 1
         return np.array([-1 * action[0], 1 * action[0]])
 
