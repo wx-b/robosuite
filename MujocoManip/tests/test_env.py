@@ -40,6 +40,7 @@ if __name__ == '__main__':
         for i in range(1000):
 
             action = 0.5 * np.random.randn(dof)
+            action[-1] = -1
             obs, reward, done, info = env.step(action)
             env.render()
 

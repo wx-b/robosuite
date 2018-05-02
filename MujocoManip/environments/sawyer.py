@@ -105,6 +105,7 @@ class SawyerEnv(MujocoEnv):
             if self.has_gripper:
                 arm_action = action[:self.mujoco_robot.dof]
                 gripper_action_in = action[self.mujoco_robot.dof:self.mujoco_robot.dof+self.gripper.dof]
+                print(gripper_action_in)
                 gripper_action_actual = self.gripper.format_action(gripper_action_in)
                 action = np.concatenate([arm_action, gripper_action_actual])
 
