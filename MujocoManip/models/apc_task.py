@@ -58,32 +58,33 @@ class ApcTask(MujocoWorldBase):
         """
         # Objects
         # print(self.shelf_offset)
-        placed_objects = self.arena.partitions
         index = 0
         for i in range(self.arena.num_shelves):
+            placed_objects = list(self.arena.partitions)
             for _, obj_mjcf in self.mujoco_objects[i].items():
                 horizontal_radius = obj_mjcf.get_horizontal_radius()
                 bottom_offset = obj_mjcf.get_bottom_offset()
                 success = False
                 for _ in range(1000): # 1000 retries
-                    shelf_x_half = self.shelf_size[0]/2 - horizontal_radius
-                    shelf_y_half = self.shelf_size[1] - horizontal_radius
-                    object_x = np.random.uniform(high=shelf_x_half, low=-shelf_x_half)
-                    object_y = np.random.uniform(high=shelf_y_half, low=-1 * shelf_y_half)
+                    shelf_x_half = self.shelf_size[0]/4 - horizontal_radius
+                    shelf_y_half = self.shelf_size[1]/2 - horizontal_radius
+                    object_x = -1*self.shelf_size[0]/4 + np.random.uniform(high=shelf_x_half, low=-shelf_x_half)
+                    object_y = np.random.uniform(high=shelf_y_half, low=-shelf_y_half)
                     # objects cannot overlap
+                    pos = self.shelf_offset[i] - bottom_offset + np.array([object_x, object_y, 0])
                     location_valid = True
-                    for (x, y, z), r in placed_objects:
-                        if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
+                    for pos2, r in placed_objects:
+                        if np.linalg.norm(pos[:2] - pos2[:2],np.inf) <= r + horizontal_radius:
                             location_valid = False
                             break
                     if location_valid: # bad luck, reroll
-                        pos = self.shelf_offset[i] - bottom_offset + np.array([object_x, object_y, 0])
                         placed_objects.append((pos, horizontal_radius))
                         self.objects[index].set('pos', array_to_string(pos))
                         success = True
                         break
-                    # location is valid, put the object down
-                    # quarternions, later we can add random rotation
+                        # location is valid, put the object down
+                        # quarternions, later we can add random rotation
                 if not success:
                     raise RandomizationError('Cannot place all objects on the shelves')
+                # print(placed_objects)
                 index += 1

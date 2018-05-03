@@ -37,10 +37,13 @@ class BinsEnv(SawyerEnv):
         #                         size_max=[0.02, 0.02, 0.02])
         cubeA1 = DefaultMugObject()
         cubeB1 = DefaultBottleObject()
-
+        cubeC1 = DefaultBowlObject()
+        cubeD1 = DefaultPotObject()
         self.mujoco_objects = OrderedDict([
             ('cubeA1', cubeA1),
-            ('cubeB1', cubeB1)
+            ('cubeB1', cubeB1),
+            ('cubeC1', cubeC1),
+            ('cubeD1', cubeD1)
         ])
         self.n_objects = len(self.mujoco_objects)
        # self.mujoco_objects=[self.mujoco_objects]*3

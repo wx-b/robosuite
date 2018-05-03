@@ -46,12 +46,12 @@ class TableArena(Arena):
 		"""Returns the absolute position of table top"""
 		return string_to_array(self.floor.get('pos')) + np.array([0,0,self.full_size[2]])
 class ShelfArena(Arena):
-	def __init__(self, full_size=(0.2,0.6,0.4), friction=(1, 0.005, 0.0001),shelf_height=0.3,num_shelves=3):
+	def __init__(self, full_size=(0.2,1.2,0.4), friction=(1, 0.005, 0.0001),shelf_height=0.3,num_shelves=3):
 		self.full_size = np.array(full_size)
 		self.shelf_height = shelf_height
 		self.num_shelves = num_shelves
 		self.half_size = self.full_size / 2
-		self.partitions = [((0, 0.2, 0.6),0.00001),((0,-0.2, 0.6),0.00001)] 
+		self.partitions = [(np.array([0, 0.2, 0.6]),0.00001),(np.array([0,-0.2, 0.6]),0.00001)] 
 		if friction is None:
 			friction = np.array([1, 0.005, 0.0001])
 		self.friction = friction
@@ -74,7 +74,7 @@ class ShelfArena(Arena):
 		return [string_to_array(self.shelf_body.get('pos')) + np.array([0,0,self.full_size[2]+x*self.shelf_height]) for x in range(self.num_shelves)]
 
 class BinsArena(Arena):
-	def __init__(self, full_size=(0.2,0.3,0.4), friction=(1, 0.005, 0.0001)):
+	def __init__(self, full_size=(0.4,0.6,0.4), friction=(1, 0.005, 0.0001)):
 		self.full_size = np.array(full_size)
 		self.half_size = self.full_size / 2
 		if friction is None:
@@ -96,4 +96,4 @@ class BinsArena(Arena):
 	@property
 	def bin_abs(self):
 		"""Returns the absolute position of table top"""
-		return string_to_array(self.floor.get('pos')) + np.array([0,0,self.full_size[2]])
+		return string_to_array(self.table_body.get('pos'))
