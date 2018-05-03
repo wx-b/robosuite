@@ -2,14 +2,17 @@
 <mujoco model="bowl">
 	<asset>
 		<mesh file="meshes/bowl.stl" name="bowl_mesh" scale="0.002 0.002 0.002"/>
+		<texture file="../textures/metal.png" name="tex-metal"/>
+		<material name="metal" reflectance="0.5" texrepeat="1 1" texture="tex-metal" texuniform="true"/>
+
 	</asset>
 	<worldbody>
 		<body>
 			<body name="collision">
-				<geom pos="0 0 0" mesh="bowl_mesh" type="mesh" rgba="1 0 0 1" density="1000" friction="0.5" group="1"/>
+				<geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="metal" density="1000" friction="0.5" group="1"/>
 			</body>
 			<body name="visual">
-				<geom pos="0 0 0" mesh="bowl_mesh" type="mesh" rgba="1 0 0 1"  conaffinity="0" contype="0" group="1"/>
+				<geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="metal"  conaffinity="0" contype="0" group="1"/>
 			</body>
 			<site pos="-0.125 0.075 0" name="bottom_site"/>
 			<site pos="-0.125 0.075 0.075" name="top_site"/>
