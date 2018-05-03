@@ -207,6 +207,13 @@ class DefaultBowlObject(MujocoMeshObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/bowl.xml'))
 
+class DefaultCanObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/can.xml'))
+class DefaultCameraObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/camera.xml'))
+
 class MujocoGeneratedObject(MujocoObject):
     """
         Base class for all programmatically generated mujoco object

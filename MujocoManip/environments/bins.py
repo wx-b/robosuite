@@ -36,9 +36,9 @@ class BinsEnv(SawyerEnv):
         # cubeA1 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
         #                         size_max=[0.02, 0.02, 0.02])
         cubeA1 = DefaultBottleObject()
-        cubeB1 = DefaultBottleObject()
-        cubeC1 = DefaultBottleObject()
-        cubeD1 = DefaultBottleObject()
+        cubeB1 = DefaultCameraObject()
+        cubeC1 = DefaultCanObject()
+        cubeD1 = DefaultCanObject()
         self.mujoco_objects = OrderedDict([
             ('cubeA1', cubeA1),
             ('cubeB1', cubeB1),
