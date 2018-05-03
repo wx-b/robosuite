@@ -37,7 +37,7 @@ class BinsEnv(SawyerEnv):
         #                         size_max=[0.02, 0.02, 0.02])
         cubeA1 = DefaultBottleObject()
         cubeB1 = DefaultCameraObject()
-        cubeC1 = DefaultCanObject()
+        cubeC1 = DefaultMugObject()
         cubeD1 = DefaultCanObject()
         self.mujoco_objects = OrderedDict([
             ('cubeA1', cubeA1),
