@@ -35,10 +35,10 @@ class BinsEnv(SawyerEnv):
         # initialize objects of interest
         # cubeA1 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
         #                         size_max=[0.02, 0.02, 0.02])
-        cubeA1 = DefaultMugObject()
+        cubeA1 = DefaultBottleObject()
         cubeB1 = DefaultBottleObject()
-        cubeC1 = DefaultBowlObject()
-        cubeD1 = DefaultPotObject()
+        cubeC1 = DefaultBottleObject()
+        cubeD1 = DefaultBottleObject()
         self.mujoco_objects = OrderedDict([
             ('cubeA1', cubeA1),
             ('cubeB1', cubeB1),
@@ -88,7 +88,7 @@ class BinsEnv(SawyerEnv):
         self.mujoco_arena = BinsArena()
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2,-0.3,0.4])
+        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2,-0.3,0])
 
         # task includes arena, robot, and objects of interest
         self.model = BinsTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
@@ -105,6 +105,7 @@ class BinsEnv(SawyerEnv):
         self.model.place_objects()
 
     def reward(self, action):
+        return 0
         r_reach, r_lift, r_stack = self.staged_rewards()
         if self.reward_shaping:
             reward = max(r_reach, r_lift, r_stack)
