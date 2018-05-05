@@ -13,7 +13,7 @@
 			<body name="visual">
 				<geom pos="0 0 0" mesh="can_mesh" type="mesh" material="metal"  conaffinity="0" contype="0"  group="1"/>
 			</body>
-			<site pos="0 0 -0.04" name="bottom_site"/>
+			<site pos="0 0 -0.06" name="bottom_site"/>
 			<site pos="0 0 0.04" name="top_site"/>
 			<site pos="0.025 0.025 0" name="horizontal_radius_site"/>
 		</body>
