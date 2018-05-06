@@ -1,3 +1,6 @@
+import pyxhook
+
+
 from MujocoManip import *
 import numpy as np
 import time
@@ -12,6 +15,24 @@ import MujocoManip.miscellaneous.utils as U
 
 import spacenav
 import threading
+
+from collections import defaultdict as dd
+
+ispressed = dd(bool)
+flipflop = dd(bool)
+hm = pyxhook.HookManager()
+
+def okp(ev):
+    ispressed[ev.Key] = True
+    flipflop[ev.Key] = True
+
+def oku(ev):
+    ispressed[ev.Key] = False
+
+hm.KeyDown = okp
+hm.KeyUp = oku
+hm.HookKeyboard()
+hm.start()
 
 control = [0 for _ in range(6)]
 button = 0
@@ -103,11 +124,16 @@ if __name__ == '__main__':
         #env.set_robot_joint_positions(list(env._joint_positions[:7]) + list(ik_controller.joint_positions_for_user_displacement(dpos, rotation)))
         #while True:env.render()
         rotation = {"left": np.array([[-1,0,0],[0,1,0],[0,0,-1]]), "right": np.array([[-1,0,0],[0,1,0],[0,0,-1]])}
+        rotation["right"] = rotation["right"].dot(U.rotation_matrix(angle=-np.pi/2., direction=[1,0,0],point=None)[:3, :3])
+        rotation["left"] = rotation["left"].dot(U.rotation_matrix(angle=-np.pi/2., direction=[0,0,1],point=None)[:3, :3])
+        #print(rotation)
+        #exit()
+
 
 
         for i in range(100000):
             #state = spacenav.get_controller_state()
-            event = spacenav.poll()
+            """event = spacenav.poll()
             if event is not None:
                 print(event)
                 if type(event) == spacenav.ButtonEvent:
@@ -122,15 +148,39 @@ if __name__ == '__main__':
                 drot3 = U.rotation_matrix(angle=yaw, direction=[0., 0., 1.], point=None)[:3, :3]
                 rotation[side] = rotation[side].dot(drot1.dot(drot2.dot(drot3)))
                 state = np.array(dpos[3:6])
-                grasp = button
-            else:
-                control = [0 for _ in range(6)]
+                grasp = button"""
+            """addr = env.sim.model.get_joint_qpos_addr("ball")[0]
+            #print(env.sim.data.qpos[addr], env.sim.data.qpos, addr, len(env.sim.data.qpos))# = np.array(list(map(str, [1+i/10000.]*3)))
+            #env.model.worldbody.find(".//body[@name='ball']").set('pos', ' '.join(map(str, [1+i/10000.]*3)))
+            env.sim.data.qpos[addr] = 1#+i/1000.
+            env.sim.data.qpos[addr+1] = 1#+i/1000.
+            env.sim.data.qpos[addr+2] = 1"""
+            kk = 0.005
+            control = [0 for _ in range(6)]
+            if ispressed['F1']:
+                control[0] = kk
+            if ispressed[('F2')]:
+                control[0] = -kk
+            if ispressed[('F3')]:
+                control[1] = -kk
+            if ispressed[('F4')]:
+                control[1] = kk
+            if ispressed[('F5')]:
+                control[2] = -kk
+            if ispressed[('F6')]:
+                control[2] = kk
+            if flipflop['k']:
+                grasp = 1
+                flipflop['k'] = False
+            dpos = np.array(control[:3])
+            """else:
                 button = 0
                 grasp = 0
-                dpos = np.array([0,0,0])
+                dpos = np.array([0,0,0])"""
             #dpos, rotation, grasp = state["dpos"], state["rotation"], state["grasp"]
             if grasp != 0:
                 print("switching")
+                grasp = 0
                 side = "right" if side == "left" else "left"
                 control = [0 for _ in range(6)]
                 dpos = np.zeros(3)
@@ -138,6 +188,12 @@ if __name__ == '__main__':
                 con[side].sync_state()
             #print(side,dpos,rotation)
             velocities = con[side].get_control(dpos=dpos, rotation=rotation[side])
+            action = np.zeros(18)
+            st = np.zeros(14)
+        
+            st[:7] = con["right"].ik_solution if hasattr(con["right"],'ik_solution') else right_robot_jpos_getter()
+            st[7:] = con["left"].ik_solution if hasattr(con["left"],'ik_solution') else left_robot_jpos_getter()
+            env.set_robot_joint_positions(st)
             if side == "left":
                 action = np.concatenate([np.zeros(7), velocities, np.zeros(4)])
             else:

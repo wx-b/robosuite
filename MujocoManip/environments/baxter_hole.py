@@ -3,7 +3,7 @@ from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.baxter import BaxterEnv
 from MujocoManip.models import *
-from MujocoManip.models.model_util import xml_path_completion, array_to_string
+from MujocoManip.models.model_util import xml_path_completion, array_to_string, joint
 
 
 class BaxterHoleEnv(BaxterEnv):
@@ -16,7 +16,7 @@ class BaxterHoleEnv(BaxterEnv):
                  use_camera_obs=True,
                  use_object_obs=True,
                  camera_name='frontview',
-                 reward_shaping=False,
+                 reward_shaping=True,
                  gripper_visualization=False,
                  **kwargs):
         """
@@ -38,6 +38,8 @@ class BaxterHoleEnv(BaxterEnv):
         #pot = DefaultPotObject()
         self.hole = DefaultHoleObject()
 
+        self.ball = BallObject(size=(0.05,))
+
         self.cylinder = CylinderObject(size=(0.01, 0.13))
         #pot = cube
         self.mujoco_objects = OrderedDict()
@@ -55,8 +57,8 @@ class BaxterHoleEnv(BaxterEnv):
         # reward configuration
         self.reward_shaping = reward_shaping
 
-        super().__init__(gripper_left='LeftTwoFingerGripper',
-                         gripper_right='TwoFingerGripper',
+        super().__init__(gripper_left=None,#'LeftTwoFingerGripper',
+                         gripper_right=None,#'TwoFingerGripper',
                          use_eef_ctrl=use_eef_ctrl,
                          use_camera_obs=use_camera_obs,
                          camera_name=camera_name,
@@ -84,19 +86,27 @@ class BaxterHoleEnv(BaxterEnv):
         self.hole_obj.set('pos','0.11 0 0.22')
         #self.hole_obj.append(joint(name='hole', type='slide'))
         self.model.merge_asset(self.hole)
-        self.model.worldbody.find(".//body[@name='left_gripper_base']").append(self.hole_obj)
+        self.model.worldbody.find(".//body[@name='left_hand']").append(self.hole_obj)
 
         self.cyl_obj = self.cylinder.get_collision(name='cylinder', site=True)
         #self.cyl_obj.set('quat','0 0 0.707 0.707')
         self.cyl_obj.set('pos','0 0 0.18')
         self.model.merge_asset(self.cylinder)
-        self.model.worldbody.find(".//body[@name='right_gripper_base']").append(self.cyl_obj)
+        self.model.worldbody.find(".//body[@name='right_hand']").append(self.cyl_obj)
+
+        self.ball_obj = self.ball.get_collision(name='ball', site=True)
+        self.ball_obj.append(joint(name='ball', type='free', damping='0'))
+        self.ball_obj.set('pos','2 2 2')
+        self.model.merge_asset(self.ball)
+        self.model.worldbody.append(self.ball_obj)
         #self.model.worldbody.append(self.hole_obj)
 
         
     def _get_reference(self):
         super()._get_reference()
-        self.cube_body_id = self.sim.model.body_name2id('hole')
+        self.hole_body_id = self.sim.model.body_name2id('hole')
+        self.cyl_body_id = self.sim.model.body_name2id('cylinder')
+        self.ball_body_id = self.sim.model.body_name2id('ball')
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -113,28 +123,43 @@ class BaxterHoleEnv(BaxterEnv):
             hole_obj = self.model.worldbody.find(".//body[@name='hole']")
 
             hole_obj.set('pos', grip)
-            self.sim.data.body_xpos[self.cube_body_id] = np.array([1,1,5])
-            print("hmm",self.sim.data.body_xpos[self.cube_body_id])# = grip
+            self.sim.data.body_xpos[self.hole_body_id] = np.array([1,1,5])
+            print("hmm",self.sim.data.body_xpos[self.hole_body_id])# = grip
             print(hole_obj)
             #self.sim.data.qfrc_applied[self._ref_gripper_left_joint_vel_indexes] = np.array([-1, 1])
             self.sim.step()
 
     def reward(self, action):
         reward = 0
-        cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
-        table_height = self.table_size[2]
 
-        # cube is higher than the table top above a margin
-        if cube_height > table_height + 0.10:
-            reward = 1.0
+        cyl_mat = self.sim.data.body_xmat[self.cyl_body_id]
+        cyl_mat.shape = (3,3)
+        cyl_pos = self.sim.data.body_xpos[self.cyl_body_id]
+
+        hole_pos = self.sim.data.body_xpos[self.hole_body_id]
+        hole_mat = self.sim.data.body_xmat[self.hole_body_id]
+        hole_mat.shape = (3,3)
+
+        addr = self.sim.model.get_joint_qpos_addr("ball")[0]
+        v = cyl_mat @ np.array([0,0,1])
+        v = v / np.linalg.norm(v)
+        center = hole_pos + hole_mat @ np.array([0.1,0,0])
+
+        t = (center - cyl_pos)@v / (np.linalg.norm(v)**2)
+        d = np.linalg.norm(np.cross(v, cyl_pos-center))/np.linalg.norm(v)
+        
+        hole_normal = hole_mat @ np.array([0,0,1])
+
+        if d < 0.06 and t >= -0.12 and t <= 0.14 and abs(np.dot(hole_normal, v)/np.linalg.norm(hole_normal)/np.linalg.norm(v)) > 0.95:
+            reward = 1
 
         # use a shaping reward
         if self.reward_shaping:
             # reaching reward
-            cube_pos = self.sim.data.body_xpos[self.cube_body_id]
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            dist = np.linalg.norm(gripper_site_pos - cube_pos)
-            reaching_reward = 1 - np.tanh(10.0 * dist)
+            hole_pos = self.sim.data.body_xpos[self.hole_body_id]
+            gripper_site_pos = self.sim.data.body_xpos[self.cyl_body_id]
+            dist = np.linalg.norm(gripper_site_pos - hole_pos)
+            reaching_reward = 1 - np.tanh(3*dist)
             reward += reaching_reward
 
         return reward
@@ -153,15 +178,16 @@ class BaxterHoleEnv(BaxterEnv):
                 di['image'] = camera_obs
 
         # low-level object information
-        if self.use_object_obs:
+        """if self.use_object_obs:
             # position and rotation of object
-            cube_pos = self.sim.data.body_xpos[self.cube_body_id]
-            cube_quat = self.sim.data.body_xquat[self.cube_body_id]
+            cube_pos = self.sim.data.body_xpos[self.hole_body_id]
+            cube_quat = self.sim.data.body_xquat[self.hole_body_id]
             di['cube_pos'] = cube_pos
             di['cube_quat'] = cube_quat
 
             gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
             di['gripper_to_cube'] = gripper_site_pos - cube_pos
+        """
 
         return di
 
@@ -183,6 +209,6 @@ class BaxterHoleEnv(BaxterEnv):
         Returns True if task is successfully completed
         """
         # cube is higher than the table top above a margin
-        cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
+        cube_height = self.sim.data.body_xpos[self.hole_body_id][2]
         table_height = self.table_size[2]
         return (cube_height > table_height + 0.10)

@@ -97,9 +97,10 @@ class BaxterEnv(MujocoEnv):
             self._ref_joint_gripper_right_actuator_indexes = [self.sim.model.actuator_name2id(actuator)
                 for actuator in self.sim.model.actuator_names if actuator.startswith("gripper_r")]
 
-        # IDs of sites for gripper visualization
-        self.eef_site_id = self.sim.model.site_name2id('grip_site')
-        self.eef_cylinder_id = self.sim.model.site_name2id('grip_site_cylinder')
+        if self.has_gripper_right:
+            # IDs of sites for gripper visualization
+            self.eef_site_id = self.sim.model.site_name2id('grip_site')
+            self.eef_cylinder_id = self.sim.model.site_name2id('grip_site_cylinder')
 
     # Note: Overrides super
     def _pre_action(self, action):
@@ -145,6 +146,7 @@ class BaxterEnv(MujocoEnv):
 
             # gravity compensation
             self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+            self.sim.data.qfrc_applied[17] = self.sim.data.qfrc_bias[17]
 
     def _post_action(self, action):
         ret = super()._post_action(action)
@@ -280,7 +282,8 @@ class BaxterEnv(MujocoEnv):
         Do any needed visualization here.
         """
         # By default, don't do any coloring.
-        self.sim.model.site_rgba[self.eef_site_id] = [0., 0., 0., 0.]
+        if self.has_gripper_right:
+            self.sim.model.site_rgba[self.eef_site_id] = [0., 0., 0., 0.]
 
     def _check_contact(self):
         """

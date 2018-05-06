@@ -1,4 +1,6 @@
 import numpy as np
+import random
+import sys
 import pybullet as p
 from os.path import join as pjoin
 
@@ -9,7 +11,7 @@ class BaxterIKController(object):
     This controller is used to control a robot using Inverse Kinematics
     to map end effector motions to joint motions. 
     """
-    def __init__(self, bullet_data_path, robot_jpos_getter):
+    def __init__(self, bullet_data_path, robot_jpos_getter, rest_poses):
 
         # path to data folder of bullet repository
         self.bullet_data_path = bullet_data_path
@@ -22,6 +24,8 @@ class BaxterIKController(object):
 
         # Should be in (0, 1], smaller values mean less sensitivity.
         self.user_sensitivity = 1.0
+
+        self.rest_poses = rest_poses
 
         self.sync_state()
 
@@ -51,14 +55,15 @@ class BaxterIKController(object):
         # P controller from joint positions (from IK) to velocities
         velocities = np.zeros(7)
         deltas = self._get_current_error(self.robot_jpos_getter(), self.commanded_joint_positions)
-        print(np.linalg.norm(deltas))
+        #print("%.3f"%np.linalg.norm(deltas), ', '.join(map(lambda x: "%.3f"%x, deltas)))
+        #print(self.robot_jpos_getter())
         #print(deltas, self.commanded_joint_positions, self.robot_jpos_getter())
         #print(self.robot_jpos_getter())
         for i, delta in enumerate(deltas):
             velocities[i] = -2. * delta # -2. * delta
         velocities = self.clip_joint_velocities(velocities)
         #print(velocities)
-        return velocities*2
+        return velocities
 
     def sync_state(self):
         """
@@ -88,6 +93,10 @@ class BaxterIKController(object):
         # Use PyBullet to handle inverse kinematics.
 
         # Set up a connection to the PyBullet simulator.
+        try:
+            p.resetSimulation()
+            p.disconnect()
+        except: pass
         p.connect(p.DIRECT)
         p.resetSimulation()
 
@@ -184,11 +193,35 @@ class BaxterIKController(object):
             ### TODO: if this is at link 6, how is the code working? target orn is eef frame, not link 6... ###
             ### TODO: test mujoco eef orientation vs. link 6 orientation in bullet vs. link 6 orn in mujoco... ###
 
+            mp = [11, 12, 13, 14, 15, 17, 18]
+
+            lowerLimits=[-1.7016,-2.147,-3.0541, -0.05 , -3.059, -1.5707 , -3.059]
+            upperLimits=[1.7016,1.047,3.0541, 2.618 , 3.059, 2.094, 3.059]
+
+            def actual(a):
+                z = np.zeros(26)
+                for i in range(7):
+                    z[mp[i]] = a[i]
+                return z
+        
             # trying nullspace IK here
             ik_solution = list(p.calculateInverseKinematics(self.ik_robot, 18, 
-                               target_position,# targetOrientation=target_orientation, 
-                               jointDamping=[0.5] * 26)) # restPoses=rest_poses, 
+                               target_position, targetOrientation=target_orientation, 
+                               #solver = 0,
+                               #lowerLimits=actual(lowerLimits), upperLimits=actual(upperLimits),
+                               restPoses=[actual(self.robot_jpos_getter())],
+                               jointDamping=[1] * 26)) # restPoses=rest_poses, 
+            """eps = 1e-1
+            for i in range(7):
+                if ik_solution[i] < lowerLimits[i]:
+                    ik_solution[i] = lowerLimits[i]
+                elif ik_solution[i] > upperLimits[i]:
+                    ik_solution[i] = upperLimits[i]
+                    #print(ik_solution)
+                    #raise ValueError
+            """
         #print("ik solution", ik_solution, len(ik_solution))
+        self.ik_solution = ik_solution
         return ik_solution
 
     def bullet_base_pose_to_world_pose(self, pose_in_base):
@@ -232,7 +265,7 @@ class BaxterIKController(object):
         world_targets = self.bullet_base_pose_to_world_pose((self.ik_robot_target_pos, self.ik_robot_target_orn))
 
         rest_poses = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
-        rest_poses = [3.10821564e-09, -5.50000000e-01, 1.38161579e-09, 1.28400000e+00, 4.89875129e-11, 2.61600000e-01, -2.71076012e-11]
+        rest_poses = self.rest_poses #[3.10821564e-09, -5.50000000e-01, 1.38161579e-09, 1.28400000e+00, 4.89875129e-11, 2.61600000e-01, -2.71076012e-11]
 
         for bullet_i in range(100):
 
