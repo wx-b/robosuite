@@ -23,7 +23,7 @@ class SawyerEnv(MujocoEnv):
             self._setup_mocap()
         
     def _setup_mocap(self):
-        mjpy_reset_mocap_welds(self.sim)
+        U.mjpy_reset_mocap_welds(self.sim)
         self.sim.forward()
 
         # Move end effector into position.
@@ -105,6 +105,7 @@ class SawyerEnv(MujocoEnv):
             if self.has_gripper:
                 arm_action = action[:self.mujoco_robot.dof]
                 gripper_action_in = action[self.mujoco_robot.dof:self.mujoco_robot.dof+self.gripper.dof]
+                print(gripper_action_in)
                 gripper_action_actual = self.gripper.format_action(gripper_action_in)
                 action = np.concatenate([arm_action, gripper_action_actual])
 
@@ -129,9 +130,16 @@ class SawyerEnv(MujocoEnv):
         di['joint_pos'] = np.array([self.sim.data.qpos[x] for x in self._ref_joint_pos_indexes])
         di['joint_vel'] = np.array([self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes])
         if self.has_gripper:
-            di['gripper_pos'] = [self.sim.data.qpos[x] for x in self._ref_gripper_joint_pos_indexes]
-            di['gripper_vel'] = [self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes]
+            di['gripper_pos'] = np.array([self.sim.data.qpos[x] for x in self._ref_gripper_joint_pos_indexes])
+            di['gripper_vel'] = np.array([self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes])
         return di
+
+    def action_spec(self):
+        # TODO: what is the range with eef control?
+        assert not self.use_eef_ctrl, 'action spec for eef control not yet supported by mujocomanip'
+        low = np.ones(self.dof) * -1.
+        high = np.ones(self.dof) * 1.
+        return low, high
 
     @property
     def dof(self):

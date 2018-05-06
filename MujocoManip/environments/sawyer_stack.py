@@ -168,21 +168,29 @@ class SawyerStackEnv(SawyerEnv):
         # low-level object information
         if self.use_object_obs:
             # position and rotation of the first cube
-            cubeA_pos = self.sim.data.body_xpos[self.cubeA_body_id]
-            cubeA_quat = self.sim.data.body_xquat[self.cubeA_body_id]
+            cubeA_pos = np.array(self.sim.data.body_xpos[self.cubeA_body_id])
+            cubeA_quat = np.array(self.sim.data.body_xquat[self.cubeA_body_id])
             di['cubeA_pos'] = cubeA_pos
             di['cubeA_quat'] = cubeA_quat
 
             # position and rotation of the second cube
-            cubeB_pos = self.sim.data.body_xpos[self.cubeB_body_id]
-            cubeB_quat = self.sim.data.body_xquat[self.cubeB_body_id]
+            cubeB_pos = np.array(self.sim.data.body_xpos[self.cubeB_body_id])
+            cubeB_quat = np.array(self.sim.data.body_xquat[self.cubeB_body_id])
             di['cubeB_pos'] = cubeB_pos
             di['cubeB_quat'] = cubeB_quat
 
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            gripper_site_pos = np.array(self.sim.data.site_xpos[self.eef_site_id])
             di['gripper_to_cubeA'] = gripper_site_pos - cubeA_pos
             di['gripper_to_cubeB'] = gripper_site_pos - cubeB_pos
             di['cubeA_to_cubeB'] = cubeA_pos - cubeB_pos
+
+        # proprioception
+        di['proprio'] = np.concatenate([
+            np.sin(di['joint_pos']),
+            np.cos(di['joint_pos']),
+            di['joint_vel'],
+            di['gripper_pos'],
+        ])
 
         return di
 

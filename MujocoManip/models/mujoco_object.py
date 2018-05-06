@@ -155,6 +155,22 @@ class DefaultCapsuleObject(MujocoXMLObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_capsule.xml'))
 
+class DefaultBottleObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/bottle.xml'))
+
+class DefaultMugObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/mug.xml'))
+
+class DefaultPotObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/pot.xml'))
+        
+class DefaultBowlObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/bowl.xml'))
+
 class MujocoGeneratedObject(MujocoObject):
     """
         Base class for all programmatically generated mujoco object

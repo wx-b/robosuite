@@ -130,13 +130,21 @@ class SawyerLiftEnv(SawyerEnv):
         # low-level object information
         if self.use_object_obs:
             # position and rotation of object
-            cube_pos = self.sim.data.body_xpos[self.cube_body_id]
-            cube_quat = self.sim.data.body_xquat[self.cube_body_id]
+            cube_pos = np.array(self.sim.data.body_xpos[self.cube_body_id])
+            cube_quat = np.array(self.sim.data.body_xquat[self.cube_body_id])
             di['cube_pos'] = cube_pos
             di['cube_quat'] = cube_quat
 
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            gripper_site_pos = np.array(self.sim.data.site_xpos[self.eef_site_id])
             di['gripper_to_cube'] = gripper_site_pos - cube_pos
+
+        # proprioception
+        di['proprio'] = np.concatenate([
+            np.sin(di['joint_pos']),
+            np.cos(di['joint_pos']),
+            di['joint_vel'],
+            di['gripper_pos'],
+        ])
 
         return di
 
