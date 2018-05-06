@@ -43,20 +43,9 @@ if __name__ == '__main__':
             #print((env.model.worldbody.find(".//body[@name='left_hand']")).keys())
 
             action = 0.5 * np.random.randn(dof)
-            action = np.zeros(9)
-            #action[0] = i/100000.*100
-            action[1] = i/100000.*100
-            #action[2] = -i/100000.*100
-            action = np.zeros(dof)
-            action[-1] = 1#+2*np.random.random()
-            action[-2] = -1#+2*np.random.random()
-            #action[:3] = -np.array(list(map(float,env.model.objects[0].get('pos').split())))
-            #print(action[0])"""
             obs, reward, done, info = env.step(action)
             env.render()
-            #print(env.sim, dir(env.sim))
-            print(env.sim.data.qpos[env._ref_joint_pos_indexes])#sim.data.qpos)
-            #print(env.model.objects[0].get('pos'))
+            print(reward)
 
 
             if i % 100 == 0:

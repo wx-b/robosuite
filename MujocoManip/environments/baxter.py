@@ -146,7 +146,6 @@ class BaxterEnv(MujocoEnv):
 
             # gravity compensation
             self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
-            self.sim.data.qfrc_applied[17] = self.sim.data.qfrc_bias[17]
 
     def _post_action(self, action):
         ret = super()._post_action(action)

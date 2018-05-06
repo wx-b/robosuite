@@ -38,8 +38,6 @@ class BaxterHoleEnv(BaxterEnv):
         #pot = DefaultPotObject()
         self.hole = DefaultHoleObject()
 
-        self.ball = BallObject(size=(0.05,))
-
         self.cylinder = CylinderObject(size=(0.01, 0.13))
         #pot = cube
         self.mujoco_objects = OrderedDict()
@@ -94,19 +92,10 @@ class BaxterHoleEnv(BaxterEnv):
         self.model.merge_asset(self.cylinder)
         self.model.worldbody.find(".//body[@name='right_hand']").append(self.cyl_obj)
 
-        self.ball_obj = self.ball.get_collision(name='ball', site=True)
-        self.ball_obj.append(joint(name='ball', type='free', damping='0'))
-        self.ball_obj.set('pos','2 2 2')
-        self.model.merge_asset(self.ball)
-        self.model.worldbody.append(self.ball_obj)
-        #self.model.worldbody.append(self.hole_obj)
-
-        
     def _get_reference(self):
         super()._get_reference()
         self.hole_body_id = self.sim.model.body_name2id('hole')
         self.cyl_body_id = self.sim.model.body_name2id('cylinder')
-        self.ball_body_id = self.sim.model.body_name2id('ball')
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -140,7 +129,6 @@ class BaxterHoleEnv(BaxterEnv):
         hole_mat = self.sim.data.body_xmat[self.hole_body_id]
         hole_mat.shape = (3,3)
 
-        addr = self.sim.model.get_joint_qpos_addr("ball")[0]
         v = cyl_mat @ np.array([0,0,1])
         v = v / np.linalg.norm(v)
         center = hole_pos + hole_mat @ np.array([0.1,0,0])
