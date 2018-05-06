@@ -132,29 +132,6 @@ if __name__ == '__main__':
 
 
         for i in range(100000):
-            #state = spacenav.get_controller_state()
-            """event = spacenav.poll()
-            if event is not None:
-                print(event)
-                if type(event) == spacenav.ButtonEvent:
-                    if event.pressed:
-                        button = 1
-                else:
-                    control = [event.x, event.y, -event.z, event.rx, event.ry, event.rz]
-                dpos = np.minimum(1, np.maximum(-1, np.array(control[:3])/350.))*0.005
-                roll, pitch, yaw = np.minimum(1, np.maximum(-1, np.array(control[3:6])/350.))*0.005
-                drot1 = U.rotation_matrix(angle=-pitch, direction=[1., 0., 0.], point=None)[:3, :3]
-                drot2 = U.rotation_matrix(angle=roll, direction=[0., 1., 0.], point=None)[:3, :3]
-                drot3 = U.rotation_matrix(angle=yaw, direction=[0., 0., 1.], point=None)[:3, :3]
-                rotation[side] = rotation[side].dot(drot1.dot(drot2.dot(drot3)))
-                state = np.array(dpos[3:6])
-                grasp = button"""
-            """addr = env.sim.model.get_joint_qpos_addr("ball")[0]
-            #print(env.sim.data.qpos[addr], env.sim.data.qpos, addr, len(env.sim.data.qpos))# = np.array(list(map(str, [1+i/10000.]*3)))
-            #env.model.worldbody.find(".//body[@name='ball']").set('pos', ' '.join(map(str, [1+i/10000.]*3)))
-            env.sim.data.qpos[addr] = 1#+i/1000.
-            env.sim.data.qpos[addr+1] = 1#+i/1000.
-            env.sim.data.qpos[addr+2] = 1"""
             kk = 0.005
             control = [0 for _ in range(6)]
             if ispressed['F1']:
@@ -173,11 +150,7 @@ if __name__ == '__main__':
                 grasp = 1
                 flipflop['k'] = False
             dpos = np.array(control[:3])
-            """else:
-                button = 0
-                grasp = 0
-                dpos = np.array([0,0,0])"""
-            #dpos, rotation, grasp = state["dpos"], state["rotation"], state["grasp"]
+            
             if grasp != 0:
                 print("switching")
                 grasp = 0
@@ -205,6 +178,7 @@ if __name__ == '__main__':
 
             #action = np.random.randn(18)
             obs, reward, done, info = env.step(action)
+            print("reward", reward)
             env.render()
 
             # if i % 100 == 0:
