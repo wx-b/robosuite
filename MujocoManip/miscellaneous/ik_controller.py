@@ -21,7 +21,7 @@ class IKController(object):
         self.setup_inverse_kinematics()
 
         # Should be in (0, 1], smaller values mean less sensitivity.
-        self.user_sensitivity = 1.0
+        self.user_sensitivity = .3
 
         self.sync_state()
 

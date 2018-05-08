@@ -8,10 +8,11 @@
 	<worldbody>
 		<body>
 			<body name="collision">
-				<geom pos="0 0 0" mesh="can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="500" friction="0.5"  material="metal" group="1"/>
+				<geom pos="0 0 0" mesh="can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="metal" group="1" condim="4"/>
 			</body>
 			<body name="visual">
-				<geom pos="0 0 0" mesh="can_mesh" type="mesh" material="metal"  conaffinity="0" contype="0"  group="1"/>
+				<geom pos="0 0 0" mesh="can_mesh" type="mesh" material="metal"  conaffinity="0" contype="0" group="0" mass="0.0001"/>
+				<geom pos="0 0 0" mesh="can_mesh" type="mesh" material="metal"  conaffinity="0" contype="0" group="1" mass="0.0001"/>
 			</body>
 			<site pos="0 0 -0.06" name="bottom_site"/>
 			<site pos="0 0 0.04" name="top_site"/>
