@@ -35,7 +35,7 @@ class BinsEnv(SawyerEnv):
         # initialize objects of interest
         # cubeA1 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
         #                         size_max=[0.02, 0.02, 0.02])
-        cubeA1 = DefaultMugObject()
+        cubeA1 = DefaultLemonObject()
         cubeB1 = DefaultBottleObject()
         cubeC1 = DefaultCanObject()
         cubeD1 = DefaultCameraObject()

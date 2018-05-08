@@ -213,6 +213,15 @@ class DefaultCanObject(MujocoMeshObject):
 class DefaultCameraObject(MujocoMeshObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/camera.xml'))
+class DefaultAppleObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/apple.xml'))
+class DefaultBananaObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/banana.xml'))
+class DefaultLemonObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/lemon.xml'))
 
 class MujocoGeneratedObject(MujocoObject):
     """
