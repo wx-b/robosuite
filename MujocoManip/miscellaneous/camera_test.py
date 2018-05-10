@@ -14,7 +14,9 @@ def rotate_and_return_quat(rot, rot_angle, direction):
 
 if __name__ == "__main__":
 
-    base_rot = np.array([[0., 0., -1.], [1., 0., 0.], [0., -1., 0.]])
+    base_quat = np.array([0.653, 0.271, 0.271, 0.653])
+    base_rot = U.quat2mat(base_quat)
+    # base_rot = np.array([[0., 0., -1.], [1., 0., 0.], [0., -1., 0.]])
 
-    quat = rotate_and_return_quat(base_rot, 30., [0., 1., 0.])
+    quat = rotate_and_return_quat(base_rot, 15., [0., 1., 0.])
     print("\"{} {} {} {}\"".format(*quat))

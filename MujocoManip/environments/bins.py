@@ -35,16 +35,25 @@ class BinsEnv(SawyerEnv):
         # initialize objects of interest
         # cubeA1 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
         #                         size_max=[0.02, 0.02, 0.02])
-        cubeA1 = DefaultLemonObject()
-        cubeB1 = DefaultBottleObject()
-        cubeC1 = DefaultCanObject()
-        cubeD1 = DefaultCameraObject()
-        self.mujoco_objects = OrderedDict([
-            ('cubeA1', cubeA1),
-            ('cubeB1', cubeB1),
-            ('cubeC1', cubeC1),
-            ('cubeD1', cubeD1)
-        ])
+
+        n_each_object = 3
+        ob_inits = [DefaultLemonObject, DefaultMilkObject, DefaultCanObject]
+        letters = ['A', 'B', 'C']
+        lst = []
+        for i in range(n_each_object):
+            for j in range(len(ob_inits)):
+                ob = ob_inits[j]()
+                lst.append(('cube{}{}'.format(letters[j], i), ob))
+        self.mujoco_objects = OrderedDict(lst)
+
+        # cubeD1 = DefaultBottleObject() 
+
+        # self.mujoco_objects = OrderedDict([
+        #     ('cubeA1', cubeA1),
+        #     ('cubeB1', cubeB1),
+        #     ('cubeC1', cubeC1),
+        #     # ('cubeD1', cubeD1),
+        # ])
         self.n_objects = len(self.mujoco_objects)
        # self.mujoco_objects=[self.mujoco_objects]*3
 
