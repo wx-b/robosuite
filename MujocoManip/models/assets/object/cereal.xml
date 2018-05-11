@@ -3,7 +3,7 @@
 	<asset>
 		<mesh file="meshes/cereal.stl" name="cereal_mesh"/>
 		<texture file="../textures/cereal.png" rgb1="1 1 1" name="tex-cereal"/>
-		<material name="cereal" reflectance="0.5" texrepeat="6 6" texture="tex-cereal" texuniform="true"/>
+		<material name="cereal" reflectance="0.5" texrepeat="2 2" texture="tex-cereal" texuniform="true"/>
 	</asset>
 	<worldbody>
 		<body>

@@ -36,8 +36,8 @@ class BinsEnv(SawyerEnv):
         # cubeA1 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
         #                         size_max=[0.02, 0.02, 0.02])
 
-        n_each_object = 3
-        ob_inits = [DefaultLemonObject, DefaultMilkObject, DefaultCanObject]
+        n_each_object = 2
+        ob_inits = [DefaultCerealObject, DefaultBottleObject, DefaultLemonObject]
         letters = ['A', 'B', 'C']
         lst = []
         for i in range(n_each_object):

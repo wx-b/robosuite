@@ -73,9 +73,9 @@ class BinsTask(MujocoWorldBase):
             horizontal_radius = obj_mjcf.get_horizontal_radius()
             bottom_offset = obj_mjcf.get_bottom_offset()
             success = False
-            for _ in range(1000): # 1000 retries
-                shelf_x_half = self.shelf_size[0]/2 - horizontal_radius - 0.1
-                shelf_y_half = self.shelf_size[1]/2 - horizontal_radius - 0.1
+            for _ in range(2000): # 1000 retries
+                shelf_x_half = self.shelf_size[0]/2 - horizontal_radius - 0.05
+                shelf_y_half = self.shelf_size[1]/2 - horizontal_radius - 0.05
                 object_x = np.random.uniform(high=shelf_x_half, low=-shelf_x_half)
                 object_y = np.random.uniform(high=shelf_y_half, low=-shelf_y_half)
                 # objects cannot overlap
