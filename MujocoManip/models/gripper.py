@@ -14,9 +14,8 @@ class MujocoGripper(MujocoXML):
 
     def format_action(self, action):
         """
-            Given 1-d action in closed (-1, 1) to open, 
-            returns the control for underlying actuators
-            returns 1-d np array 
+            Given (-1,1) abstract control as np-array
+            returns the (-1,1) for underlying actuators as 1-d np array 
         """
         raise NotImplementedError
 
@@ -64,7 +63,7 @@ class MujocoGripper(MujocoXML):
             geom.set('rgba', '0 0 0 0')
 
 
-class TwoFingerGripper(MujocoGripper):
+class TwoFingerGripperBase(MujocoGripper):
     def __init__(self):
         super().__init__(xml_path_completion('gripper/two_finger_gripper.xml'))
 
@@ -89,6 +88,21 @@ class TwoFingerGripper(MujocoGripper):
 
     def contact_geoms(self):
         return ["r_finger_g0", "r_finger_g1", "l_finger_g0", "l_finger_g1", "r_fingertip_g0", "l_fingertip_g0"]
+
+class TwoFingerGripper(TwoFingerGripperBase):
+    """
+    Modifies two finger base to only take one action
+    """
+    def format_action(self, action):
+        """
+        1 => open, -1 => closed
+        """
+        assert len(action) == 1
+        return np.array([-1 * action[0], 1 * action[0]])
+
+    @property
+    def dof(self):
+        return 1
 
 class PR2Gripper(MujocoGripper):
     def __init__(self):
@@ -194,6 +208,8 @@ def gripper_factory(name):
     """Genreator for grippers"""
     if name == "TwoFingerGripper":
         return TwoFingerGripper()
+    if name == "TwoFingerGripperBase":
+        return TwoFingerGripperBase()
     if name == "PR2Gripper":
         return PR2Gripper()
     if name == "RobotiqGripper":
