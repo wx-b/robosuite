@@ -34,8 +34,8 @@ class SawyerLiftEnv(SawyerEnv):
             @reward_shaping, using a shaping reward
         """
         # initialize objects of interest
-        cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                               size_max=[0.025, 0.025, 0.025])
+        cube = RandomBoxObject(size_min=[0.015, 0.015, 0.015],
+                               size_max=[0.018, 0.018, 0.018])
         self.mujoco_objects = OrderedDict([('cube', cube)])
 
         # settings for table top
@@ -55,10 +55,10 @@ class SawyerLiftEnv(SawyerEnv):
         if placement_initializer:
             self.placement_initializer = placement_initializer
         else:
-            self.placement_initializer = UniformRandomSampler(x_range=[-0.2, 0.2],
-                                                              y_range=[-0.2, 0.2],
-                                                              ensure_object_boundary_in_range=False,
-                                                              z_rotation=True)
+            self.placement_initializer = UniformRandomSampler(
+                x_range=[-0.2, 0.2], y_range=[-0.2, 0.2],
+                ensure_object_boundary_in_range=False,
+                z_rotation=True)
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
