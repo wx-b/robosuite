@@ -18,6 +18,10 @@ class BinsTask(MujocoWorldBase):
 
     def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects):
         super().__init__()
+
+        # temp: z-rotation
+        self.z_rotation = True
+
         self.object_metadata = []
         self.merge_arena(mujoco_arena)
         self.merge_robot(mujoco_robot)
@@ -50,6 +54,12 @@ class BinsTask(MujocoWorldBase):
             self.max_horizontal_radius = max(self.max_horizontal_radius,
                                              obj_mjcf.get_horizontal_radius())
 
+    def sample_quat(self):
+        if self.z_rotation:
+            rot_angle = np.random.uniform(high=2 * np.pi,low=0)
+            return [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
+        else:
+            return [1, 0, 0, 0]
 
     def place_objects(self):
         """
@@ -64,8 +74,8 @@ class BinsTask(MujocoWorldBase):
             bottom_offset = obj_mjcf.get_bottom_offset()
             success = False
             for _ in range(1000): # 1000 retries
-                shelf_x_half = self.shelf_size[0]/2 - horizontal_radius
-                shelf_y_half = self.shelf_size[1]/2 - horizontal_radius
+                shelf_x_half = self.shelf_size[0]/2 - horizontal_radius - 0.1
+                shelf_y_half = self.shelf_size[1]/2 - horizontal_radius - 0.1
                 object_x = np.random.uniform(high=shelf_x_half, low=-shelf_x_half)
                 object_y = np.random.uniform(high=shelf_y_half, low=-shelf_y_half)
                 # objects cannot overlap
@@ -78,6 +88,11 @@ class BinsTask(MujocoWorldBase):
                 if location_valid: # bad luck, reroll
                     placed_objects.append((pos, horizontal_radius))
                     self.objects[index].set('pos', array_to_string(pos))
+
+                    # random z-rotation
+                    quat = self.sample_quat()
+                    self.objects[index].set('quat', array_to_string(quat))
+
                     success = True
                     break
                     # location is valid, put the object down
