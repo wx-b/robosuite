@@ -225,6 +225,14 @@ class DefaultLemonObject(MujocoMeshObject):
 class DefaultMilkObject(MujocoMeshObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/milk.xml'))
+        
+class DefaultBreadObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/bread.xml'))
+
+class DefaultCerealObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/cereal.xml'))
 
 class MujocoGeneratedObject(MujocoObject):
     """
