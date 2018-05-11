@@ -239,6 +239,10 @@ class DefaultCerealObject(MujocoMeshObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/cereal.xml'))
 
+class DefaultAtomizerObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/atomizer.xml'))
+
 class MujocoGeneratedObject(MujocoObject):
     """
         Base class for all programmatically generated mujoco object

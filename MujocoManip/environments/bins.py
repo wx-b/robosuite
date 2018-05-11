@@ -40,6 +40,8 @@ class BinsEnv(SawyerEnv):
         # ob_inits = [DefaultCerealObject, DefaultBreadObject, DefaultLemonObject, DefaultMilkObject]
         ob_inits = [DefaultCerealObject, DefaultBreadObject, DefaultCanObject, DefaultMilkObject]
         letters = ['A', 'B', 'C', 'D']
+        # ob_inits = [DefaultBreadObject, DefaultAtomizerObject, DefaultLemonObject]
+        # letters = ['A', 'B', 'C']
         lst = []
         for i in range(n_each_object):
             for j in range(len(ob_inits)):
