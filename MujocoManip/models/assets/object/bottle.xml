@@ -13,7 +13,7 @@
 			<body name="visual">
 				<geom pos="0 0 0" mesh="bottle_mesh" type="mesh" material="glass"  conaffinity="0" contype="0"  group="1"/>
 			</body>
-			<site pos="0 0 -0.08756" name="bottom_site"/>
+			<site pos="0 0 -0.082" name="bottom_site"/>
 			<site pos="0 0 0.075" name="top_site"/>
 			<site pos="0.0254 0.0254 0" name="horizontal_radius_site"/>
 		</body>
