@@ -74,7 +74,7 @@ class ShelfArena(Arena):
 		return [string_to_array(self.shelf_body.get('pos')) + np.array([0,0,self.full_size[2]+x*self.shelf_height]) for x in range(self.num_shelves)]
 
 class BinsArena(Arena):
-	def __init__(self, full_size=(0.39,0.59,0.82), friction=(1, 0.005, 0.0001)):
+	def __init__(self, full_size=(0.39,0.49,0.82), friction=(1, 0.005, 0.0001)):
 		self.full_size = np.array(full_size)
 		self.half_size = self.full_size / 2
 		if friction is None:

@@ -1,7 +1,7 @@
 <!-- sample of a general object defined in mujoco -->
 <mujoco model="atomizer">
 	<asset>
-		<mesh file="meshes/atomizer.stl" name="atomizer_mesh"/>
+		<mesh file="meshes/atomizer.stl" name="atomizer_mesh" scale="1.5 1 1"/>
 		<texture type="cube" file="../textures/atomizer.png" name="tex-atomizer"/>
 		<material name="atomizer" reflectance="0.5" texrepeat="10 20" texture="tex-atomizer" texuniform="true"/>
 	</asset>
