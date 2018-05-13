@@ -1,6 +1,6 @@
 import numpy as np
 from MujocoManip.miscellaneous import SimulationError, XMLError, MujocoPyRenderer
-from mujoco_py import MjSim
+from mujoco_py import MjSim, MjRenderContextOffscreen
 from collections import OrderedDict
 import glfw
 from mujoco_py import load_model_from_path, load_model_from_xml
@@ -119,6 +119,12 @@ class MujocoEnv(object, metaclass=EnvMeta):
             self.viewer = MujocoPyRenderer(self.sim)
             self.viewer.viewer.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
             self.viewer.viewer.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
+        else:
+            render_context=MjRenderContextOffscreen(self.sim)
+            render_context.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
+            render_context.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
+            self.sim.add_render_context(render_context)
+
         self.sim_state_initial = self.sim.get_state()
         self._get_reference()
         self.cur_time = 0
