@@ -33,8 +33,6 @@ class BinsEnv(SawyerEnv):
             @gripper_visualization: visualizing gripper site
         """
         # initialize objects of interest
-        # cubeA1 = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-        #                         size_max=[0.02, 0.02, 0.02])
 
         n_each_object = 2
         # ob_inits = [DefaultCerealObject, DefaultBreadObject, DefaultLemonObject, DefaultMilkObject]
@@ -49,16 +47,8 @@ class BinsEnv(SawyerEnv):
                 lst.append(('cube{}{}'.format(letters[j], i), ob))
         self.mujoco_objects = OrderedDict(lst)
 
-        # cubeD1 = DefaultBottleObject() 
 
-        # self.mujoco_objects = OrderedDict([
-        #     ('cubeA1', cubeA1),
-        #     ('cubeB1', cubeB1),
-        #     ('cubeC1', cubeC1),
-        #     # ('cubeD1', cubeD1),
-        # ])
         self.n_objects = len(self.mujoco_objects)
-       # self.mujoco_objects=[self.mujoco_objects]*3
 
         # settings for table top
         self.table_size = table_size

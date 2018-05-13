@@ -34,8 +34,8 @@ class SawyerLiftEnv(SawyerEnv):
             @reward_shaping, using a shaping reward
         """
         # initialize objects of interest
-        cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                               size_max=[0.025, 0.025, 0.025])
+        cube = RandomBoxObject(size_min=[0.015, 0.015, 0.015],
+                               size_max=[0.018, 0.018, 0.018])
         self.mujoco_objects = OrderedDict([('cube', cube)])
 
         # settings for table top
@@ -55,10 +55,10 @@ class SawyerLiftEnv(SawyerEnv):
         if placement_initializer:
             self.placement_initializer = placement_initializer
         else:
-            self.placement_initializer = UniformRandomSampler(x_range=[-0.2, 0.2],
-                                                              y_range=[-0.2, 0.2],
-                                                              ensure_object_boundary_in_range=False,
-                                                              z_rotation=True)
+            self.placement_initializer = UniformRandomSampler(
+                x_range=[-0.2, 0.2], y_range=[-0.2, 0.2],
+                ensure_object_boundary_in_range=False,
+                z_rotation=True)
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
@@ -137,6 +137,14 @@ class SawyerLiftEnv(SawyerEnv):
 
             gripper_site_pos = np.array(self.sim.data.site_xpos[self.eef_site_id])
             di['gripper_to_cube'] = gripper_site_pos - cube_pos
+
+        # proprioception
+        di['proprio'] = np.concatenate([
+            np.sin(di['joint_pos']),
+            np.cos(di['joint_pos']),
+            di['joint_vel'],
+            di['gripper_pos'],
+        ])
 
         return di
 

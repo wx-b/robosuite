@@ -184,6 +184,14 @@ class SawyerStackEnv(SawyerEnv):
             di['gripper_to_cubeB'] = gripper_site_pos - cubeB_pos
             di['cubeA_to_cubeB'] = cubeA_pos - cubeB_pos
 
+        # proprioception
+        di['proprio'] = np.concatenate([
+            np.sin(di['joint_pos']),
+            np.cos(di['joint_pos']),
+            di['joint_vel'],
+            di['gripper_pos'],
+        ])
+
         return di
 
     def _check_contact(self):
