@@ -83,8 +83,9 @@ class BinsArena(Arena):
 
 		super().__init__(xml_path_completion('arena/bins_arena.xml'))
 		self.floor = self.worldbody.find("./geom[@name='floor']")
-		self.table_body = self.worldbody.find("./body[@name='bin1']")
-		self.table_collision = self.table_body.find("./geom[@name='bin1_collision']")
+		self.bin1_body = self.worldbody.find("./body[@name='bin1']")
+		self.bin2_body = self.worldbody.find("./body[@name='bin2']")
+		self.table_collision = self.bin1_body.find("./geom[@name='bin1_collision']")
 
 		self.configure_location()
 
@@ -96,4 +97,4 @@ class BinsArena(Arena):
 	@property
 	def bin_abs(self):
 		"""Returns the absolute position of table top"""
-		return string_to_array(self.table_body.get('pos'))
+		return string_to_array(self.bin1_body.get('pos'))

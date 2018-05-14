@@ -34,17 +34,15 @@ class BinsEnv(SawyerEnv):
         """
         # initialize objects of interest
 
-        n_each_object = 2
+        self.n_each_object = 2
         # ob_inits = [DefaultCerealObject, DefaultBreadObject, DefaultLemonObject, DefaultMilkObject]
-        ob_inits = [DefaultCerealObject, DefaultBreadObject, DefaultCanObject, DefaultMilkObject]
-        letters = ['A', 'B', 'C', 'D']
+        self.ob_inits = [DefaultMilkObject, DefaultBreadObject, DefaultCerealObject, DefaultCanObject]
         # ob_inits = [DefaultBreadObject, DefaultAtomizerObject, DefaultLemonObject]
-        # letters = ['A', 'B', 'C']
         lst = []
-        for i in range(n_each_object):
-            for j in range(len(ob_inits)):
-                ob = ob_inits[j]()
-                lst.append(('cube{}{}'.format(letters[j], i), ob))
+        for i in range(self.n_each_object):
+            for j in range(len(self.ob_inits)):
+                ob = self.ob_inits[j]()
+                lst.append((str(self.ob_inits[j])+'{}'.format(i), ob))
         self.mujoco_objects = OrderedDict(lst)
 
 
@@ -95,53 +93,59 @@ class BinsEnv(SawyerEnv):
         # task includes arena, robot, and objects of interest
         self.model = BinsTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
         self.model.place_objects()
+        self.bin_pos = string_to_array(self.model.bin2_body.get('pos'))
+        self.bin_size = self.model.shelf_size
 
     def _get_reference(self):
         super()._get_reference()
-        self.cubeA_body_id = self.sim.model.body_name2id('cubeA1')
-        self.cubeB_body_id = self.sim.model.body_name2id('cubeB1')
+        self.obj_body_id={}
+
+        for i in range(self.n_each_object):
+            for j in range(len(self.ob_inits)):
+                obj_str = str(self.ob_inits[j]) + '{}'.format(i)
+                self.obj_body_id[obj_str] = self.sim.model.body_name2id(obj_str)
 
     def _reset_internal(self):
         super()._reset_internal()
         # inherited class should reset positions of objects
         self.model.place_objects()
 
-    def reward(self, action):
-        return 0
-        r_reach, r_lift, r_stack = self.staged_rewards()
-        if self.reward_shaping:
-            reward = max(r_reach, r_lift, r_stack)
-        else:
-            reward = 1.0 if r_stack > 0 else 0.0
+    def reward(self, action = None):
+        reward = 1
+        gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+        for i in range(self.n_each_object):
+            for j in range(len(self.ob_inits)):
+                obj_str = str(self.ob_inits[j]) + '{}'.format(i)
+                obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
+                dist = np.linalg.norm(gripper_site_pos - obj_pos)
+                r_reach = 1 - np.tanh(10.0 * dist)
+                if r_reach > 0.6 or self.not_in_bin(obj_pos,j):
+                    reward = 0
+
         return reward
 
-    def staged_rewards(self):
-        """
-        Returns staged rewards based on current physical states
-        """
-        # reaching is successful when the gripper site is close to
-        # the center of the cube
-        cubeA_pos = self.sim.data.body_xpos[self.cubeA_body_id]
-        gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-        dist = np.linalg.norm(gripper_site_pos - cubeA_pos)
-        r_reach = 1 - np.tanh(10.0 * dist)
+    def not_in_bin(self, obj_pos, bin_id):
 
-        # lifting is successful when the cube is above the table top
-        # by a margin
-        cubeA_height = cubeA_pos[2]
-        table_height = self.table_size[2]
-        r_lift = 1.0 if cubeA_height > table_height + 0.045 else 0.0
+        bin_x_low = self.bin_pos[0]
+        bin_y_low = self.bin_pos[1]
+        if bin_id == 0 or bin_id == 2:
+            bin_x_low -=  self.bin_size[0]/2
+        if bin_id < 2 :
+            bin_y_low -=  self.bin_size[1]/2
 
-        # stacking is successful when the block is lifted and
-        # the gripper is not holding the object
-        r_stack = 0
-        if r_reach < 0.6 and r_lift > 0:
-            r_stack = 2.0
+        bin_x_high = bin_x_low + self.bin_size[0]/2       
+        bin_y_high = bin_y_low + self.bin_size[1]/2
 
-        # print("reach: %.2f lift: %.2f stack: %.2f final: %.2f"%
-        #     (r_reach, r_lift, r_stack, max(r_reach, r_lift, r_stack)))
-        return (r_reach, r_lift, r_stack)
-
+        res = True
+        if obj_pos[2] > self.bin_pos[2] and obj_pos[0] < bin_x_high and \
+                obj_pos[0] > bin_x_low and obj_pos[1] < bin_y_high and \
+                obj_pos[1] > bin_y_low  and obj_pos[2] < self.bin_pos[2] + 0.1 :
+            res = False
+        if not res:
+            print(obj_pos)
+            print(bin_x_low,bin_x_high)
+            print(bin_y_low,bin_y_high)
+        return res
     def _get_observation(self):
         """
             Adds hand_position, hand_velocity or 
@@ -159,23 +163,23 @@ class BinsEnv(SawyerEnv):
                 di['image'] = camera_obs
 
         # low-level object information
-        if self.use_object_obs:
-            # position and rotation of the first cube
-            cubeA_pos = self.sim.data.body_xpos[self.cubeA_body_id]
-            cubeA_quat = self.sim.data.body_xquat[self.cubeA_body_id]
-            di['cubeA_pos'] = cubeA_pos
-            di['cubeA_quat'] = cubeA_quat
+        # if self.use_object_obs:
+        #     # position and rotation of the first cube
+        #     cubeA_pos = self.sim.data.body_xpos[self.cubeA_body_id]
+        #     cubeA_quat = self.sim.data.body_xquat[self.cubeA_body_id]
+        #     di['cubeA_pos'] = cubeA_pos
+        #     di['cubeA_quat'] = cubeA_quat
 
-            # position and rotation of the second cube
-            cubeB_pos = self.sim.data.body_xpos[self.cubeB_body_id]
-            cubeB_quat = self.sim.data.body_xquat[self.cubeB_body_id]
-            di['cubeB_pos'] = cubeB_pos
-            di['cubeB_quat'] = cubeB_quat
+        #     # position and rotation of the second cube
+        #     cubeB_pos = self.sim.data.body_xpos[self.cubeB_body_id]
+        #     cubeB_quat = self.sim.data.body_xquat[self.cubeB_body_id]
+        #     di['cubeB_pos'] = cubeB_pos
+        #     di['cubeB_quat'] = cubeB_quat
 
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            di['gripper_to_cubeA'] = gripper_site_pos - cubeA_pos
-            di['gripper_to_cubeB'] = gripper_site_pos - cubeB_pos
-            di['cubeA_to_cubeB'] = cubeA_pos - cubeB_pos
+        #     gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+        #     di['gripper_to_cubeA'] = gripper_site_pos - cubeA_pos
+        #     di['gripper_to_cubeB'] = gripper_site_pos - cubeB_pos
+        #     di['cubeA_to_cubeB'] = cubeA_pos - cubeB_pos
 
         return di
 
@@ -195,8 +199,7 @@ class BinsEnv(SawyerEnv):
         """
         Returns True if task is successfully completed
         """
-        r_reach, r_lift, r_stack = self.staged_rewards()
-        return r_stack > 0
+        return False
 
     def _gripper_visualization(self):
         """

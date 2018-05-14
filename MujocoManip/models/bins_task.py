@@ -35,6 +35,7 @@ class BinsTask(MujocoWorldBase):
         self.arena = mujoco_arena
         self.shelf_offset = mujoco_arena.bin_abs
         self.shelf_size = mujoco_arena.full_size
+        self.bin2_body = mujoco_arena.bin2_body
         self.merge(mujoco_arena)
 
     def merge_objects(self, mujoco_objects):
