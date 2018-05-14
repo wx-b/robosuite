@@ -37,6 +37,7 @@ class BinsEnv(SawyerEnv):
         self.n_each_object = 2
         # ob_inits = [DefaultCerealObject, DefaultBreadObject, DefaultLemonObject, DefaultMilkObject]
         self.ob_inits = [DefaultMilkObject, DefaultBreadObject, DefaultCerealObject, DefaultCanObject]
+        self.vis_inits = [DefaultMilkVisualObject, DefaultBreadVisualObject, DefaultCerealVisualObject, DefaultCanVisualObject]
         # ob_inits = [DefaultBreadObject, DefaultAtomizerObject, DefaultLemonObject]
         lst = []
         for i in range(self.n_each_object):
@@ -45,6 +46,10 @@ class BinsEnv(SawyerEnv):
                 lst.append((str(self.ob_inits[j])+'{}'.format(i), ob))
         self.mujoco_objects = OrderedDict(lst)
 
+        lst = []
+        for j in range(len(self.vis_inits)):
+            lst.append((str(self.vis_inits[j]),self.vis_inits[j]()))
+        self.visual_objects = lst
 
         self.n_objects = len(self.mujoco_objects)
 
@@ -91,8 +96,9 @@ class BinsEnv(SawyerEnv):
         self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2,-0.3,0])
 
         # task includes arena, robot, and objects of interest
-        self.model = BinsTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
+        self.model = BinsTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects, self.visual_objects)
         self.model.place_objects()
+        self.model.place_visual()
         self.bin_pos = string_to_array(self.model.bin2_body.get('pos'))
         self.bin_size = self.model.shelf_size
 
@@ -129,9 +135,9 @@ class BinsEnv(SawyerEnv):
         bin_x_low = self.bin_pos[0]
         bin_y_low = self.bin_pos[1]
         if bin_id == 0 or bin_id == 2:
-            bin_x_low -=  self.bin_size[0]/2
+            bin_x_low -= self.bin_size[0]/2
         if bin_id < 2 :
-            bin_y_low -=  self.bin_size[1]/2
+            bin_y_low -= self.bin_size[1]/2
 
         bin_x_high = bin_x_low + self.bin_size[0]/2       
         bin_y_high = bin_y_low + self.bin_size[1]/2

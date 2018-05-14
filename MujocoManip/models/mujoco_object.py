@@ -154,7 +154,7 @@ class MujocoMeshObject(MujocoXML, MujocoObject):
         collision = copy.deepcopy(self.worldbody.find("./body/body[@name='collision']"))
         collision.attrib.pop('name')
         if name is not None:
-            collision.attrib['name']= name
+            collision.attrib['name'] = name
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
@@ -167,7 +167,7 @@ class MujocoMeshObject(MujocoXML, MujocoObject):
         visual = copy.deepcopy(self.worldbody.find("./body/body[@name='visual']"))
         visual.attrib.pop('name')
         if name is not None:
-            visual.attrib.set('name', name)
+            visual.attrib['name'] = name
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
@@ -242,6 +242,23 @@ class DefaultCerealObject(MujocoMeshObject):
 class DefaultAtomizerObject(MujocoMeshObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/atomizer.xml'))
+
+class DefaultMilkVisualObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/milk-visual.xml'))
+        
+class DefaultBreadVisualObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/bread-visual.xml'))
+
+class DefaultCerealVisualObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/cereal-visual.xml'))
+
+class DefaultCanVisualObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/can-visual.xml'))
+
 
 class MujocoGeneratedObject(MujocoObject):
     """

@@ -5,6 +5,7 @@ from MujocoManip.miscellaneous import XMLError
 from MujocoManip.models.world import MujocoWorldBase
 from MujocoManip.models.model_util import *
 from MujocoManip.miscellaneous.utils import *
+from collections import OrderedDict
 
 class BinsTask(MujocoWorldBase):
 
@@ -16,7 +17,7 @@ class BinsTask(MujocoWorldBase):
         @mujoco_objects, a list of MJCF objects of interest
     """
 
-    def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects):
+    def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects, visual_objects):
         super().__init__()
 
         # temp: z-rotation
@@ -26,7 +27,8 @@ class BinsTask(MujocoWorldBase):
         self.merge_arena(mujoco_arena)
         self.merge_robot(mujoco_robot)
         self.merge_objects(mujoco_objects)
-
+        self.merge_visual(OrderedDict(visual_objects))
+        self.visual_objects = visual_objects
     def merge_robot(self, mujoco_robot):
         self.robot = mujoco_robot
         self.merge(mujoco_robot)
@@ -42,7 +44,6 @@ class BinsTask(MujocoWorldBase):
         self.n_objects = len(mujoco_objects)
         self.mujoco_objects = mujoco_objects
         self.objects = [] # xml manifestation
-        self.targets = [] # xml manifestation
         self.max_horizontal_radius = 0
         for obj_name, obj_mjcf in mujoco_objects.items():
             self.merge_asset(obj_mjcf)
@@ -54,6 +55,17 @@ class BinsTask(MujocoWorldBase):
 
             self.max_horizontal_radius = max(self.max_horizontal_radius,
                                              obj_mjcf.get_horizontal_radius())
+
+    def merge_visual(self, mujoco_objects):
+        self.visual_obj_mjcf = []
+        for obj_name, obj_mjcf in mujoco_objects.items():
+            self.merge_asset(obj_mjcf)
+            # Load object
+            obj = obj_mjcf.get_visual(name=obj_name, site=True)
+            obj.append(joint(name=obj_name, type='free'))
+            self.visual_obj_mjcf.append(obj)
+            self.worldbody.append(obj)
+
 
     def sample_quat(self):
         if self.z_rotation:
@@ -101,4 +113,33 @@ class BinsTask(MujocoWorldBase):
             if not success:
                 raise RandomizationError('Cannot place all objects on the shelves')
             # print(placed_objects)
+            index += 1
+
+    def place_visual(self):
+        """
+        Place objects randomly until no more collisions or max iterations hit.
+        """
+        # Objects
+        # print(self.shelf_offset)
+        placed_objects = []
+        index = 0
+        bin_pos = string_to_array(self.bin2_body.get('pos'))
+        bin_size = self.shelf_size
+
+        for _, obj_mjcf in self.visual_objects :
+
+            bin_x_low = bin_pos[0]
+            bin_y_low = bin_pos[1]
+            if index == 0 or index == 2:
+                bin_x_low -= bin_size[0]/2
+            if index < 2 :
+                bin_y_low -= bin_size[1]/2
+
+            bin_x_high = bin_x_low + bin_size[0]/2       
+            bin_y_high = bin_y_low + bin_size[1]/2
+            bottom_offset = obj_mjcf.get_bottom_offset()
+
+            pos = np.array([bin_x_low + bin_x_high, bin_y_low + bin_y_high, 2*bin_pos[2]])/2 - bottom_offset
+            self.visual_obj_mjcf[index].set('pos', array_to_string(pos))
+            print(pos)
             index += 1

@@ -24,6 +24,7 @@ while True:
     env.reset()
     env.render()
     env.viewer.set_camera(3)
+    time.sleep(1)
     for i in range(100000):
         env.step(np.random.randn(9))
         env.render()
