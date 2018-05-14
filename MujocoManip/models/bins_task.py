@@ -62,7 +62,6 @@ class BinsTask(MujocoWorldBase):
             self.merge_asset(obj_mjcf)
             # Load object
             obj = obj_mjcf.get_visual(name=obj_name, site=True)
-            obj.append(joint(name=obj_name, type='free'))
             self.visual_obj_mjcf.append(obj)
             self.worldbody.append(obj)
 
@@ -141,5 +140,4 @@ class BinsTask(MujocoWorldBase):
 
             pos = np.array([bin_x_low + bin_x_high, bin_y_low + bin_y_high, 2*bin_pos[2]])/2 - bottom_offset
             self.visual_obj_mjcf[index].set('pos', array_to_string(pos))
-            print(pos)
             index += 1
