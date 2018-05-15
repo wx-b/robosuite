@@ -117,7 +117,8 @@ class BinsEnv(SawyerEnv):
         self.model.place_objects()
 
     def reward(self, action = None):
-        reward = 1
+        reward_completion = 1
+        reward_stage = 0
         gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
         for i in range(self.n_each_object):
             for j in range(len(self.ob_inits)):
@@ -126,9 +127,12 @@ class BinsEnv(SawyerEnv):
                 dist = np.linalg.norm(gripper_site_pos - obj_pos)
                 r_reach = 1 - np.tanh(10.0 * dist)
                 if r_reach > 0.6 or self.not_in_bin(obj_pos,j):
-                    reward = 0
+                    reward_completion = 0
+                else:
+                    reward_stage += 0.1
+                        
 
-        return reward
+        return reward_completion + reward_stage
 
     def not_in_bin(self, obj_pos, bin_id):
 
