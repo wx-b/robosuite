@@ -49,7 +49,7 @@ class BinsTask(MujocoWorldBase):
             self.merge_asset(obj_mjcf)
             # Load object
             obj = obj_mjcf.get_collision(name=obj_name, site=True)
-            obj.append(joint(name=obj_name, type='free', damping='0.001'))
+            obj.append(joint(name=obj_name, type='free', damping='0.0005'))
             self.objects.append(obj)
             self.worldbody.append(obj)
 
