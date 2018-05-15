@@ -1,7 +1,7 @@
 <!-- sample of a general object defined in mujoco -->
 <mujoco model="cereal">
 	<asset>
-		<mesh file="meshes/cereal.stl" name="cereal_mesh"/>
+		<mesh file="meshes/cereal.stl" name="cereal_mesh" scale="0.4 1.0 0.4"/>
 		<texture file="../textures/cereal.png" rgb1="1 1 1" name="tex-cereal"/>
 		<material name="cereal" reflectance="0.5" texrepeat="2 2" texture="tex-cereal" texuniform="true"/>
 	</asset>

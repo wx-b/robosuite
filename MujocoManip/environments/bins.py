@@ -147,11 +147,8 @@ class BinsEnv(SawyerEnv):
                 obj_pos[0] > bin_x_low and obj_pos[1] < bin_y_high and \
                 obj_pos[1] > bin_y_low  and obj_pos[2] < self.bin_pos[2] + 0.1 :
             res = False
-        if not res:
-            print(obj_pos)
-            print(bin_x_low,bin_x_high)
-            print(bin_y_low,bin_y_high)
         return res
+
     def _get_observation(self):
         """
             Adds hand_position, hand_velocity or 
