@@ -61,7 +61,7 @@ class BinsTask(MujocoWorldBase):
         for obj_name, obj_mjcf in mujoco_objects.items():
             self.merge_asset(obj_mjcf)
             # Load object
-            obj = obj_mjcf.get_visual(name=obj_name, site=True)
+            obj = obj_mjcf.get_visual(name=obj_name, site=False)
             self.visual_obj_mjcf.append(obj)
             self.worldbody.append(obj)
 
@@ -85,7 +85,7 @@ class BinsTask(MujocoWorldBase):
             horizontal_radius = obj_mjcf.get_horizontal_radius()
             bottom_offset = obj_mjcf.get_bottom_offset()
             success = False
-            for _ in range(5000): # 1000 retries
+            for _ in range(5000): # 5000 retries
                 shelf_x_half = self.shelf_size[0]/2 - horizontal_radius - 0.05
                 shelf_y_half = self.shelf_size[1]/2 - horizontal_radius - 0.05
                 object_x = np.random.uniform(high=shelf_x_half, low=-shelf_x_half)
