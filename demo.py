@@ -6,7 +6,7 @@ from IPython import embed
 
 # env = make("SawyerLiftEnv", ignore_done=True, use_camera_obs=False)
 
-env = make("BinsEnv", ignore_done=True, use_camera_obs=False)
+env = make("SawyerBinsEnv", ignore_done=True, use_camera_obs=False)
 
 # env for training
 # env = make("SawyerLiftEnv",

@@ -5,7 +5,7 @@ from MujocoManip.environments.sawyer import SawyerEnv
 from MujocoManip.models import *
 
 
-class BinsEnv(SawyerEnv):
+class SawyerBinsEnv(SawyerEnv):
 
     def __init__(self, 
                  gripper_type='TwoFingerGripper',
