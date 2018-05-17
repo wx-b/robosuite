@@ -34,8 +34,8 @@ class SawyerLiftEnv(SawyerEnv):
             @reward_shaping, using a shaping reward
         """
         # initialize objects of interest
-        cube = RandomBoxObject(size_min=[0.015, 0.015, 0.015],
-                               size_max=[0.018, 0.018, 0.018])
+        cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02], #[0.015, 0.015, 0.015],
+                               size_max=[0.025, 0.025, 0.025]) #[0.018, 0.018, 0.018])
         self.mujoco_objects = OrderedDict([('cube', cube)])
 
         # settings for table top
