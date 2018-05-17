@@ -198,10 +198,6 @@ class DefaultBottleObject(MujocoMeshObject):
 class DefaultMugObject(MujocoMeshObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/mug.xml'))
-
-class DefaultPotObject(MujocoMeshObject):
-    def __init__(self):
-        super().__init__(xml_path_completion('object/pot.xml'))
         
 class DefaultBowlObject(MujocoMeshObject):
     def __init__(self):
@@ -214,14 +210,6 @@ class DefaultCanObject(MujocoMeshObject):
 class DefaultCameraObject(MujocoMeshObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/camera.xml'))
-
-class DefaultAppleObject(MujocoMeshObject):
-    def __init__(self):
-        super().__init__(xml_path_completion('object/apple.xml'))
-
-class DefaultBananaObject(MujocoMeshObject):
-    def __init__(self):
-        super().__init__(xml_path_completion('object/banana.xml'))
 
 class DefaultLemonObject(MujocoMeshObject):
     def __init__(self):
