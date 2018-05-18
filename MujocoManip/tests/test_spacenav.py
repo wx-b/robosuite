@@ -13,7 +13,7 @@ from MujocoManip.miscellaneous.ik_controller import IKController
 if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
-    env = make("SawyerStackEnv",
+    env = make("SawyerBinsEnv",
                ignore_done=True,
                use_camera_obs=False,
                gripper_visualization=True)

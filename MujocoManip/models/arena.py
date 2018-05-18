@@ -45,3 +45,29 @@ class TableArena(Arena):
 	def table_top_abs(self):
 		"""Returns the absolute position of table top"""
 		return string_to_array(self.floor.get('pos')) + np.array([0,0,self.full_size[2]])
+
+class BinsArena(Arena):
+	def __init__(self, full_size=(0.39,0.49,0.82), friction=(1, 0.005, 0.0001)):
+		self.full_size = np.array(full_size)
+		self.half_size = self.full_size / 2
+		if friction is None:
+			friction = np.array([1, 0.005, 0.0001])
+		self.friction = friction
+
+		super().__init__(xml_path_completion('arena/bins_arena.xml'))
+		self.floor = self.worldbody.find("./geom[@name='floor']")
+		self.bin1_body = self.worldbody.find("./body[@name='bin1']")
+		self.bin2_body = self.worldbody.find("./body[@name='bin2']")
+		self.table_collision = self.bin1_body.find("./geom[@name='bin1_collision']")
+
+		self.configure_location()
+
+	def configure_location(self):
+		self.bottom_pos = np.array([0,0,0])
+		self.floor.set('pos', array_to_string(self.bottom_pos))
+		
+	
+	@property
+	def bin_abs(self):
+		"""Returns the absolute position of table top"""
+		return string_to_array(self.bin1_body.get('pos'))
