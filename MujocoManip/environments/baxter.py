@@ -10,21 +10,15 @@ class BaxterEnv(MujocoEnv):
     def __init__(self,
                  gripper_right=None,
                  gripper_left=None,
-                 use_eef_ctrl=False,
                  gripper_visualization=False,
                  **kwargs):
         self.has_gripper_right = not (gripper_right is None)
         self.has_gripper_left = not (gripper_left is None)
         self.gripper_right_name = gripper_right
         self.gripper_left_name = gripper_left
-        self.use_eef_ctrl = use_eef_ctrl
         self.gripper_visualization = gripper_visualization
         super().__init__(**kwargs)
 
-        # setup mocap stuff if necessary
-        if self.use_eef_ctrl:
-            self._setup_mocap()
-        
     def _setup_mocap(self):
         U.mjpy_reset_mocap_welds(self.sim)
         self.sim.forward()
@@ -41,7 +35,7 @@ class BaxterEnv(MujocoEnv):
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_robot = BaxterRobot(use_eef_ctrl=self.use_eef_ctrl)
+        self.mujoco_robot = BaxterRobot()
         if self.has_gripper_right:
             self.gripper_right = gripper_factory(self.gripper_right_name)
             if not self.gripper_visualization:
@@ -104,48 +98,29 @@ class BaxterEnv(MujocoEnv):
 
     # Note: Overrides super
     def _pre_action(self, action):
-        if self.use_eef_ctrl:
-            # assert len(action) == 5
-            assert len(action) == 9
-            action = action.copy()  # ensure that we don't change the action outside of this scope
+        action = np.clip(action, -1, 1)    
+        last = self.mujoco_robot.dof
+        arm_action = action[:last]
+        if self.has_gripper_right:
+            gripper_right_action_in = action[last:last+self.gripper_right.dof]
+            gripper_right_action_actual = self.gripper_right.format_action(gripper_right_action_in)
+            arm_action = np.concatenate([arm_action, gripper_right_action_actual])
+            last = last + self.gripper_right.dof
+        if self.has_gripper_left:
+            gripper_left_action_in = action[last:last+self.gripper_left.dof]
+            gripper_left_action_actual = self.gripper_left.format_action(gripper_left_action_in)
+            arm_action = np.concatenate([arm_action, gripper_left_action_actual])
+        action = arm_action
 
-            pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:]
+        # rescale normalized action to control ranges
+        ctrl_range = self.sim.model.actuator_ctrlrange
+        bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
+        weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
+        applied_action = bias + weight * action
+        self.sim.data.ctrl[:] = applied_action
 
-            # TODO (Ajay): Are we only supporting eef control with two-finger gripper?
-            assert gripper_ctrl.shape == (2,)
-            action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
-
-            # Apply action to simulation.
-            U.mjpy_ctrl_set_action(self.sim, action)
-            U.mjpy_mocap_set_action(self.sim, action)
-
-            # gravity compensation
-            self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
-
-        else:
-            action = np.clip(action, -1, 1)    
-            last = self.mujoco_robot.dof
-            arm_action = action[:last]
-            if self.has_gripper_right:
-                gripper_right_action_in = action[last:last+self.gripper_right.dof]
-                gripper_right_action_actual = self.gripper_right.format_action(gripper_right_action_in)
-                arm_action = np.concatenate([arm_action, gripper_right_action_actual])
-                last = last + self.gripper_right.dof
-            if self.has_gripper_left:
-                gripper_left_action_in = action[last:last+self.gripper_left.dof]
-                gripper_left_action_actual = self.gripper_left.format_action(gripper_left_action_in)
-                arm_action = np.concatenate([arm_action, gripper_left_action_actual])
-            action = arm_action
-
-            # rescale normalized action to control ranges
-            ctrl_range = self.sim.model.actuator_ctrlrange
-            bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
-            weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
-            applied_action = bias + weight * action
-            self.sim.data.ctrl[:] = applied_action
-
-            # gravity compensation
-            self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+        # gravity compensation
+        self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
 
     def _post_action(self, action):
         ret = super()._post_action(action)
@@ -164,11 +139,7 @@ class BaxterEnv(MujocoEnv):
 
     @property
     def dof(self):
-        if self.use_eef_ctrl:
-            # 3 for position and 4 for rotation
-            dof = 7
-        else:
-            dof = self.mujoco_robot.dof
+        dof = self.mujoco_robot.dof
         if self.has_gripper_left:
             dof += self.gripper_left.dof
         if self.has_gripper_right:

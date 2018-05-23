@@ -67,28 +67,22 @@ class BaxterHoleEnv(BaxterEnv):
         super()._load_model()
         self.mujoco_robot.set_base_xpos([0,0,0])
 
-        # load model for table top workspace
         self.mujoco_arena = TableArena(full_size=self.table_size,
                                        friction=self.table_friction)
 
-        # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.45 + self.table_size[0] / 2,0,0])
 
-        # task includes arena, robot, and objects of interest
         self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
         self.model.place_objects()
 
-
         self.hole_obj = self.hole.get_collision(name='hole', site=True)
         self.hole_obj.set('quat','0 0 0.707 0.707')
-        self.hole_obj.set('pos','0.11 0 0.22')
-        #self.hole_obj.append(joint(name='hole', type='slide'))
+        self.hole_obj.set('pos','0.11 0 0.18')
         self.model.merge_asset(self.hole)
         self.model.worldbody.find(".//body[@name='left_hand']").append(self.hole_obj)
 
         self.cyl_obj = self.cylinder.get_collision(name='cylinder', site=True)
-        #self.cyl_obj.set('quat','0 0 0.707 0.707')
-        self.cyl_obj.set('pos','0 0 0.18')
+        self.cyl_obj.set('pos','0 0 0.15')
         self.model.merge_asset(self.cylinder)
         self.model.worldbody.find(".//body[@name='right_hand']").append(self.cyl_obj)
 
@@ -101,22 +95,6 @@ class BaxterHoleEnv(BaxterEnv):
         super()._reset_internal()
         # inherited class should reset positions of objects
         self.model.place_objects()
-
-        return
-        self.sim.data.qpos[self._ref_gripper_left_joint_pos_indexes] = np.array([0.1, -0.1])
-        for i in range(500):
-            self.sim.step()
-        for i in range(100):
-            grip = (self.sim.data.site_xpos[self.eef_site_id])
-            print("grip",grip,type(grip))
-            hole_obj = self.model.worldbody.find(".//body[@name='hole']")
-
-            hole_obj.set('pos', grip)
-            self.sim.data.body_xpos[self.hole_body_id] = np.array([1,1,5])
-            print("hmm",self.sim.data.body_xpos[self.hole_body_id])# = grip
-            print(hole_obj)
-            #self.sim.data.qfrc_applied[self._ref_gripper_left_joint_vel_indexes] = np.array([-1, 1])
-            self.sim.step()
 
     def reward(self, action):
         reward = 0
@@ -138,7 +116,10 @@ class BaxterHoleEnv(BaxterEnv):
         
         hole_normal = hole_mat @ np.array([0,0,1])
 
-        if d < 0.06 and t >= -0.12 and t <= 0.14 and abs(np.dot(hole_normal, v)/np.linalg.norm(hole_normal)/np.linalg.norm(v)) > 0.95:
+        # Right location and angle
+        if d < 0.06 and t >= -0.12 and t <= 0.14 and \
+            abs(np.dot(hole_normal, v)/np.linalg.norm(hole_normal) \
+                                      /np.linalg.norm(v)) > 0.95:
             reward = 1
 
         # use a shaping reward
@@ -166,16 +147,15 @@ class BaxterHoleEnv(BaxterEnv):
                 di['image'] = camera_obs
 
         # low-level object information
-        """if self.use_object_obs:
+        if self.use_object_obs:
             # position and rotation of object
-            cube_pos = self.sim.data.body_xpos[self.hole_body_id]
-            cube_quat = self.sim.data.body_xquat[self.hole_body_id]
-            di['cube_pos'] = cube_pos
-            di['cube_quat'] = cube_quat
+            hole_pos = self.sim.data.body_xpos[self.hole_body_id]
+            hole_quat = self.sim.data.body_xquat[self.hole_body_id]
+            di['hole_pos'] = hole_pos
+            di['hole_quat'] = hole_quat
 
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            di['gripper_to_cube'] = gripper_site_pos - cube_pos
-        """
+            gripper_site_pos = self.sim.data.body_xpos[self.cyl_body_id]
+            di['cyl_to_hole'] = gripper_site_pos - hole_pos
 
         return di
 

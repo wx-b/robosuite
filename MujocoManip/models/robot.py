@@ -91,11 +91,8 @@ class SawyerRobot(MujocoRobot):
 
 class BaxterRobot(MujocoRobot):
 
-    def __init__(self, use_eef_ctrl=False):
-        if use_eef_ctrl:
-            super().__init__(xml_path_completion('robot/baxter/robot_mocap.xml'))
-        else:
-            super().__init__(xml_path_completion('robot/baxter/robot.xml'))
+    def __init__(self):
+        super().__init__(xml_path_completion('robot/baxter/robot.xml'))
 
         # TODO: fix me to the correct value
         self.bottom_offset = np.array([0, 0, -0.913])
