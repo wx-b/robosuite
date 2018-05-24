@@ -177,13 +177,6 @@ class BaxterEnv(MujocoEnv):
         high = np.ones(self.dof) * 1.
         return low, high
 
-    @property
-    def _right_hand_joint_cartesian_pose(self):
-        """
-        Returns the cartesian pose of the last robot joint in base frame of robot.
-        """
-        return self.pose_in_base_from_name('right_l6')
-
     @property 
     def _right_hand_pose(self):
         """
@@ -200,10 +193,10 @@ class BaxterEnv(MujocoEnv):
 
         # Use jacobian to translate joint velocities to end effector velocities.
         Jp = self.sim.data.get_body_jacp('right_hand').reshape((3, -1))
-        Jp_joint = Jp[:, self._ref_joint_vel_indexes]
+        Jp_joint = Jp[:, self._ref_joint_vel_indexes[:7]]
 
         Jr = self.sim.data.get_body_jacr('right_hand').reshape((3, -1))
-        Jr_joint = Jr[:, self._ref_joint_vel_indexes]
+        Jr_joint = Jr[:, self._ref_joint_vel_indexes[:7]]
 
         eef_lin_vel = Jp_joint.dot(self._joint_velocities)
         eef_rot_vel = Jr_joint.dot(self._joint_velocities)
@@ -238,6 +231,61 @@ class BaxterEnv(MujocoEnv):
         Returns angular velocity of eef in base frame of robot.
         """
         return self._right_hand_total_velocity[3:]
+
+    @property 
+    def _left_hand_pose(self):
+        """
+        Returns eef pose in base frame of robot.
+        """
+        return self.pose_in_base_from_name('left_hand')
+
+    @property
+    def _left_hand_total_velocity(self):
+        """
+        Returns the total eef velocity (linear + angular) in the base frame as a numpy
+        array of shape (6,)
+        """
+
+        # Use jacobian to translate joint velocities to end effector velocities.
+        Jp = self.sim.data.get_body_jacp('left_hand').reshape((3, -1))
+        Jp_joint = Jp[:, self._ref_joint_vel_indexes[7:]]
+
+        Jr = self.sim.data.get_body_jacr('left_hand').reshape((3, -1))
+        Jr_joint = Jr[:, self._ref_joint_vel_indexes[7:]]
+
+        eef_lin_vel = Jp_joint.dot(self._joint_velocities)
+        eef_rot_vel = Jr_joint.dot(self._joint_velocities)
+        return np.concatenate([eef_lin_vel, eef_rot_vel])
+
+    @property
+    def _left_hand_pos(self):
+        """
+        Returns position of eef in base frame of robot. 
+        """
+        eef_pose_in_base = self._left_hand_pose
+        return eef_pose_in_base[:3, 3]
+
+    @property
+    def _left_hand_orn(self):
+        """
+        Returns orientation of eef in base frame of robot as a rotation matrix.
+        """
+        eef_pose_in_base = self._left_hand_pose
+        return eef_pose_in_base[:3, :3]
+
+    @property
+    def _left_hand_vel(self):
+        """
+        Returns velocity of eef in base frame of robot.
+        """
+        return self._left_hand_total_velocity[:3]
+
+    @property
+    def _left_hand_ang_vel(self):
+        """
+        Returns angular velocity of eef in base frame of robot.
+        """
+        return self._left_hand_total_velocity[3:]
 
     @property
     def _joint_positions(self):
