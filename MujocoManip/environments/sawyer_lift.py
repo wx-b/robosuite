@@ -33,10 +33,6 @@ class SawyerLiftEnv(SawyerEnv):
             @camera_depth, rendering depth
             @reward_shaping, using a shaping reward
         """
-        # initialize objects of interest
-        cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02], #[0.015, 0.015, 0.015],
-                               size_max=[0.025, 0.025, 0.025]) #[0.018, 0.018, 0.018])
-        self.mujoco_objects = OrderedDict([('cube', cube)])
 
         # settings for table top
         self.table_size = table_size
@@ -56,7 +52,7 @@ class SawyerLiftEnv(SawyerEnv):
             self.placement_initializer = placement_initializer
         else:
             self.placement_initializer = UniformRandomSampler(
-                x_range=[-0.2, 0.2], y_range=[-0.2, 0.2],
+                x_range=[-0.03, 0.03], y_range=[-0.03, 0.03],
                 ensure_object_boundary_in_range=False,
                 z_rotation=True)
 
@@ -78,6 +74,12 @@ class SawyerLiftEnv(SawyerEnv):
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
 
+        # initialize objects of interest
+        cube = RandomBoxObject(size_min=[0.020, 0.020, 0.020], #[0.015, 0.015, 0.015],
+                               size_max=[0.022, 0.022, 0.022], #[0.018, 0.018, 0.018])
+                               rgba=[1, 0, 0, 1])
+        self.mujoco_objects = OrderedDict([('cube', cube)])
+
         # task includes arena, robot, and objects of interest
         self.model = TableTopTask(self.mujoco_arena, 
                                 self.mujoco_robot, 
@@ -93,6 +95,10 @@ class SawyerLiftEnv(SawyerEnv):
         super()._reset_internal()
         # inherited class should reset positions of objects
         self.model.place_objects()
+        # reset joint positions
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = np.array([
+            -0.5538, -0.8208,  0.4155, 1.8409, -0.4955, 0.6482,  1.9628
+        ])
 
     def reward(self, action):
         reward = 0
