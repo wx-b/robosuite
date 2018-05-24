@@ -107,6 +107,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
         # if there is an active viewer window, destroy it
         self.close()
         self._reset_internal()
+        self.sim.forward()
         return self._get_observation()
 
     def _reset_internal(self):

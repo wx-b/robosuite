@@ -13,7 +13,7 @@ from MujocoManip.miscellaneous.ik_controller import IKController
 if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
-    env = make("SawyerBinsEnv",
+    env = make("SawyerLiftEnv",
                ignore_done=True,
                use_camera_obs=False,
                gripper_visualization=True)
@@ -24,10 +24,7 @@ if __name__ == '__main__':
 
     obs = env.reset()
 
-    # rotate the gripper so we can see it easily 
-    env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
-
-    dof = 9
+    dof = env.dof
     print('action space', env.action_space)
     print('Obs: {}'.format(len(obs)))
     print('DOF: {}'.format(dof))
@@ -37,13 +34,13 @@ if __name__ == '__main__':
     ik_controller = IKController(bullet_data_path="../models/assets/bullet_data",
                                  robot_jpos_getter=robot_jpos_getter)
 
-    gripper_controls = [[1., -1.], [-1., 1.]] 
+    gripper_controls = [[1.,], [-1.,]]
 
     while True:
         obs = env.reset()
 
         # rotate the gripper so we can see it easily 
-        env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
+        # env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
         # env.env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
         for i in range(100000):
@@ -55,10 +52,6 @@ if __name__ == '__main__':
             obs, reward, done, info = env.step(action)
             env.render()
 
-            # if i % 100 == 0:
-            #     print(i)
-
             if done:
                 print('done: {}'.format(reward))
                 break
-
