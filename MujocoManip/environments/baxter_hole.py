@@ -11,8 +11,6 @@ class BaxterHoleEnv(BaxterEnv):
     def __init__(self, 
                  gripper_type='TwoFingerGripper',
                  use_eef_ctrl=False,
-                 table_size=(0.8, 0.8, 0.8),
-                 table_friction=None,
                  use_camera_obs=True,
                  use_object_obs=True,
                  camera_name='frontview',
@@ -42,10 +40,6 @@ class BaxterHoleEnv(BaxterEnv):
         #pot = cube
         self.mujoco_objects = OrderedDict()
 
-        # settings for table top
-        self.table_size = table_size
-        self.table_friction = table_friction
-
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
@@ -67,13 +61,15 @@ class BaxterHoleEnv(BaxterEnv):
         super()._load_model()
         self.mujoco_robot.set_base_xpos([0,0,0])
 
-        self.mujoco_arena = TableArena(full_size=self.table_size,
+        """self.mujoco_arena = TableArena(full_size=self.table_size,
                                        friction=self.table_friction)
 
         self.mujoco_arena.set_origin([0.45 + self.table_size[0] / 2,0,0])
+        """
 
-        self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
-        self.model.place_objects()
+        self.model = MujocoWorldBase()
+        self.model.merge(EmptyArena())
+        self.model.merge(self.mujoco_robot)
 
         self.hole_obj = self.hole.get_collision(name='hole', site=True)
         self.hole_obj.set('quat','0 0 0.707 0.707')
@@ -95,8 +91,6 @@ class BaxterHoleEnv(BaxterEnv):
 
     def _reset_internal(self):
         super()._reset_internal()
-        # inherited class should reset positions of objects
-        self.model.place_objects()
 
     def reward(self, action):
         reward = 0
@@ -178,7 +172,4 @@ class BaxterHoleEnv(BaxterEnv):
         """
         Returns True if task is successfully completed
         """
-        # cube is higher than the table top above a margin
-        cube_height = self.sim.data.body_xpos[self.hole_body_id][2]
-        table_height = self.table_size[2]
-        return (cube_height > table_height + 0.10)
+        return False

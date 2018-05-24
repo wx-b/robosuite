@@ -45,3 +45,8 @@ class TableArena(Arena):
 	def table_top_abs(self):
 		"""Returns the absolute position of table top"""
 		return string_to_array(self.floor.get('pos')) + np.array([0,0,self.full_size[2]])
+
+class EmptyArena(Arena):
+    def __init__(self):
+        super().__init__(xml_path_completion('arena/empty_arena.xml'))
+        self.floor = self.worldbody.find("./geom[@name='floor']")
