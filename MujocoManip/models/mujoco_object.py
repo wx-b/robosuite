@@ -131,7 +131,7 @@ class MujocoXMLObject(MujocoXML, MujocoObject):
             visual.append(ET.Element('site', attrib=template))
         return visual
 
-class DefaultPotObject(MujocoXMLObject):
+class DefaultStockPotObject(MujocoXMLObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_pot.xml'))
 

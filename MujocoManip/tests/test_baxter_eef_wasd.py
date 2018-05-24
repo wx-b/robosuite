@@ -1,6 +1,3 @@
-import pyxhook
-
-
 from MujocoManip import *
 import numpy as np
 import time
@@ -13,55 +10,23 @@ from MujocoManip.wrappers import DataCollector
 from MujocoManip.miscellaneous.baxter_ik import BaxterIKController as IKController
 import MujocoManip.miscellaneous.utils as U
 
-import spacenav
 import threading
 
 from collections import defaultdict as dd
+import glfw
 
 ispressed = dd(bool)
 flipflop = dd(bool)
-hm = pyxhook.HookManager()
 
-def okp(ev):
-    ispressed[ev.Key] = True
-    flipflop[ev.Key] = True
+def okp(window, key, scancode, action, mods):
+    ispressed[key] = True
+    flipflop[key] = True
 
-def oku(ev):
-    ispressed[ev.Key] = False
-
-hm.KeyDown = okp
-hm.KeyUp = oku
-hm.HookKeyboard()
-hm.start()
+def oku(window, key, scancode, action, mods):
+    ispressed[key] = False
 
 control = [0 for _ in range(6)]
 button = 0
-
-def run():
-    print("thread running")
-    #global control, button
-    while True:
-        event = spacenav.poll()
-        if event is None: continue
-        print(event)
-        if type(event) == spacenav.ButtonEvent:
-            if event.pressed:
-                button = 1
-        else:
-            control = [event.x, event.y, event.z, event.rx, event.ry, event.rz]
-            #print(event.type, event.x, event.y, event.z, event.rx, event.ry, event.rz)
-
-try:
-    spacenav.open()
-    #run()
-    #exit()
-    #thread = threading.Thread(target=run)
-    #thread.daemon = True
-    #thread.start()
-    print("thread in background")
-except SystemExit:
-    print("fail lol")
-    exit()
 
 if __name__ == '__main__':
 
@@ -70,6 +35,8 @@ if __name__ == '__main__':
                display=True,
                ignore_done=True,
                gripper_visualization=True, use_camera_obs=False)
+    env.viewer.add_keypress_callback('any', okp)
+    env.viewer.add_keyup_callback('any', oku)
 
     # function to return robot joint angles
 
@@ -134,17 +101,17 @@ if __name__ == '__main__':
         for i in range(100000):
             kk = 0.005
             control = [0 for _ in range(6)]
-            if ispressed['F1']:
+            if ispressed[glfw.KEY_F1]:
                 control[0] = kk
-            if ispressed[('F2')]:
+            if ispressed[(glfw.KEY_F2)]:
                 control[0] = -kk
-            if ispressed[('F3')]:
+            if ispressed[(glfw.KEY_F3)]:
                 control[1] = -kk
-            if ispressed[('F4')]:
+            if ispressed[(glfw.KEY_F4)]:
                 control[1] = kk
-            if ispressed[('F5')]:
+            if ispressed[(glfw.KEY_F5)]:
                 control[2] = -kk
-            if ispressed[('F6')]:
+            if ispressed[(glfw.KEY_F6)]:
                 control[2] = kk
             if flipflop['k']:
                 grasp = 1
@@ -178,7 +145,7 @@ if __name__ == '__main__':
 
             #action = np.random.randn(18)
             obs, reward, done, info = env.step(action)
-            print("reward", reward)
+            #print("reward", reward)
             env.render()
 
             # if i % 100 == 0:
