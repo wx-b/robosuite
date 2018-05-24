@@ -92,9 +92,7 @@ class BaxterHoleEnv(BaxterEnv):
     def _reset_internal(self):
         super()._reset_internal()
 
-    def reward(self, action):
-        reward = 0
-
+    def _compute_orientation(self):
         cyl_mat = self.sim.data.body_xmat[self.cyl_body_id]
         cyl_mat.shape = (3,3)
         cyl_pos = self.sim.data.body_xpos[self.cyl_body_id]
@@ -111,11 +109,16 @@ class BaxterHoleEnv(BaxterEnv):
         d = np.linalg.norm(np.cross(v, cyl_pos-center))/np.linalg.norm(v)
         
         hole_normal = hole_mat @ np.array([0,0,1])
+        return (t, d, abs(np.dot(hole_normal, v)/np.linalg.norm(hole_normal) \
+                                                /np.linalg.norm(v)))
+
+    def reward(self, action):
+        reward = 0
+
+        t, d, cos = self._compute_orientation()
 
         # Right location and angle
-        if d < 0.06 and t >= -0.12 and t <= 0.14 and \
-            abs(np.dot(hole_normal, v)/np.linalg.norm(hole_normal) \
-                                      /np.linalg.norm(v)) > 0.95:
+        if d < 0.06 and t >= -0.12 and t <= 0.14 and cos > 0.95:
             reward = 1
 
         # use a shaping reward
@@ -144,14 +147,22 @@ class BaxterHoleEnv(BaxterEnv):
 
         # low-level object information
         if self.use_object_obs:
-            # position and rotation of object
+            # position and rotation of cylinder and hole
             hole_pos = self.sim.data.body_xpos[self.hole_body_id]
             hole_quat = self.sim.data.body_xquat[self.hole_body_id]
             di['hole_pos'] = hole_pos
             di['hole_quat'] = hole_quat
 
-            gripper_site_pos = self.sim.data.body_xpos[self.cyl_body_id]
-            di['cyl_to_hole'] = gripper_site_pos - hole_pos
+            cyl_pos = self.sim.data.body_xpos[self.cyl_body_id]
+            cyl_quat = self.sim.data.body_xquat[self.cyl_body_id]
+            di['cyl_to_hole'] = cyl_pos - hole_pos
+            di['cyl_quat'] = cyl_quat
+
+            # Relative orientation parameters
+            t, d, cos = self._compute_orientation()
+            di['angle'] = cos
+            di['t'] = t
+            di['d'] = d
 
         return di
 
