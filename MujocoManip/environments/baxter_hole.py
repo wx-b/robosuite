@@ -82,7 +82,7 @@ class BaxterHoleEnv(BaxterEnv):
 
         self.model.merge_asset(self.cylinder)
         self.model.worldbody.find(".//body[@name='right_hand']").append(self.cyl_obj)
-        self.model.worldbody.find(".//geom[@name='cylinder']").set('rgba','0 0 1 1')
+        self.model.worldbody.find(".//geom[@name='cylinder']").set('rgba','0 1 0 1')
 
     def _get_reference(self):
         super()._get_reference()
@@ -163,6 +163,13 @@ class BaxterHoleEnv(BaxterEnv):
             di['angle'] = cos
             di['t'] = t
             di['d'] = d
+
+        # proprioception
+        di['proprio'] = np.concatenate([
+            np.sin(di['joint_pos']),
+            np.cos(di['joint_pos']),
+            di['joint_vel'],
+        ])
 
         return di
 

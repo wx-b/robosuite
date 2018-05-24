@@ -65,7 +65,6 @@ class BaxterEnv(MujocoEnv):
         self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.robot_joints]
 
         # indices for grippers in qpos, qvel
-        print(self.has_gripper_left, self.has_gripper_right)
         if self.has_gripper_left:
             self.gripper_left_joints = list(self.gripper_left.joints)
             self._ref_gripper_left_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.gripper_left_joints]
