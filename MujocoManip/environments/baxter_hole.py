@@ -83,8 +83,10 @@ class BaxterHoleEnv(BaxterEnv):
 
         self.cyl_obj = self.cylinder.get_collision(name='cylinder', site=True)
         self.cyl_obj.set('pos','0 0 0.15')
+
         self.model.merge_asset(self.cylinder)
         self.model.worldbody.find(".//body[@name='right_hand']").append(self.cyl_obj)
+        self.model.worldbody.find(".//geom[@name='cylinder']").set('rgba','0 0 1 1')
 
     def _get_reference(self):
         super()._get_reference()
