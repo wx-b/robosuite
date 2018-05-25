@@ -127,7 +127,7 @@ class BaxterHoleEnv(BaxterEnv):
             hole_pos = self.sim.data.body_xpos[self.hole_body_id]
             gripper_site_pos = self.sim.data.body_xpos[self.cyl_body_id]
             dist = np.linalg.norm(gripper_site_pos - hole_pos)
-            reaching_reward = 1 - np.tanh(3*dist)
+            reaching_reward = 1 - np.tanh(1.0*dist)
             reward += reaching_reward
 
         return reward
