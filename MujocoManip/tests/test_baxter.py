@@ -11,9 +11,10 @@ if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
     #env = make("BaxterStackEnv", display=True, ignore_done=True, show_gripper_visualization=True, use_camera_obs=False)
-    #env = make("BaxterLiftEnv", display=True, ignore_done=True, show_gripper_visualization=True, use_camera_obs=False, use_eef_ctrl=True)
-    env = make("BaxterHoleEnv", display=True, ignore_done=True, show_gripper_visualization=True, use_camera_obs=False, use_eef_ctrl=not True)
-
+    env = make("BaxterLiftEnv", display=True, ignore_done=True, show_gripper_visualization=True, use_camera_obs=False, use_eef_ctrl=True)
+    # env = make("BaxterHoleEnv", display=True, ignore_done=True, show_gripper_visualization=True, use_camera_obs=False, use_eef_ctrl=not True)
+    # print(env.model.get_xml())
+    # exit(0)
     obs = env.reset()
     # rotate the gripper so we can see it easily 
     #env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708]*2)
@@ -46,7 +47,7 @@ if __name__ == '__main__':
             obs, reward, done, info = env.step(action)
             env.render()
             print(reward)
-            print(env._peg_pose_in_hole_frame())
+            # print(env._peg_pose_in_hole_frame())
 
 
             if i % 100 == 0:

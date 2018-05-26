@@ -16,7 +16,7 @@ class BaxterLiftEnv(BaxterEnv):
                  use_camera_obs=True,
                  use_object_obs=True,
                  camera_name='frontview',
-                 reward_shaping=False,
+                 reward_shaping=True,
                  gripper_visualization=False,
                  **kwargs):
         """
@@ -35,7 +35,7 @@ class BaxterLiftEnv(BaxterEnv):
         # initialize objects of interest
         cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
                                size_max=[0.025, 0.025, 0.025])
-        pot = DefaultPotObject()
+        pot = DefaultStockPotObject()
         #pot = cube
         self.mujoco_objects = OrderedDict([('pot', pot)])
 
@@ -78,6 +78,8 @@ class BaxterLiftEnv(BaxterEnv):
     def _get_reference(self):
         super()._get_reference()
         self.cube_body_id = self.sim.model.body_name2id('pot')
+        self.handle_1_site_id = self.sim.model.site_name2id('pot_handle_1')
+        self.handle_2_site_id = self.sim.model.site_name2id('pot_handle_2')
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -97,10 +99,21 @@ class BaxterLiftEnv(BaxterEnv):
         if self.reward_shaping:
             # reaching reward
             cube_pos = self.sim.data.body_xpos[self.cube_body_id]
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            dist = np.linalg.norm(gripper_site_pos - cube_pos)
-            reaching_reward = 1 - np.tanh(10.0 * dist)
-            reward += reaching_reward
+            l_gripper_site_pos = self.sim.data.site_xpos[self.left_eef_site_id]
+            r_gripper_site_pos = self.sim.data.site_xpos[self.right_eef_site_id]
+
+            handle_1_pos = self.sim.data.site_xpos[self.handle_1_site_id]
+            handle_2_pos = self.sim.data.site_xpos[self.handle_2_site_id]
+
+            handle_reward_case_1 = 2
+            handle_reward_case_1 -= np.tanh(np.linalg.norm(l_gripper_site_pos - handle_1_pos))
+            handle_reward_case_1 -= np.tanh(np.linalg.norm(r_gripper_site_pos - handle_2_pos))
+
+            # handle_reward_case_2 = 2
+            # handle_reward_case_2 -= np.tanh(np.linalg.norm(r_gripper_site_pos - handle_1_pos))
+            # handle_reward_case_2 -= np.tanh(np.linalg.norm(l_gripper_site_pos - handle_2_pos))
+
+            reward += handle_reward_case_1
 
         return reward
 

@@ -50,7 +50,7 @@ class BaxterEnv(MujocoEnv):
 
     def _reset_internal(self):
         super()._reset_internal()
-        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos + 0.1 * np.random.normal(len(self._ref_joint_pos_indexes))
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos + 0.03 * np.random.normal(len(self._ref_joint_pos_indexes))
 
         if self.has_gripper_right:
             self.sim.data.qpos[self._ref_joint_gripper_right_actuator_indexes] = self.gripper_right.init_qpos
@@ -69,11 +69,13 @@ class BaxterEnv(MujocoEnv):
             self.gripper_left_joints = list(self.gripper_left.joints)
             self._ref_gripper_left_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.gripper_left_joints]
             self._ref_gripper_left_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.gripper_left_joints]
+            self.left_eef_site_id = self.sim.model.site_name2id('l_g_grip_site')
 
         if self.has_gripper_right:
             self.gripper_right_joints = list(self.gripper_right.joints)
             self._ref_gripper_right_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.gripper_right_joints]
             self._ref_gripper_right_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.gripper_right_joints]
+            self.right_eef_site_id = self.sim.model.site_name2id('grip_site')
 
         # indices for joint pos actuation, joint vel actuation, gripper actuation
         self._ref_joint_pos_actuator_indexes = [self.sim.model.actuator_name2id(actuator)
