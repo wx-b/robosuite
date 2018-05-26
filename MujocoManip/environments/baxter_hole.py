@@ -107,7 +107,7 @@ class BaxterHoleEnv(BaxterEnv):
 
         t = (center - cyl_pos)@v / (np.linalg.norm(v)**2)
         d = np.linalg.norm(np.cross(v, cyl_pos-center))/np.linalg.norm(v)
-        
+
         hole_normal = hole_mat @ np.array([0,0,1])
         return (t, d, abs(np.dot(hole_normal, v)/np.linalg.norm(hole_normal) \
                                                 /np.linalg.norm(v)))
@@ -129,6 +129,11 @@ class BaxterHoleEnv(BaxterEnv):
             dist = np.linalg.norm(gripper_site_pos - hole_pos)
             reaching_reward = 1 - np.tanh(1.0*dist)
             reward += reaching_reward
+
+            # Orientation reward
+            reward += 1 - np.tanh(d)
+            reward += 1 - np.tanh(np.abs(t))
+            reward += cos
 
         return reward
 
