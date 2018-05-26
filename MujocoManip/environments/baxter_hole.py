@@ -4,6 +4,7 @@ from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.baxter import BaxterEnv
 from MujocoManip.models import *
 from MujocoManip.models.model_util import xml_path_completion, array_to_string, joint
+import MujocoManip.miscellaneous.utils as U
 
 
 class BaxterHoleEnv(BaxterEnv):
@@ -136,6 +137,25 @@ class BaxterHoleEnv(BaxterEnv):
             reward += cos
 
         return reward
+
+    def _peg_pose_in_hole_frame(self):
+        """
+        A helper function that takes in a named data field and returns the pose of that
+        object in the base frame.
+        """
+        # World frame
+        peg_pos_in_world = self.sim.data.get_body_xpos('cylinder')
+        peg_rot_in_world = self.sim.data.get_body_xmat('cylinder').reshape((3, 3))
+        peg_pose_in_world = U.make_pose(peg_pos_in_world, peg_rot_in_world)
+        # World frame
+        hole_pos_in_world = self.sim.data.get_body_xpos('hole')
+        hole_rot_in_world = self.sim.data.get_body_xmat('hole').reshape((3, 3))
+        hole_pose_in_world = U.make_pose(hole_pos_in_world, hole_rot_in_world)
+
+        world_pose_in_hole = U.pose_inv(hole_pose_in_world)
+
+        peg_pose_in_hole = U.pose_in_A_to_pose_in_B(peg_pose_in_world, world_pose_in_hole)
+        return peg_pose_in_hole
 
     def _get_observation(self):
         di = super()._get_observation()

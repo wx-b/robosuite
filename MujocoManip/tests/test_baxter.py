@@ -46,6 +46,7 @@ if __name__ == '__main__':
             obs, reward, done, info = env.step(action)
             env.render()
             print(reward)
+            print(env._peg_pose_in_hole_frame())
 
 
             if i % 100 == 0:
