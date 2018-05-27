@@ -39,7 +39,6 @@
     <exclude body1="collision_head_link_2" body2="torso" />
   </contact>
   <worldbody>
-	  <light directional="false" cutoff="90" exponent="1" diffuse="1 1 1" specular="0 0 0" pos="1 0 1.5" dir="-1 0 -2.5" />
     <body name="base" pos="0 0 0">
       <inertial pos="0 0 0" mass="10" diaginertia="0.001 0.001 0.001" />
       <body name="collision_head_link_1" pos="0.11 0 0.75">

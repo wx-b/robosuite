@@ -33,8 +33,8 @@ class BaxterLiftEnv(BaxterEnv):
             @reward_shaping, using a shaping reward
         """
         # initialize objects of interest
-        cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                               size_max=[0.025, 0.025, 0.025])
+        # cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
+        #                        size_max=[0.025, 0.025, 0.025])
         pot = DefaultStockPotObject()
         #pot = cube
         self.mujoco_objects = OrderedDict([('pot', pot)])
