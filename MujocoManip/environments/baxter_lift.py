@@ -87,6 +87,8 @@ class BaxterLiftEnv(BaxterEnv):
         self.cube_body_id = self.sim.model.body_name2id('pot')
         self.handle_1_site_id = self.sim.model.site_name2id('pot_handle_1')
         self.handle_2_site_id = self.sim.model.site_name2id('pot_handle_2')
+        self.table_top_id = self.sim.model.site_name2id('table_top')
+        self.pot_bottom_id = self.sim.model.site_name2id('pot_bottom')
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -95,8 +97,8 @@ class BaxterLiftEnv(BaxterEnv):
 
     def reward(self, action):
         reward = 0
-        cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
-        table_height = self.table_size[2]
+        cube_height = self.sim.data.site_xpos[self.pot_bottom_id][2]
+        table_height = self.sim.data.site_xpos[self.table_top_id][2]
 
         # cube is higher than the table top above a margin
         if cube_height > table_height + 0.10:
@@ -104,6 +106,7 @@ class BaxterLiftEnv(BaxterEnv):
 
         # use a shaping reward
         if self.reward_shaping:
+            reward = 10 * (cube_height - table_height)
             # reaching reward
             cube_pos = self.sim.data.body_xpos[self.cube_body_id]
             l_gripper_site_pos = self.sim.data.site_xpos[self.left_eef_site_id]
@@ -121,6 +124,9 @@ class BaxterLiftEnv(BaxterEnv):
             # handle_reward_case_2 -= np.tanh(np.linalg.norm(l_gripper_site_pos - handle_2_pos))
 
             reward += handle_reward_case_1
+
+            # height reward
+            
 
         return reward
 
