@@ -34,7 +34,7 @@ class SawyerBinsEnv(SawyerEnv):
         """
         # initialize objects of interest
 
-        self.n_each_object = 2
+        self.n_each_object = 1
         # ob_inits = [DefaultCerealObject, DefaultBreadObject, DefaultLemonObject, DefaultMilkObject]
         self.ob_inits = [DefaultMilkObject, DefaultBreadObject, DefaultCerealObject, DefaultCanObject]
         self.vis_inits = [DefaultMilkVisualObject, DefaultBreadVisualObject, DefaultCerealVisualObject, DefaultCanVisualObject]
