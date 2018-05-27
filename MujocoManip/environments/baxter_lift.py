@@ -52,6 +52,10 @@ class BaxterLiftEnv(BaxterEnv):
         # reward configuration
         self.reward_shaping = reward_shaping
 
+        self.object_initializer = UniformRandomSampler(x_range=(-0.4, 0.4),
+                                                       y_range=(-0.4, 0.4),
+                                                       z_rotation=(-0.2 * np.pi, 0.2 * np.pi))
+
         super().__init__(gripper_left='LeftTwoFingerGripper',
                          gripper_right='TwoFingerGripper',
                          use_eef_ctrl=use_eef_ctrl,
@@ -72,7 +76,10 @@ class BaxterLiftEnv(BaxterEnv):
         self.mujoco_arena.set_origin([0.45 + self.table_size[0] / 2,0,0])
 
         # task includes arena, robot, and objects of interest
-        self.model = TableTopTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects)
+        self.model = TableTopTask(self.mujoco_arena,
+                                  self.mujoco_robot,
+                                  self.mujoco_objects,
+                                  self.object_initializer)
         self.model.place_objects()
 
     def _get_reference(self):

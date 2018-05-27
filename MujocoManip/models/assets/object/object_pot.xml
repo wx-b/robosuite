@@ -5,21 +5,45 @@
     </asset>
     <worldbody>
         <body name="collision">
-            <geom type="mesh" mesh="potmesh" pos="0 0 0.5" group="1" friction="10 10 10"/>
-            <!-- TODO: Why are we putting collision mesh in group=1?-->
-            <!-- <site name="x" type="sphere" size="0.03" pos="0.15 0 0.6" rgba="0 1 0 0.5"/>
-            <site name="y" type="sphere" size="0.03" pos="0 0.15 0.6" rgba="0 0 1 0.5"/> -->
-            <site name="pot_handle_1" size="0.005 0.005 0.005" pos="0.15 0 0.592"/>
-            <site name="pot_handle_2" size="0.005 0.005 0.005" pos="-0.15 0 0.592"/>
+            <geom type="box" size="0.07 0.07 0.07"  group="1"/>
+            <body>
+            <!-- x handle -->
+                <geom type="box" pos="0 0.13 0.065" size="0.045 0.005 0.005" rgba="1 0 0 1"  group="1"/>
+                <geom type="box" pos="-0.04 0.1 0.065" size="0.005 0.03 0.005" rgba="1 0 0 1"  group="1"/>
+                <geom type="box" pos="0.04 0.1 0.065" size="0.005 0.03 0.005" rgba="1 0 0 1"  group="1"/>
+            </body>
+            <body>
+            <!-- -x handle -->
+                <geom type="box" pos="0 -0.13 0.065" size="0.045 0.005 0.005" rgba="0 1 0 1" group="1"/>
+                <geom type="box" pos="-0.04 -0.1 0.065" size="0.005 0.03 0.005" rgba="0 1 0 1" group="1"/>
+                <geom type="box" pos="0.04 -0.1 0.065" size="0.005 0.03 0.005" rgba="0 1 0 1" group="1"/>
+            </body>
+            <!-- <geom type="mesh" mesh="potmesh" pos="0 0 0.5" group="1" friction="10 10 10"/> -->
+            <site name="pot_handle_1" size="0.005" rgba="1 0 0 1" pos="0 0.13 0.065"/>
+            <site name="pot_handle_2" size="0.005" rgba="0 1 0 1" pos="0 -0.13 0.065"/>
         </body>
         <body name="visual">
-       	    <inertial pos="0 0 0" mass="1" diaginertia="1 1 1" />
-            <geom type="mesh" mesh="potmesh" pos="0 0 0.5" />
-
+            <geom type="box" size="0.07 0.07 0.07"/>
+            <body>
+            <!-- x handle -->
+                <geom type="box" pos="0 0.13 0.065" size="0.045 0.005 0.005" rgba="1 0 0 1"/>
+                <geom type="box" pos="-0.04 0.1 0.065" size="0.005 0.03 0.005" rgba="1 0 0 1"/>
+                <geom type="box" pos="0.04 0.1 0.065" size="0.005 0.03 0.005" rgba="1 0 0 1"/>
+            </body>
+            <body>
+            <!-- -x handle -->
+                <geom type="box" pos="0 -0.13 0.065" size="0.045 0.005 0.005" rgba="0 1 0 1" />
+                <geom type="box" pos="-0.04 -0.1 0.065" size="0.005 0.03 0.005" rgba="0 1 0 1" />
+                <geom type="box" pos="0.04 -0.1 0.065" size="0.005 0.03 0.005" rgba="0 1 0 1" />
+            </body>
+            <!-- <geom type="mesh" mesh="potmesh" pos="0 0 0.5" group="1" friction="10 10 10"/> -->
+            <site name="pot_handle_1" size="0.005" rgba="1 0 0 1" pos="0 0.13 0.065"/>
+            <site name="pot_handle_2" size="0.005" rgba="0 1 0 1" pos="0 -0.13 0.065"/>
+            <!-- <geom type="mesh" mesh="potmesh" pos="0 0 0.5" group="1" friction="10 10 10"/> -->
         </body>
         <!-- These sites are for stacking objects, for aligning objects on a table for example. -->
-	<site pos="0 0 0.4" name="bottom_site"/>
-    <site pos="0.17 0 0.17" name="top_site"/>
-	<site pos="0.17 0 0" name="horizontal_radius_site"/>
+	<site pos="0 0 -0.07" name="bottom_site"/>
+    <site pos="0 0 0.05" name="top_site"/>
+	<site pos="0.15 0 0" name="horizontal_radius_site"/>
     </worldbody>
 </mujoco>
