@@ -33,18 +33,6 @@ class SawyerStackEnv(SawyerEnv):
             @reward_shaping, using a shaping reward
             @gripper_visualization: visualizing gripper site
         """
-        # initialize objects of interest
-        cubeA = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                                size_max=[0.02, 0.02, 0.02],
-                                rgba=[1,0,0,1])
-        cubeB = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
-                                size_max=[0.025, 0.025, 0.025],
-                                rgba=[0,1,0,1])
-        self.mujoco_objects = OrderedDict([
-            ('cubeA', cubeA),
-            ('cubeB', cubeB)
-        ])
-        self.n_objects = len(self.mujoco_objects)
 
         # settings for table top
         self.table_size = table_size
@@ -60,10 +48,11 @@ class SawyerStackEnv(SawyerEnv):
         if placement_initializer:
             self.placement_initializer = placement_initializer
         else:
-            self.placement_initializer = UniformRandomSampler(x_range=[-0.2, 0.2],
-                                                              y_range=[-0.2, 0.2],
-                                                              ensure_object_boundary_in_range=False,
-                                                              z_rotation=True)
+            self.placement_initializer = UniformRandomSampler(
+                x_range=[-0.08, 0.08],
+                y_range=[-0.08, 0.08],
+                ensure_object_boundary_in_range=False,
+                z_rotation=True)
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
@@ -97,6 +86,19 @@ class SawyerStackEnv(SawyerEnv):
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
 
+        # initialize objects of interest
+        cubeA = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
+                                size_max=[0.02, 0.02, 0.02],
+                                rgba=[1,0,0,1])
+        cubeB = RandomBoxObject(size_min=[0.025, 0.025, 0.025],
+                                size_max=[0.025, 0.025, 0.025],
+                                rgba=[0,1,0,1])
+        self.mujoco_objects = OrderedDict([
+            ('cubeA', cubeA),
+            ('cubeB', cubeB)
+        ])
+        self.n_objects = len(self.mujoco_objects)
+
         # task includes arena, robot, and objects of interest
         self.model = TableTopTask(self.mujoco_arena, 
                                 self.mujoco_robot, 
@@ -113,6 +115,11 @@ class SawyerStackEnv(SawyerEnv):
         super()._reset_internal()
         # inherited class should reset positions of objects
         self.model.place_objects()
+        # reset joint positions
+        init_pos = np.array([-0.5538, -0.8208,  0.4155, 1.8409,
+                             -0.4955, 0.6482,  1.9628])
+        init_pos += np.random.randn(init_pos.shape[0]) * 0.02
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = np.array(init_pos)
 
     def reward(self, action):
         r_reach, r_lift, r_stack = self.staged_rewards()
