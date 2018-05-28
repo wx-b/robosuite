@@ -110,7 +110,7 @@ class SawyerLiftEnv(SawyerEnv):
         table_height = self.table_size[2]
 
         # cube is higher than the table top above a margin
-        if cube_height > table_height + 0.03:
+        if cube_height > table_height + 0.04:
             reward = 1.0
 
         # use a shaping reward
