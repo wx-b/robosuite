@@ -90,6 +90,9 @@ class SawyerLiftEnv(SawyerEnv):
     def _get_reference(self):
         super()._get_reference()
         self.cube_body_id = self.sim.model.body_name2id('cube')
+        self.l_finger_geom_id = self.sim.model.geom_name2id('l_fingertip_g0')
+        self.r_finger_geom_id = self.sim.model.geom_name2id('r_fingertip_g0')
+        self.cube_geom_id = self.sim.model.geom_name2id('cube')
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -107,17 +110,34 @@ class SawyerLiftEnv(SawyerEnv):
         table_height = self.table_size[2]
 
         # cube is higher than the table top above a margin
-        if cube_height > table_height + 0.04:
+        if cube_height > table_height + 0.03:
             reward = 1.0
 
         # use a shaping reward
         if self.reward_shaping:
+
             # reaching reward
             cube_pos = self.sim.data.body_xpos[self.cube_body_id]
             gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
             dist = np.linalg.norm(gripper_site_pos - cube_pos)
             reaching_reward = 1 - np.tanh(10.0 * dist)
             reward += reaching_reward
+
+            # grasping reward
+            touch_left_finger = False
+            touch_right_finger = False
+            for i in range(self.sim.data.ncon):
+                c = self.sim.data.contact[i]
+                if c.geom1 == self.l_finger_geom_id and c.geom2 == self.cube_geom_id:
+                    touch_left_finger = True
+                if c.geom1 == self.cube_geom_id and c.geom2 == self.l_finger_geom_id:
+                    touch_left_finger = True
+                if c.geom1 == self.r_finger_geom_id and c.geom2 == self.cube_geom_id:
+                    touch_right_finger = True
+                if c.geom1 == self.cube_geom_id and c.geom2 == self.r_finger_geom_id:
+                    touch_right_finger = True
+            if touch_right_finger and touch_right_finger:
+                reward += 0.25
 
         return reward
 
