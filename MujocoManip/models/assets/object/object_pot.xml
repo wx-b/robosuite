@@ -21,6 +21,7 @@
             <!-- <geom type="mesh" mesh="potmesh" pos="0 0 0.5" group="1" friction="10 10 10"/> -->
             <site name="pot_handle_1" size="0.005" rgba="0 1 0 1" pos="0 0.13 0.065"/>
             <site name="pot_handle_2" size="0.005" rgba="0 0 1 1" pos="0 -0.13 0.065"/>
+            <site name="pot_center" size="0.005" rgba="1 0 0 0" pos="0 0 0"/>
             <site name="pot_bottom" size="0.005" rgba="1 0 0 0" pos="0 0 -0.07"/>
         </body>
         <body name="visual">

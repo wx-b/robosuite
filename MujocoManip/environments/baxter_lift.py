@@ -89,6 +89,7 @@ class BaxterLiftEnv(BaxterEnv):
         self.handle_2_site_id = self.sim.model.site_name2id('pot_handle_2')
         self.table_top_id = self.sim.model.site_name2id('table_top')
         self.pot_bottom_id = self.sim.model.site_name2id('pot_bottom')
+        self.pot_center_id = self.sim.model.site_name2id('pot_center')
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -97,7 +98,7 @@ class BaxterLiftEnv(BaxterEnv):
 
     def reward(self, action):
         reward = 0
-        cube_height = self.sim.data.site_xpos[self.pot_bottom_id][2]
+        cube_height = self.sim.data.site_xpos[self.pot_center_id][2] - 0.07
         table_height = self.sim.data.site_xpos[self.table_top_id][2]
 
         # cube is higher than the table top above a margin
