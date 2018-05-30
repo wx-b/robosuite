@@ -122,24 +122,23 @@ class SawyerPegsEnv(SawyerEnv):
     def reward(self, action = None):
         reward = 0
         num_obj_on_peg = 0
-        num_obj_total = 0
+        num_obj_total = self.n_each_object * len(self.ob_inits)
 
-        if self.reward_shaping:
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            for i in range(self.n_each_object):
-                for j in range(len(self.ob_inits)):
-                    r_on_peg, r_lift = 0, 0
-                    obj_str = str(self.ob_inits[j]) + '{}'.format(i)
-                    obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
-                    dist = np.linalg.norm(gripper_site_pos - obj_pos)
-                    r_reach = 1 - np.tanh(10.0 * dist)
-                    if r_reach < 0.6 and self.on_peg(obj_pos,j):
-                        r_on_peg = 0.25
-                    if self._check_contact() and obj_pos[2] > self.model.shelf_offset[2] + 0.05:
-                        r_lift = 0.05
-                    if r_on_peg > 0:
-                        num_obj_on_peg += 1
-                    num_obj_total += 1
+        gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+        for i in range(self.n_each_object):
+            for j in range(len(self.ob_inits)):
+                r_on_peg, r_lift = 0, 0
+                obj_str = str(self.ob_inits[j]) + '{}'.format(i)
+                obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
+                dist = np.linalg.norm(gripper_site_pos - obj_pos)
+                r_reach = 1 - np.tanh(10.0 * dist)
+                if r_reach < 0.6 and self.on_peg(obj_pos,j):
+                    r_on_peg = 0.25
+                if self._check_contact() and obj_pos[2] > self.model.shelf_offset[2] + 0.05:
+                    r_lift = 0.05
+                if r_on_peg > 0:
+                    num_obj_on_peg += 1
+                if self.reward_shaping:
                     reward += max(r_on_peg, r_lift)
 
         if num_obj_total == num_obj_on_peg:
