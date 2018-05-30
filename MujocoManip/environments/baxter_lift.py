@@ -35,7 +35,7 @@ class BaxterLiftEnv(BaxterEnv):
         # initialize objects of interest
         # cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
         #                        size_max=[0.025, 0.025, 0.025])
-        pot = DefaultStockPotObject()
+        pot = GeneratedPotObject()
         #pot = cube
         self.mujoco_objects = OrderedDict([('pot', pot)])
 
@@ -88,7 +88,6 @@ class BaxterLiftEnv(BaxterEnv):
         self.handle_1_site_id = self.sim.model.site_name2id('pot_handle_1')
         self.handle_2_site_id = self.sim.model.site_name2id('pot_handle_2')
         self.table_top_id = self.sim.model.site_name2id('table_top')
-        self.pot_bottom_id = self.sim.model.site_name2id('pot_bottom')
         self.pot_center_id = self.sim.model.site_name2id('pot_center')
 
     def _reset_internal(self):
@@ -154,6 +153,12 @@ class BaxterLiftEnv(BaxterEnv):
 
             gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
             di['gripper_to_cube'] = gripper_site_pos - cube_pos
+
+            di['low-level'] = np.concatenate([
+                di['cube_pos'],
+                di['cube_quat'],
+                di['gripper_to_cube'],
+            ])
 
         # proprioception
         di['proprio'] = np.concatenate([

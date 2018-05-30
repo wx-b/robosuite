@@ -189,6 +189,16 @@ class BaxterHoleEnv(BaxterEnv):
             di['t'] = t
             di['d'] = d
 
+            di['low-level'] = np.concatenate([
+                di['hole_pos'],
+                di['hole_quat'],
+                di['cyl_to_hole'],
+                di['cyl_quat'],
+                [di['angle']],
+                [di['t']],
+                [di['d']],
+            ])
+
         # proprioception
         di['proprio'] = np.concatenate([
             np.sin(di['joint_pos']),

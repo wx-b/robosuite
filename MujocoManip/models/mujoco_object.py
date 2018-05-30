@@ -259,7 +259,6 @@ class DefaultHoleObject(MujocoXMLObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/object_hole.xml'))
 
-
 class MujocoGeneratedObject(MujocoObject):
     """
         Base class for all programmatically generated mujoco object
@@ -335,9 +334,9 @@ class MujocoGeneratedObject(MujocoObject):
 
     # returns a copy, Returns xml body node
     def _get_collision(self, name=None, site=False, ob_type='box'):
-        body = ET.Element('body')
+        main_body = ET.Element('body')
         if name is not None:
-            body.set('name', name)
+            main_body.set('name', name)
         template = self.get_collision_attrib_template()
         if name is not None:
             template['name'] = name
@@ -346,32 +345,193 @@ class MujocoGeneratedObject(MujocoObject):
         template['size'] = array_to_string(self.size)
         template['density'] = str(self.density)
         template['friction'] = array_to_string(self.friction)
-        body.append(ET.Element('geom', attrib=template))
+        main_body.append(ET.Element('geom', attrib=template))
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
             if name is not None:
                 template['name'] = name
-            body.append(ET.Element('site', attrib=template))
-        return body
+            main_body.append(ET.Element('site', attrib=template))
+        return main_body
 
     # returns a copy, Returns xml body node
     def _get_visual(self, name=None, site=False, ob_type='box'):
-        body = ET.Element('body')
+        main_body = ET.Element('body')
         if name is not None:
-            body.set('name', name)
+            main_body.set('name', name)
         template = self.get_visual_attrib_template()
         template['type'] = ob_type
         template['rgba'] = array_to_string(self.rgba)
         template['size'] = array_to_string(self.size) 
-        body.append(ET.Element('geom', attrib=template))
+        main_body.append(ET.Element('geom', attrib=template))
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
             if name is not None:
                 template['name'] = name
-            body.append(ET.Element('site', attrib=template))
-        return body
+            main_body.append(ET.Element('site', attrib=template))
+        return main_body
+
+
+class GeneratedPotObject(MujocoGeneratedObject):
+    """ 
+        Handle extends in y_direction and has width in x direction
+        <geom type="box" size="0.07 0.07 0.07" rgba="1 0 0 1" group="1"/>
+            <body>
+            <!-- x handle -->
+                <geom type="box" pos="0 0.13 0.065" size="0.045 0.005 0.005" rgba="0 1 0 1"  group="1"/>
+                <geom type="box" pos="-0.04 0.1 0.065" size="0.005 0.03 0.005" rgba="0 1 0 1"  group="1"/>
+                <geom type="box" pos="0.04 0.1 0.065" size="0.005 0.03 0.005" rgba="0 1 0 1"  group="1"/>
+            </body>
+            <body>
+            <!-- -x handle -->
+                <geom type="box" pos="0 -0.13 0.065" size="0.045 0.005 0.005" rgba="0 0 1 1" group="1"/>
+                <geom type="box" pos="-0.04 -0.1 0.065" size="0.005 0.03 0.005" rgba="0 0 1 1" group="1"/>
+                <geom type="box" pos="0.04 -0.1 0.065" size="0.005 0.03 0.005" rgba="0 0 1 1" group="1"/>
+            </body>
+            <site name="pot_handle_1" size="0.005" rgba="0 1 0 1" pos="0 0.13 0.065"/>
+            <site name="pot_handle_2" size="0.005" rgba="0 0 1 1" pos="0 -0.13 0.065"/>
+            <site name="pot_center" size="0.005" rgba="1 0 0 0" pos="0 0 0"/>
+    """
+    def __init__(self,
+                 body_half_size=None,
+                 handle_radius=0.005,
+                 handle_length=0.15,
+                 handle_width=0.09,
+                 rgba_body=None,
+                 rgba_handle_1=None,
+                 rgba_handle_2=None,
+                 density=3000, # 3 * water, 3 * mujoco default
+                ):
+        super().__init__()
+        if body_half_size: 
+            self.body_half_size = body_half_size 
+        else: 
+            self.body_half_size =  np.array([0.07, 0.07, 0.07])
+        self.handle_radius = handle_radius
+        self.handle_length = handle_length
+        self.handle_width = handle_width
+        if rgba_body: 
+            self.rgba_body = np.array(rgba_body) 
+        else: 
+            self.rgba_body = RED
+        if rgba_handle_1:
+            self.rgba_handle_1 = np.array(rgba_handle_1) 
+        else: 
+            self.rgba_handle_1 = GREEN
+        if rgba_handle_2: 
+            self.rgba_handle_2 = np.array(rgba_handle_2) 
+        else:
+            self.rgba_handle_2 =  BLUE
+        self.density = density
+        # TODO: would friction even help?
+    
+    def get_bottom_offset(self):
+        return np.array([0, 0, -1 * self.body_half_size[2]])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.body_half_size[2]])
+
+    def get_horizontal_radius(self):
+        print("Warning: Pot object in general do not expect get_horizontal_radius to be called")
+        return np.sqrt(2) * (max(self.body_half_size) + self.handle_length)
+
+    def get_collision(self, name=None, site=None):
+        main_body = gen_body()
+        if name is not None:
+            main_body.set('name', name)
+        main_body.append(gen_geom(geom_type='box',
+                         size=self.body_half_size,
+                         rgba=self.rgba_body,
+                         group=1))
+        # handle_z = self.body_half_size[2] - self.handle_radius
+        handle_z = 0
+        handle_1_center = [0,
+                           self.body_half_size[1] + self.handle_length,
+                           handle_z]
+        handle_2_center = [0,
+                           -1 * (self.body_half_size[1] + self.handle_length),
+                           handle_z]
+        # the bar on handle horizontal to body
+        main_bar_size = [self.handle_width / 2 + self.handle_radius,
+                         self.handle_radius,
+                         self.handle_radius]
+        side_bar_size = [self.handle_radius,
+                         self.handle_length / 2,
+                         self.handle_radius]
+        handle_1 = gen_body(name='handle_1')
+        handle_1.append(gen_geom(geom_type='box', 
+                             name='handle_1_c',
+                             pos=handle_1_center,
+                             size=main_bar_size,
+                             rgba=self.rgba_handle_1,
+                             group=1))
+        handle_1.append(gen_geom(geom_type='box',
+                             name='handle_1_+', # + for positive x
+                             pos=[self.handle_width / 2, 
+                                  self.body_half_size[0] + self.handle_length / 2,
+                                  handle_z],
+                             size=side_bar_size,
+                             rgba=self.rgba_handle_1,
+                             group=1))
+        handle_1.append(gen_geom(geom_type='box',
+                             name='handle_1_-',
+                             pos=[- self.handle_width / 2, 
+                                  self.body_half_size[0] + self.handle_length / 2,
+                                  handle_z],
+                             size=side_bar_size,
+                             rgba=self.rgba_handle_1,
+                             group=1))
+
+        handle_2 = gen_body(name="handle_2")
+        handle_2.append(gen_geom(geom_type='box', 
+                             name='handle_2_c',
+                             pos=handle_2_center,
+                             size=main_bar_size,
+                             rgba=self.rgba_handle_2,
+                             group=1))
+        handle_2.append(gen_geom(geom_type='box',
+                             name='handle_2_+', # + for positive x
+                             pos=[self.handle_width / 2, 
+                                  - self.body_half_size[0] - self.handle_length / 2,
+                                  handle_z],
+                             size=side_bar_size,
+                             rgba=self.rgba_handle_2,
+                             group=1))
+        handle_2.append(gen_geom(geom_type='box',
+                             name='handle_2_-',
+                             pos=[- self.handle_width / 2, 
+                                  - self.body_half_size[0] - self.handle_length / 2,
+                                  handle_z],
+                             size=side_bar_size,
+                             rgba=self.rgba_handle_2,
+                             group=1))
+
+        main_body.append(handle_1)
+        main_body.append(handle_2)
+        main_body.append(gen_site(name="pot_handle_1",
+                         rgba=self.rgba_handle_1,
+                         pos=handle_1_center,
+                         size=[self.handle_radius]))
+        main_body.append(gen_site(name="pot_handle_2",
+                         rgba=self.rgba_handle_2,
+                         pos=handle_2_center,
+                         size=[self.handle_radius]))
+        main_body.append(gen_site(name="pot_center", pos=[0, 0, 0]))
+        if site:
+            # add a site as well
+            template = self.get_site_attrib_template()
+            if name is not None:
+                template['name'] = name
+            main_body.append(ET.Element('site', attrib=template))
+        return main_body
+
+    def handle_geoms(self):
+        return ['handle_1_c', 'handle_1_+', 'handle_1_-', 
+                'handle_2_c', 'handle_2_+', 'handle_2_-']
+
+    def get_visual(self, name=None, site=None):
+        return self.get_collision(name, site)
 
 
 class BoxObject(MujocoGeneratedObject):
