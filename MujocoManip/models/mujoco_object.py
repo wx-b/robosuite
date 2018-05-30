@@ -158,6 +158,7 @@ class MujocoMeshObject(MujocoXML, MujocoObject):
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
+            template['rgba'] = '1 0 0 0'
             if name is not None:
                 template['name'] = name
             collision.append(ET.Element('site', attrib=template))
@@ -171,6 +172,7 @@ class MujocoMeshObject(MujocoXML, MujocoObject):
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
+            template['rgba'] = '1 0 0 0'
             if name is not None:
                 template['name'] = name
             visual.append(ET.Element('site', attrib=template))
@@ -230,6 +232,14 @@ class DefaultCerealObject(MujocoMeshObject):
 class DefaultAtomizerObject(MujocoMeshObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/atomizer.xml'))
+
+class DefaultSquareNutObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/square-nut.xml'))  
+
+class DefaultRoundNutObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/round-nut.xml'))        
 
 class DefaultMilkVisualObject(MujocoMeshObject):
     def __init__(self):
