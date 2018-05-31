@@ -110,6 +110,10 @@ class SawyerStackEnv(SawyerEnv):
         super()._get_reference()
         self.cubeA_body_id = self.sim.model.body_name2id('cubeA')
         self.cubeB_body_id = self.sim.model.body_name2id('cubeB')
+        self.l_finger_geom_id = self.sim.model.geom_name2id('l_fingertip_g0')
+        self.r_finger_geom_id = self.sim.model.geom_name2id('r_fingertip_g0')
+        self.cubeA_geom_id = self.sim.model.geom_name2id('cubeA')
+        self.cubeB_geom_id = self.sim.model.geom_name2id('cubeB')
 
     def _reset_internal(self):
         super()._reset_internal()
@@ -138,22 +142,36 @@ class SawyerStackEnv(SawyerEnv):
         cubeA_pos = self.sim.data.body_xpos[self.cubeA_body_id]
         gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
         dist = np.linalg.norm(gripper_site_pos - cubeA_pos)
-        r_reach = 1 - np.tanh(10.0 * dist)
+        r_reach = (1 - np.tanh(10.0 * dist)) * 0.25
+
+        # additional grasping reward
+        touch_left_finger = False
+        touch_right_finger = False
+        for i in range(self.sim.data.ncon):
+            c = self.sim.data.contact[i]
+            if c.geom1 == self.l_finger_geom_id and c.geom2 == self.cubeA_geom_id:
+                touch_left_finger = True
+            if c.geom1 == self.cubeA_geom_id and c.geom2 == self.l_finger_geom_id:
+                touch_left_finger = True
+            if c.geom1 == self.r_finger_geom_id and c.geom2 == self.cubeA_geom_id:
+                touch_right_finger = True
+            if c.geom1 == self.cubeA_geom_id and c.geom2 == self.r_finger_geom_id:
+                touch_right_finger = True
+        if touch_right_finger and touch_right_finger:
+            r_reach += 0.25
 
         # lifting is successful when the cube is above the table top
         # by a margin
         cubeA_height = cubeA_pos[2]
         table_height = self.table_size[2]
-        r_lift = 1.0 if cubeA_height > table_height + 0.045 else 0.0
+        r_lift = 1.0 if cubeA_height > table_height + 0.04 else 0.0
 
         # stacking is successful when the block is lifted and
         # the gripper is not holding the object
         r_stack = 0
-        if r_reach < 0.6 and r_lift > 0:
+        if (not touch_left_finger and not touch_right_finger) and r_lift > 0:
             r_stack = 2.0
 
-        # print("reach: %.2f lift: %.2f stack: %.2f final: %.2f"%
-        #     (r_reach, r_lift, r_stack, max(r_reach, r_lift, r_stack)))
         return (r_reach, r_lift, r_stack)
 
     def _get_observation(self):
