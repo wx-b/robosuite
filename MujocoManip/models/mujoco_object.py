@@ -433,7 +433,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         return np.array([0, 0, self.body_half_size[2]])
 
     def get_horizontal_radius(self):
-        print("Warning: Pot object in general do not expect get_horizontal_radius to be called")
+        # print("Warning: Pot object in general do not expect get_horizontal_radius to be called")
         return np.sqrt(2) * (max(self.body_half_size) + self.handle_length)
 
     def get_collision(self, name=None, site=None):
@@ -527,8 +527,14 @@ class GeneratedPotObject(MujocoGeneratedObject):
         return main_body
 
     def handle_geoms(self):
-        return ['handle_1_c', 'handle_1_+', 'handle_1_-', 
+        return ['handle_1_c', 'handle_1_+', 'handle_1_-',
                 'handle_2_c', 'handle_2_+', 'handle_2_-']
+
+    def handle_1_geoms(self):
+        return ['handle_1_c', 'handle_1_+', 'handle_1_-']
+
+    def handle_2_geoms(self):
+        return ['handle_2_c', 'handle_2_+', 'handle_2_-']
 
     def get_visual(self, name=None, site=None):
         return self.get_collision(name, site)

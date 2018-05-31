@@ -200,6 +200,16 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.t = 0
         self.done = False
 
+    def find_contacts(self, geoms_1, geoms_2):
+        for contact in self.sim.data.contact[0:self.sim.data.ncon]:
+            if (self.sim.model.geom_id2name(contact.geom1) in geoms_1 \
+            and self.sim.model.geom_id2name(contact.geom2) == geoms_2) or \
+            (self.sim.model.geom_id2name(contact.geom2) in geoms_1 \
+            and self.sim.model.geom_id2name(contact.geom1) == geoms_2):
+                yield contact
+
+
+
     def _check_contact(self):
         """
         Returns True if gripper is in contact with an object.

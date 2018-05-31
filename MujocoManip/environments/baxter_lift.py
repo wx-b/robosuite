@@ -35,9 +35,9 @@ class BaxterLiftEnv(BaxterEnv):
         # initialize objects of interest
         # cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
         #                        size_max=[0.025, 0.025, 0.025])
-        pot = GeneratedPotObject()
+        self.pot = GeneratedPotObject()
         #pot = cube
-        self.mujoco_objects = OrderedDict([('pot', pot)])
+        self.mujoco_objects = OrderedDict([('pot', self.pot)])
 
         # settings for table top
         self.table_size = table_size
@@ -106,7 +106,9 @@ class BaxterLiftEnv(BaxterEnv):
 
         # use a shaping reward
         if self.reward_shaping:
+            # Height reward
             reward = 10 * (cube_height - table_height)
+
             # reaching reward
             cube_pos = self.sim.data.body_xpos[self.cube_body_id]
             l_gripper_site_pos = self.sim.data.site_xpos[self.left_eef_site_id]
@@ -115,18 +117,23 @@ class BaxterLiftEnv(BaxterEnv):
             handle_1_pos = self.sim.data.site_xpos[self.handle_1_site_id]
             handle_2_pos = self.sim.data.site_xpos[self.handle_2_site_id]
 
-            handle_reward_case_1 = 2
-            handle_reward_case_1 -= np.tanh(np.linalg.norm(l_gripper_site_pos - handle_1_pos))
-            handle_reward_case_1 -= np.tanh(np.linalg.norm(r_gripper_site_pos - handle_2_pos))
+            handle_reward = 2
+            handle_reward -= np.tanh(np.linalg.norm(l_gripper_site_pos - handle_1_pos))
+            handle_reward -= np.tanh(np.linalg.norm(r_gripper_site_pos - handle_2_pos))
 
-            # handle_reward_case_2 = 2
-            # handle_reward_case_2 -= np.tanh(np.linalg.norm(r_gripper_site_pos - handle_1_pos))
-            # handle_reward_case_2 -= np.tanh(np.linalg.norm(l_gripper_site_pos - handle_2_pos))
+            reward += handle_reward
 
-            reward += handle_reward_case_1
-
-            # height reward
-            
+            contact_reward = 0.1
+            for contact in self.find_contacts(self.gripper_left.contact_geoms(),
+                                              self.pot.handle_1_geoms()):
+                print(self.sim.model.geom_id2name(contact.geom1), 
+                      self.sim.model.geom_id2name(contact.geom2))
+                reward += contact_reward
+            for contact in self.find_contacts(self.gripper_right.contact_geoms(),
+                                              self.pot.handle_2_geoms()):
+                print(self.sim.model.geom_id2name(contact.geom1), 
+                      self.sim.model.geom_id2name(contact.geom2))
+                reward += contact_reward
 
         return reward
 
