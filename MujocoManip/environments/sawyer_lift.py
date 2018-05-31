@@ -33,10 +33,6 @@ class SawyerLiftEnv(SawyerEnv):
             @camera_depth, rendering depth
             @reward_shaping, using a shaping reward
         """
-        # initialize objects of interest
-        cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02], #[0.015, 0.015, 0.015],
-                               size_max=[0.025, 0.025, 0.025]) #[0.018, 0.018, 0.018])
-        self.mujoco_objects = OrderedDict([('cube', cube)])
 
         # settings for table top
         self.table_size = table_size
@@ -56,7 +52,7 @@ class SawyerLiftEnv(SawyerEnv):
             self.placement_initializer = placement_initializer
         else:
             self.placement_initializer = UniformRandomSampler(
-                x_range=[-0.2, 0.2], y_range=[-0.2, 0.2],
+                x_range=[-0.03, 0.03], y_range=[-0.03, 0.03],
                 ensure_object_boundary_in_range=False,
                 z_rotation=True)
 
@@ -78,6 +74,12 @@ class SawyerLiftEnv(SawyerEnv):
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2,0,0])
 
+        # initialize objects of interest
+        cube = RandomBoxObject(size_min=[0.020, 0.020, 0.020], #[0.015, 0.015, 0.015],
+                               size_max=[0.022, 0.022, 0.022], #[0.018, 0.018, 0.018])
+                               rgba=[1, 0, 0, 1])
+        self.mujoco_objects = OrderedDict([('cube', cube)])
+
         # task includes arena, robot, and objects of interest
         self.model = TableTopTask(self.mujoco_arena, 
                                 self.mujoco_robot, 
@@ -88,11 +90,19 @@ class SawyerLiftEnv(SawyerEnv):
     def _get_reference(self):
         super()._get_reference()
         self.cube_body_id = self.sim.model.body_name2id('cube')
+        self.l_finger_geom_id = self.sim.model.geom_name2id('l_fingertip_g0')
+        self.r_finger_geom_id = self.sim.model.geom_name2id('r_fingertip_g0')
+        self.cube_geom_id = self.sim.model.geom_name2id('cube')
 
     def _reset_internal(self):
         super()._reset_internal()
         # inherited class should reset positions of objects
         self.model.place_objects()
+        # reset joint positions
+        init_pos = np.array([-0.5538, -0.8208,  0.4155, 1.8409,
+                             -0.4955, 0.6482,  1.9628])
+        init_pos += np.random.randn(init_pos.shape[0]) * 0.02
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = np.array(init_pos)
 
     def reward(self, action):
         reward = 0
@@ -100,17 +110,34 @@ class SawyerLiftEnv(SawyerEnv):
         table_height = self.table_size[2]
 
         # cube is higher than the table top above a margin
-        if cube_height > table_height + 0.10:
+        if cube_height > table_height + 0.04:
             reward = 1.0
 
         # use a shaping reward
         if self.reward_shaping:
+
             # reaching reward
             cube_pos = self.sim.data.body_xpos[self.cube_body_id]
             gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
             dist = np.linalg.norm(gripper_site_pos - cube_pos)
             reaching_reward = 1 - np.tanh(10.0 * dist)
             reward += reaching_reward
+
+            # grasping reward
+            touch_left_finger = False
+            touch_right_finger = False
+            for i in range(self.sim.data.ncon):
+                c = self.sim.data.contact[i]
+                if c.geom1 == self.l_finger_geom_id and c.geom2 == self.cube_geom_id:
+                    touch_left_finger = True
+                if c.geom1 == self.cube_geom_id and c.geom2 == self.l_finger_geom_id:
+                    touch_left_finger = True
+                if c.geom1 == self.r_finger_geom_id and c.geom2 == self.cube_geom_id:
+                    touch_right_finger = True
+                if c.geom1 == self.cube_geom_id and c.geom2 == self.r_finger_geom_id:
+                    touch_right_finger = True
+            if touch_right_finger and touch_right_finger:
+                reward += 0.25
 
         return reward
 

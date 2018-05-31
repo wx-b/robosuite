@@ -107,7 +107,7 @@ class BaxterLiftEnv(BaxterEnv):
         # use a shaping reward
         if self.reward_shaping:
             # Height reward
-            reward = 10 * (cube_height - table_height)
+            reward = 10 * min(cube_height - table_height, 0.2)
 
             # reaching reward
             cube_pos = self.sim.data.body_xpos[self.cube_body_id]
@@ -126,14 +126,17 @@ class BaxterLiftEnv(BaxterEnv):
             contact_reward = 0.1
             for contact in self.find_contacts(self.gripper_left.contact_geoms(),
                                               self.pot.handle_1_geoms()):
-                print(self.sim.model.geom_id2name(contact.geom1), 
-                      self.sim.model.geom_id2name(contact.geom2))
                 reward += contact_reward
             for contact in self.find_contacts(self.gripper_right.contact_geoms(),
                                               self.pot.handle_2_geoms()):
-                print(self.sim.model.geom_id2name(contact.geom1), 
-                      self.sim.model.geom_id2name(contact.geom2))
                 reward += contact_reward
+
+            # Allow flipping no more than 30 degrees
+            z_diff = abs(handle_1_pos[2] - handle_2_pos[2])
+            angle = np.pi / 4 # 45 degrees
+            handle_distance = self.pot.handle_distance
+            z_diff_tolerance = np.sin(angle) * handle_distance
+            reward -= 2 * z_diff
 
         return reward
 

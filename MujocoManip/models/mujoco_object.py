@@ -160,6 +160,7 @@ class MujocoMeshObject(MujocoXML, MujocoObject):
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
+            template['rgba'] = '1 0 0 0'
             if name is not None:
                 template['name'] = name
             collision.append(ET.Element('site', attrib=template))
@@ -173,6 +174,7 @@ class MujocoMeshObject(MujocoXML, MujocoObject):
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
+            template['rgba'] = '1 0 0 0'
             if name is not None:
                 template['name'] = name
             visual.append(ET.Element('site', attrib=template))
@@ -234,6 +236,14 @@ class DefaultCerealObject(MujocoMeshObject):
 class DefaultAtomizerObject(MujocoMeshObject):
     def __init__(self):
         super().__init__(xml_path_completion('object/atomizer.xml'))
+
+class DefaultSquareNutObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/square-nut.xml'))  
+
+class DefaultRoundNutObject(MujocoMeshObject):
+    def __init__(self):
+        super().__init__(xml_path_completion('object/round-nut.xml'))        
 
 class DefaultMilkVisualObject(MujocoMeshObject):
     def __init__(self):
@@ -436,6 +446,11 @@ class GeneratedPotObject(MujocoGeneratedObject):
         # print("Warning: Pot object in general do not expect get_horizontal_radius to be called")
         return np.sqrt(2) * (max(self.body_half_size) + self.handle_length)
 
+    @property
+    def handle_distance(self):
+        return self.body_half_size[1] * 2 + self.handle_length * 2
+
+
     def get_collision(self, name=None, site=None):
         main_body = gen_body()
         if name is not None:
@@ -444,8 +459,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
                          size=self.body_half_size,
                          rgba=self.rgba_body,
                          group=1))
-        # handle_z = self.body_half_size[2] - self.handle_radius
-        handle_z = 0
+        handle_z = self.body_half_size[2] - self.handle_radius
         handle_1_center = [0,
                            self.body_half_size[1] + self.handle_length,
                            handle_z]
@@ -469,7 +483,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         handle_1.append(gen_geom(geom_type='box',
                              name='handle_1_+', # + for positive x
                              pos=[self.handle_width / 2, 
-                                  self.body_half_size[0] + self.handle_length / 2,
+                                  self.body_half_size[1] + self.handle_length / 2,
                                   handle_z],
                              size=side_bar_size,
                              rgba=self.rgba_handle_1,
@@ -477,7 +491,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         handle_1.append(gen_geom(geom_type='box',
                              name='handle_1_-',
                              pos=[- self.handle_width / 2, 
-                                  self.body_half_size[0] + self.handle_length / 2,
+                                  self.body_half_size[1] + self.handle_length / 2,
                                   handle_z],
                              size=side_bar_size,
                              rgba=self.rgba_handle_1,
@@ -493,7 +507,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         handle_2.append(gen_geom(geom_type='box',
                              name='handle_2_+', # + for positive x
                              pos=[self.handle_width / 2, 
-                                  - self.body_half_size[0] - self.handle_length / 2,
+                                  - self.body_half_size[1] - self.handle_length / 2,
                                   handle_z],
                              size=side_bar_size,
                              rgba=self.rgba_handle_2,
@@ -501,7 +515,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         handle_2.append(gen_geom(geom_type='box',
                              name='handle_2_-',
                              pos=[- self.handle_width / 2, 
-                                  - self.body_half_size[0] - self.handle_length / 2,
+                                  - self.body_half_size[1] - self.handle_length / 2,
                                   handle_z],
                              size=side_bar_size,
                              rgba=self.rgba_handle_2,
