@@ -203,9 +203,9 @@ class MujocoEnv(object, metaclass=EnvMeta):
     def find_contacts(self, geoms_1, geoms_2):
         for contact in self.sim.data.contact[0:self.sim.data.ncon]:
             if (self.sim.model.geom_id2name(contact.geom1) in geoms_1 \
-            and self.sim.model.geom_id2name(contact.geom2) == geoms_2) or \
+            and self.sim.model.geom_id2name(contact.geom2) in geoms_2) or \
             (self.sim.model.geom_id2name(contact.geom2) in geoms_1 \
-            and self.sim.model.geom_id2name(contact.geom1) == geoms_2):
+            and self.sim.model.geom_id2name(contact.geom1) in geoms_2):
                 yield contact
 
 

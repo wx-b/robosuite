@@ -136,7 +136,7 @@ class BaxterLiftEnv(BaxterEnv):
             angle = np.pi / 4 # 45 degrees
             handle_distance = self.pot.handle_distance
             z_diff_tolerance = np.sin(angle) * handle_distance
-            reward -= 2 * z_diff
+            reward -= 2 * max(z_diff - z_diff_tolerance, 0)
 
         return reward
 

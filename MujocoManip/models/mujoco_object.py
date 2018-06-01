@@ -406,7 +406,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
     def __init__(self,
                  body_half_size=None,
                  handle_radius=0.005,
-                 handle_length=0.15,
+                 handle_length=0.06,
                  handle_width=0.09,
                  rgba_body=None,
                  rgba_handle_1=None,
@@ -580,7 +580,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         if self.solid_handle:
             return ['handle_2']
         else:
-        return ['handle_2_c', 'handle_2_+', 'handle_2_-']
+            return ['handle_2_c', 'handle_2_+', 'handle_2_-']
 
     def get_visual(self, name=None, site=None):
         return self.get_collision(name, site)
