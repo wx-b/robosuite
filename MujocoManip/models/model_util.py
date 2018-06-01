@@ -5,6 +5,10 @@ import MujocoManip.models
 
 visual_size_shrink_ratio = 0.99
 
+RED = [1, 0, 0, 1]
+GREEN = [0, 1, 0, 1]
+BLUE = [0, 0, 1, 1]
+
 def xml_path_completion(xml_path):
     """
         Takes in a local xml path and returns a full path. 
@@ -56,3 +60,37 @@ def actuator(joint, act_type, **kwargs):
     element.set('joint', joint)
     return element
     
+def gen_site(name, rgba=None, pos=None, size=None, **kwargs):
+    if rgba is None:
+        rgba = RED
+    if pos is None:
+        pos = [0, 0, 0]
+    if size is None:
+        size = [0.005]
+    kwargs['rgba'] = array_to_string(rgba)
+    kwargs['pos'] = array_to_string(pos)
+    kwargs['size'] = array_to_string(size)
+    kwargs['name'] = name
+    element = ET.Element('site', attrib=kwargs)
+    return element
+
+def gen_geom(geom_type, size, pos=None, rgba=None, group=0, **kwargs):
+    if rgba is None:
+        rgba = RED
+    if pos is None:
+        pos = [0, 0, 0]
+    kwargs['type'] = str(geom_type)
+    kwargs['size'] = array_to_string(size)
+    kwargs['rgba'] = array_to_string(rgba)
+    kwargs['group'] = str(group)
+    kwargs['pos'] = array_to_string(pos)
+    element = ET.Element('geom', attrib=kwargs)
+    return element
+
+def gen_body(name=None, pos=None, **kwargs):
+    if name is not None:
+        kwargs['name'] = name
+    if pos is not None:
+        kwargs['pos'] = array_to_string(pos)
+    element = ET.Element('body', attrib=kwargs)
+    return element
