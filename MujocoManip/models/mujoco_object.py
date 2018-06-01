@@ -411,6 +411,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
                  rgba_body=None,
                  rgba_handle_1=None,
                  rgba_handle_2=None,
+                 solid_handle=True,
                  density=3000, # 3 * water, 3 * mujoco default
                 ):
         super().__init__()
@@ -434,6 +435,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         else:
             self.rgba_handle_2 =  BLUE
         self.density = density
+        self.solid_handle = solid_handle
         # TODO: would friction even help?
     
     def get_bottom_offset(self):
@@ -458,7 +460,8 @@ class GeneratedPotObject(MujocoGeneratedObject):
         main_body.append(gen_geom(geom_type='box',
                          size=self.body_half_size,
                          rgba=self.rgba_body,
-                         group=1))
+                         group=1,
+                         density=str(self.density)))
         handle_z = self.body_half_size[2] - self.handle_radius
         handle_1_center = [0,
                            self.body_half_size[1] + self.handle_length,
@@ -474,52 +477,76 @@ class GeneratedPotObject(MujocoGeneratedObject):
                          self.handle_length / 2,
                          self.handle_radius]
         handle_1 = gen_body(name='handle_1')
-        handle_1.append(gen_geom(geom_type='box', 
-                             name='handle_1_c',
-                             pos=handle_1_center,
-                             size=main_bar_size,
-                             rgba=self.rgba_handle_1,
-                             group=1))
-        handle_1.append(gen_geom(geom_type='box',
-                             name='handle_1_+', # + for positive x
-                             pos=[self.handle_width / 2, 
-                                  self.body_half_size[1] + self.handle_length / 2,
-                                  handle_z],
-                             size=side_bar_size,
-                             rgba=self.rgba_handle_1,
-                             group=1))
-        handle_1.append(gen_geom(geom_type='box',
-                             name='handle_1_-',
-                             pos=[- self.handle_width / 2, 
-                                  self.body_half_size[1] + self.handle_length / 2,
-                                  handle_z],
-                             size=side_bar_size,
-                             rgba=self.rgba_handle_1,
-                             group=1))
+        if self.solid_handle:
+            handle_1.append(gen_geom(geom_type='box',
+                                     name='handle_1',
+                                     pos=[0, 
+                                          self.body_half_size[1] + self.handle_length / 2,
+                                          handle_z],
+                                     size=[self.handle_width / 2, 
+                                           self.handle_length / 2,
+                                           self.handle_radius],
+                                     rgba=self.rgba_handle_1,
+                                     group=1))
+        else:
+            handle_1.append(gen_geom(geom_type='box', 
+                                     name='handle_1_c',
+                                     pos=handle_1_center,
+                                     size=main_bar_size,
+                                     rgba=self.rgba_handle_1,
+                                     group=1))
+            handle_1.append(gen_geom(geom_type='box',
+                                     name='handle_1_+', # + for positive x
+                                     pos=[self.handle_width / 2, 
+                                          self.body_half_size[1] + self.handle_length / 2,
+                                          handle_z],
+                                     size=side_bar_size,
+                                     rgba=self.rgba_handle_1,
+                                     group=1))
+            handle_1.append(gen_geom(geom_type='box',
+                                     name='handle_1_-',
+                                     pos=[- self.handle_width / 2, 
+                                          self.body_half_size[1] + self.handle_length / 2,
+                                          handle_z],
+                                     size=side_bar_size,
+                                     rgba=self.rgba_handle_1,
+                                     group=1))
 
         handle_2 = gen_body(name="handle_2")
-        handle_2.append(gen_geom(geom_type='box', 
-                             name='handle_2_c',
-                             pos=handle_2_center,
-                             size=main_bar_size,
-                             rgba=self.rgba_handle_2,
-                             group=1))
-        handle_2.append(gen_geom(geom_type='box',
-                             name='handle_2_+', # + for positive x
-                             pos=[self.handle_width / 2, 
-                                  - self.body_half_size[1] - self.handle_length / 2,
-                                  handle_z],
-                             size=side_bar_size,
-                             rgba=self.rgba_handle_2,
-                             group=1))
-        handle_2.append(gen_geom(geom_type='box',
-                             name='handle_2_-',
-                             pos=[- self.handle_width / 2, 
-                                  - self.body_half_size[1] - self.handle_length / 2,
-                                  handle_z],
-                             size=side_bar_size,
-                             rgba=self.rgba_handle_2,
-                             group=1))
+        if self.solid_handle:
+            handle_2.append(gen_geom(geom_type='box',
+                                     name='handle_2',
+                                     pos=[0, 
+                                          - self.body_half_size[1] - self.handle_length / 2,
+                                          handle_z],
+                                     size=[self.handle_width / 2, 
+                                           self.handle_length / 2,
+                                           self.handle_radius],
+                                     rgba=self.rgba_handle_2,
+                                     group=1))
+        else:
+            handle_2.append(gen_geom(geom_type='box', 
+                                     name='handle_2_c',
+                                     pos=handle_2_center,
+                                     size=main_bar_size,
+                                     rgba=self.rgba_handle_2,
+                                     group=1))
+            handle_2.append(gen_geom(geom_type='box',
+                                     name='handle_2_+', # + for positive x
+                                     pos=[self.handle_width / 2, 
+                                          - self.body_half_size[1] - self.handle_length / 2,
+                                          handle_z],
+                                     size=side_bar_size,
+                                     rgba=self.rgba_handle_2,
+                                     group=1))
+            handle_2.append(gen_geom(geom_type='box',
+                                     name='handle_2_-',
+                                     pos=[- self.handle_width / 2, 
+                                          - self.body_half_size[1] - self.handle_length / 2,
+                                          handle_z],
+                                     size=side_bar_size,
+                                     rgba=self.rgba_handle_2,
+                                     group=1))
 
         main_body.append(handle_1)
         main_body.append(handle_2)
@@ -541,13 +568,18 @@ class GeneratedPotObject(MujocoGeneratedObject):
         return main_body
 
     def handle_geoms(self):
-        return ['handle_1_c', 'handle_1_+', 'handle_1_-',
-                'handle_2_c', 'handle_2_+', 'handle_2_-']
+        return self.handle_1_geoms() + self.handle_2_geoms()
 
     def handle_1_geoms(self):
-        return ['handle_1_c', 'handle_1_+', 'handle_1_-']
+        if self.solid_handle:
+            return ['handle_1']
+        else:
+            return ['handle_1_c', 'handle_1_+', 'handle_1_-']
 
     def handle_2_geoms(self):
+        if self.solid_handle:
+            return ['handle_2']
+        else:
         return ['handle_2_c', 'handle_2_+', 'handle_2_-']
 
     def get_visual(self, name=None, site=None):
