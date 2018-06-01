@@ -406,13 +406,13 @@ class GeneratedPotObject(MujocoGeneratedObject):
     def __init__(self,
                  body_half_size=None,
                  handle_radius=0.005,
-                 handle_length=0.06,
+                 handle_length=0.09,
                  handle_width=0.09,
                  rgba_body=None,
                  rgba_handle_1=None,
                  rgba_handle_2=None,
                  solid_handle=True,
-                 density=3000, # 3 * water, 3 * mujoco default
+                 density=3000, # 3 * water, 3 * mujoco default DEPRECATED for now
                 ):
         super().__init__()
         if body_half_size: 
@@ -460,8 +460,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         main_body.append(gen_geom(geom_type='box',
                          size=self.body_half_size,
                          rgba=self.rgba_body,
-                         group=1,
-                         density=str(self.density)))
+                         group=1))
         handle_z = self.body_half_size[2] - self.handle_radius
         handle_1_center = [0,
                            self.body_half_size[1] + self.handle_length,

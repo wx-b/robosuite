@@ -117,37 +117,37 @@ class BaxterLiftEnv(BaxterEnv):
             # When grippers are far away, tell them to be closer
             l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle)
             r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle)
-            if l_gh_dist_xy > 0.05:
-                reward += 1 - np.tanh(l_gh_dist_xy)
-            if r_gh_dist_xy > 0.05:
-                reward += 1 - np.tanh(r_gh_dist_xy)
+            # if l_gh_dist_xy > 0.05:
+            reward += 1 - np.tanh(l_gh_dist_xy)
+            # if r_gh_dist_xy > 0.05:
+            reward += 1 - np.tanh(r_gh_dist_xy)
  
-            l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle[:2])
-            r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle[:2])
+            # l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle[:2])
+            # r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle[:2])
 
-            l_gh_z_diff = l_gripper_to_handle[2]
-            r_gh_z_diff = r_gripper_to_handle[2]
+            # l_gh_z_diff = l_gripper_to_handle[2]
+            # r_gh_z_diff = r_gripper_to_handle[2]
 
-            handle_reward = 0
+            # handle_reward = 0
 
             # When gripper is close and above, tell them to move away and down
             # When gripper is close and below, tell them to move close and up
-            coef_z = 2
-            coef_xy = 1
-            if l_gh_z_diff > 0: # gripper below handle
-                handle_reward -= coef_z * l_gh_z_diff
-                handle_reward -= coef_xy * l_gh_dist_xy
-            else:
-                handle_reward += coef_z * l_gh_z_diff
-                handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
-            if r_gh_z_diff > 0:
-                handle_reward -= coef_z * r_gh_z_diff
-                handle_reward -= coef_xy * r_gh_dist_xy
-            else:
-                handle_reward += coef_z * l_gh_z_diff
-                handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
+            # coef_z = 2
+            # coef_xy = 1
+            # if l_gh_z_diff > 0: # gripper below handle
+            #     handle_reward -= coef_z * l_gh_z_diff
+            #     handle_reward -= coef_xy * l_gh_dist_xy
+            # else:
+            #     handle_reward += coef_z * l_gh_z_diff
+            #     handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
+            # if r_gh_z_diff > 0:
+            #     handle_reward -= coef_z * r_gh_z_diff
+            #     handle_reward -= coef_xy * r_gh_dist_xy
+            # else:
+            #     handle_reward += coef_z * l_gh_z_diff
+            #     handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
 
-            reward += handle_reward
+            # reward += handle_reward
 
             contact_reward = 0.25
             for contact in self.find_contacts(self.gripper_left.contact_geoms(),
