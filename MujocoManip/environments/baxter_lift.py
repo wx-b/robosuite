@@ -109,21 +109,47 @@ class BaxterLiftEnv(BaxterEnv):
             # Height reward
             reward = 10 * min(cube_height - table_height, 0.2)
 
-            # reaching reward
-            cube_pos = self.sim.data.body_xpos[self.cube_body_id]
-            l_gripper_site_pos = self.sim.data.site_xpos[self.left_eef_site_id]
-            r_gripper_site_pos = self.sim.data.site_xpos[self.right_eef_site_id]
+            l_gripper_to_handle = self._l_gripper_to_handle
+            r_gripper_to_handle = self._r_gripper_to_handle
 
-            handle_1_pos = self.sim.data.site_xpos[self.handle_1_site_id]
-            handle_2_pos = self.sim.data.site_xpos[self.handle_2_site_id]
+            # gh stands for gripper-handle
 
-            handle_reward = 2
-            handle_reward -= np.tanh(np.linalg.norm(l_gripper_site_pos - handle_1_pos))
-            handle_reward -= np.tanh(np.linalg.norm(r_gripper_site_pos - handle_2_pos))
+            # When grippers are far away, tell them to be closer
+            l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle)
+            r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle)
+            if l_gh_dist_xy > 0.05:
+                reward += 1 - np.tanh(l_gh_dist_xy)
+            if r_gh_dist_xy > 0.05:
+                reward += 1 - np.tanh(r_gh_dist_xy)
+ 
+            l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle[:2])
+            r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle[:2])
+
+            l_gh_z_diff = l_gripper_to_handle[2]
+            r_gh_z_diff = r_gripper_to_handle[2]
+
+            handle_reward = 0
+
+            # When gripper is close and above, tell them to move away and down
+            # When gripper is close and below, tell them to move close and up
+            coef_z = 2
+            coef_xy = 1
+            if l_gh_z_diff > 0: # gripper below handle
+                handle_reward -= coef_z * l_gh_z_diff
+                handle_reward -= coef_xy * l_gh_dist_xy
+            else:
+                handle_reward += coef_z * l_gh_z_diff
+                handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
+            if r_gh_z_diff > 0:
+                handle_reward -= coef_z * r_gh_z_diff
+                handle_reward -= coef_xy * r_gh_dist_xy
+            else:
+                handle_reward += coef_z * l_gh_z_diff
+                handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
 
             reward += handle_reward
 
-            contact_reward = 0.1
+            contact_reward = 0.25
             for contact in self.find_contacts(self.gripper_left.contact_geoms(),
                                               self.pot.handle_1_geoms()):
                 reward += contact_reward
@@ -132,6 +158,8 @@ class BaxterLiftEnv(BaxterEnv):
                 reward += contact_reward
 
             # Allow flipping no more than 30 degrees
+            handle_1_pos = self._handle_1_xpos
+            handle_2_pos = self._handle_2_xpos
             z_diff = abs(handle_1_pos[2] - handle_2_pos[2])
             angle = np.pi / 4 # 45 degrees
             handle_distance = self.pot.handle_distance
@@ -139,6 +167,30 @@ class BaxterLiftEnv(BaxterEnv):
             reward -= 2 * max(z_diff - z_diff_tolerance, 0)
 
         return reward
+
+    @property
+    def _l_eef_xpos(self):
+        return self.sim.data.site_xpos[self.left_eef_site_id]
+    
+    @property
+    def _r_eef_xpos(self):
+        return self.sim.data.site_xpos[self.right_eef_site_id]
+
+    @property
+    def _handle_1_xpos(self):
+        return self.sim.data.site_xpos[self.handle_1_site_id]
+
+    @property
+    def _handle_2_xpos(self):
+        return self.sim.data.site_xpos[self.handle_2_site_id]
+
+    @property
+    def _l_gripper_to_handle(self):
+        return self._handle_1_xpos - self._l_eef_xpos
+
+    @property
+    def _r_gripper_to_handle(self):
+        return self._handle_2_xpos - self._r_eef_xpos
 
     def _get_observation(self):
         di = super()._get_observation()
@@ -161,13 +213,22 @@ class BaxterLiftEnv(BaxterEnv):
             di['cube_pos'] = cube_pos
             di['cube_quat'] = cube_quat
 
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            di['gripper_to_cube'] = gripper_site_pos - cube_pos
+            di['l_eef_xpos'] = self._l_eef_xpos
+            di['r_eef_xpos'] = self._r_eef_xpos
+            di['handle_1_xpos'] = self._handle_1_xpos
+            di['handle_2_xpos'] = self._handle_2_xpos
+            di['l_gripper_to_handle'] = self._l_gripper_to_handle
+            di['r_gripper_to_handle'] = self._r_gripper_to_handle
 
             di['low-level'] = np.concatenate([
                 di['cube_pos'],
                 di['cube_quat'],
-                di['gripper_to_cube'],
+                di['l_eef_xpos'],
+                di['r_eef_xpos'],
+                di['handle_1_xpos'],
+                di['handle_2_xpos'],
+                di['l_gripper_to_handle'],
+                di['r_gripper_to_handle'],
             ])
 
         # proprioception
