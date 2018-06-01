@@ -136,7 +136,7 @@ class SawyerLiftEnv(SawyerEnv):
                     touch_right_finger = True
                 if c.geom1 == self.cube_geom_id and c.geom2 == self.r_finger_geom_id:
                     touch_right_finger = True
-            if touch_right_finger and touch_right_finger:
+            if touch_left_finger and touch_right_finger:
                 reward += 0.25
 
         return reward
