@@ -204,10 +204,14 @@ class SawyerStackEnv(SawyerEnv):
             di['cubeB_pos'] = cubeB_pos
             di['cubeB_quat'] = cubeB_quat
 
+            # relative positions between gripper and cubes
             gripper_site_pos = np.array(self.sim.data.site_xpos[self.eef_site_id])
             di['gripper_to_cubeA'] = gripper_site_pos - cubeA_pos
             di['gripper_to_cubeB'] = gripper_site_pos - cubeB_pos
             di['cubeA_to_cubeB'] = cubeA_pos - cubeB_pos
+
+            # gripper orientation
+            di['gripper_quat'] = self._right_hand_quat
 
         # proprioception
         di['proprio'] = np.concatenate([

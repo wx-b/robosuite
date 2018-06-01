@@ -3,6 +3,7 @@ from collections import OrderedDict
 from MujocoManip.environments.base import MujocoEnv
 from MujocoManip.models import SawyerRobot, gripper_factory
 import MujocoManip.miscellaneous.utils as U
+import MujocoManip.miscellaneous.transformations as T
 
 
 class SawyerEnv(MujocoEnv):
@@ -21,7 +22,7 @@ class SawyerEnv(MujocoEnv):
         # setup mocap stuff if necessary
         if self.use_eef_ctrl:
             self._setup_mocap()
-        
+
     def _setup_mocap(self):
         U.mjpy_reset_mocap_welds(self.sim)
         self.sim.forward()
@@ -195,6 +196,13 @@ class SawyerEnv(MujocoEnv):
         Returns eef pose in base frame of robot.
         """
         return self.pose_in_base_from_name('right_hand')
+
+    @property
+    def _right_hand_quat(self):
+        """
+        Returns eef pose in base frame of robot.
+        """
+        return T.quaternion_from_matrix(self._right_hand_pose)
 
     @property
     def _right_hand_total_velocity(self):
