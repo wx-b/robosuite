@@ -144,9 +144,11 @@ class SawyerStackEnv(SawyerEnv):
         dist = np.linalg.norm(gripper_site_pos - cubeA_pos)
         r_reach = (1 - np.tanh(10.0 * dist)) * 0.25
 
-        # additional grasping reward
+        # collision checking
         touch_left_finger = False
         touch_right_finger = False
+        touch_cubeA_cubeB = False
+
         for i in range(self.sim.data.ncon):
             c = self.sim.data.contact[i]
             if c.geom1 == self.l_finger_geom_id and c.geom2 == self.cubeA_geom_id:
@@ -157,6 +159,12 @@ class SawyerStackEnv(SawyerEnv):
                 touch_right_finger = True
             if c.geom1 == self.cubeA_geom_id and c.geom2 == self.r_finger_geom_id:
                 touch_right_finger = True
+            if c.geom1 == self.cubeA_geom_id and c.geom2 == self.cubeB_geom_id:
+                touch_cubeA_cubeB = True
+            if c.geom1 == self.cubeB_geom_id and c.geom2 == self.cubeA_geom_id:
+                touch_cubeA_cubeB = True
+
+        # additional grasping reward
         if touch_left_finger and touch_right_finger:
             r_reach += 0.25
 
@@ -169,7 +177,8 @@ class SawyerStackEnv(SawyerEnv):
         # stacking is successful when the block is lifted and
         # the gripper is not holding the object
         r_stack = 0
-        if (not touch_left_finger and not touch_right_finger) and r_lift > 0:
+        not_touching = not touch_left_finger and not touch_right_finger
+        if not_touching and r_lift > 0 and touch_cubeA_cubeB:
             r_stack = 2.0
 
         return (r_reach, r_lift, r_stack)
