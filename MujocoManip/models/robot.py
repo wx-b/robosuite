@@ -87,3 +87,36 @@ class SawyerRobot(MujocoRobot):
     @property
     def init_qpos(self):
         return np.array([0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161])
+
+
+class BaxterRobot(MujocoRobot):
+
+    def __init__(self):
+        super().__init__(xml_path_completion('robot/baxter/robot.xml'))
+
+        # TODO: fix me to the correct value
+        self.bottom_offset = np.array([0, 0, -0.913])
+        self.left_hand = self.worldbody.find(".//body[@name='left_hand']")
+
+    def set_base_xpos(self, pos):
+        """place the robot on position @pos"""
+        node = self.worldbody.find("./body[@name='base']")
+        node.set('pos', array_to_string(pos - self.bottom_offset))
+
+    @property
+    def dof(self):
+        return 14
+
+    @property
+    def joints(self):
+        out = []
+        for s in ['right_', 'left_']:
+            out.extend(s+a for a in ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2'])
+        return out
+
+    @property
+    def init_qpos(self):
+        return np.array([-2.80245441e-04, -5.50127483e-01, -2.56679166e-04, 1.28390663e+00,
+             -3.02081392e-05, 2.61554090e-01, 1.43798268e-06, 3.10821564e-09,
+              -5.50000000e-01, 1.38161579e-09, 1.28400000e+00, 4.89875129e-11,
+                2.61600000e-01, -2.71076012e-11])

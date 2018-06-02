@@ -1,5 +1,6 @@
 import numpy as np
 import xml.etree.ElementTree as ET
+import collections
 from MujocoManip.models.base import MujocoXML
 from MujocoManip.miscellaneous import XMLError, RandomizationError
 from MujocoManip.models.world import MujocoWorldBase
@@ -40,7 +41,7 @@ class UniformRandomSampler(ObjectPositionSampler):
     def __init__(self, x_range=None, 
                     y_range=None, 
                     ensure_object_boundary_in_range=True,
-                    z_rotation=True):
+                    z_rotation='random'):
         """
         Args:
             x_range(float * 2): override the x_range used to uniformly place objects
@@ -54,7 +55,9 @@ class UniformRandomSampler(ObjectPositionSampler):
                 False: 
                     [uniform(min x_range, max x_range)], [uniform(min x_range, max x_range)]
             z_rotation:
-                Add random z-rotation
+                None: Add uniform random random z-rotation
+                iterable (a,b): Uniformly randomize rotation angle between a and b (in radians)
+                value: Add fixed angle z-rotation
         """
         self.x_range = x_range
         self.y_range = y_range
@@ -84,11 +87,14 @@ class UniformRandomSampler(ObjectPositionSampler):
         return np.random.uniform(high=maximum, low=minimum)
 
     def sample_quat(self):
-        if self.z_rotation:
+        if self.z_rotation is None:
             rot_angle = np.random.uniform(high=2 * np.pi,low=0)
-            return [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
+        elif isinstance(self.z_rotation, collections.Iterable):
+            rot_angle = np.random.uniform(high=max(self.z_rotation),low=min(self.z_rotation))
         else:
-            return [1, 0, 0, 0]
+            rot_angle = self.z_rotation
+
+        return [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
 
     def sample(self):
         pos_arr = []
