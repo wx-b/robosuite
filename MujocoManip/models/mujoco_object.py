@@ -551,11 +551,11 @@ class GeneratedPotObject(MujocoGeneratedObject):
         main_body.append(handle_2)
         main_body.append(gen_site(name="pot_handle_1",
                          rgba=self.rgba_handle_1,
-                         pos=handle_1_center,
+                         pos=handle_1_center - np.array([0, 0.005, 0]),
                          size=[self.handle_radius]))
         main_body.append(gen_site(name="pot_handle_2",
                          rgba=self.rgba_handle_2,
-                         pos=handle_2_center,
+                         pos=handle_2_center + np.array([0, 0.005, 0]),
                          size=[self.handle_radius]))
         main_body.append(gen_site(name="pot_center", pos=[0, 0, 0]))
         if site:
