@@ -101,8 +101,8 @@ class BaxterLiftEnv(BaxterEnv):
         table_height = self.sim.data.site_xpos[self.table_top_id][2]
 
         # cube is higher than the table top above a margin
-        if cube_height > table_height + 0.10:
-            reward = 1.0
+        if cube_height > table_height + 0.15:
+            reward = 1.5
 
         # use a shaping reward
         if self.reward_shaping:
@@ -118,9 +118,9 @@ class BaxterLiftEnv(BaxterEnv):
             l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle)
             r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle)
             # if l_gh_dist_xy > 0.05:
-            reward += 1 - np.tanh(l_gh_dist_xy)
+            reward -= np.tanh(l_gh_dist_xy)
             # if r_gh_dist_xy > 0.05:
-            reward += 1 - np.tanh(r_gh_dist_xy)
+            reward -= np.tanh(r_gh_dist_xy)
  
             # l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle[:2])
             # r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle[:2])
