@@ -4,6 +4,8 @@ from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.baxter import BaxterEnv
 from MujocoManip.models import *
 from MujocoManip.models.model_util import xml_path_completion
+from MujocoManip.miscellaneous.transformations import quaternion_matrix
+from MujocoManip.miscellaneous.utils import range_to_reward
 
 
 class BaxterLiftEnv(BaxterEnv):
@@ -106,8 +108,22 @@ class BaxterLiftEnv(BaxterEnv):
 
         # use a shaping reward
         if self.reward_shaping:
+            handle_1_pos = self._handle_1_xpos
+            handle_2_pos = self._handle_2_xpos
+
+            mat = quaternion_matrix(self._pot_quat)[0:3, 0:3]
+            z_unit = [0, 0, 1]
+            z_rotated = np.matmul(mat, z_unit)
+            cos_z = np.dot(z_unit, z_rotated)
+
+            # Allow flipping no more than 30 degrees, 
+            # height gets no reward with flipping of 45 degrees
+            cos_30 = np.cos(np.pi / 6)
+            cos_45 = np.cos(np.pi / 4)
+            direction_coef = range_to_reward(1, 1 - cos_30, 1 - cos_45, cos_z)
+
             # Height reward
-            reward += 10 * min(cube_height - table_height, 0.2)
+            reward += 10. * direction_coef * min(cube_height - table_height, 0.2)
 
             l_gripper_to_handle = self._l_gripper_to_handle
             r_gripper_to_handle = self._r_gripper_to_handle
@@ -157,15 +173,6 @@ class BaxterLiftEnv(BaxterEnv):
             #                                   self.pot.handle_2_geoms()):
             #     reward += contact_reward
 
-            # Allow flipping no more than 30 degrees
-            handle_1_pos = self._handle_1_xpos
-            handle_2_pos = self._handle_2_xpos
-            z_diff = abs(handle_1_pos[2] - handle_2_pos[2])
-            angle = np.pi / 4 # 45 degrees
-            handle_distance = self.pot.handle_distance
-            z_diff_tolerance = np.sin(angle) * handle_distance
-            reward -= 2 * max(z_diff - z_diff_tolerance, 0)
-
         return reward
 
     @property
@@ -183,6 +190,14 @@ class BaxterLiftEnv(BaxterEnv):
     @property
     def _handle_2_xpos(self):
         return self.sim.data.site_xpos[self.handle_2_site_id]
+
+    @property
+    def _pot_quat(self):
+        return self.sim.data.body_xquat[self.cube_body_id]
+
+    @property
+    def _world_quat(self):
+        return np.array([1, 0, 0, 0])
 
     @property
     def _l_gripper_to_handle(self):

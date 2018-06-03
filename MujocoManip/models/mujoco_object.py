@@ -438,7 +438,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
     """
     def __init__(self,
                  body_half_size=None,
-                 handle_radius=0.005,
+                 handle_radius=0.02,
                  handle_length=0.09,
                  handle_width=0.09,
                  rgba_body=None,
@@ -590,11 +590,11 @@ class GeneratedPotObject(MujocoGeneratedObject):
         main_body.append(gen_site(name="pot_handle_1",
                          rgba=self.rgba_handle_1,
                          pos=handle_1_center - np.array([0, 0.005, 0]),
-                         size=[self.handle_radius]))
+                         size=[0.005]))
         main_body.append(gen_site(name="pot_handle_2",
                          rgba=self.rgba_handle_2,
                          pos=handle_2_center + np.array([0, 0.005, 0]),
-                         size=[self.handle_radius]))
+                         size=[0.005]))
         main_body.append(gen_site(name="pot_center", pos=[0, 0, 0], rgba=[1, 0, 0, 0]))
         # if site:
         #     # add a site as well
