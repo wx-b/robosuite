@@ -107,7 +107,7 @@ class BaxterLiftEnv(BaxterEnv):
         # use a shaping reward
         if self.reward_shaping:
             # Height reward
-            reward = 10 * min(cube_height - table_height, 0.2)
+            reward += 10 * min(cube_height - table_height, 0.2)
 
             l_gripper_to_handle = self._l_gripper_to_handle
             r_gripper_to_handle = self._r_gripper_to_handle
@@ -115,12 +115,12 @@ class BaxterLiftEnv(BaxterEnv):
             # gh stands for gripper-handle
 
             # When grippers are far away, tell them to be closer
-            l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle)
-            r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle)
+            l_gh_dist = np.linalg.norm(l_gripper_to_handle)
+            r_gh_dist = np.linalg.norm(r_gripper_to_handle)
             # if l_gh_dist_xy > 0.05:
-            reward -= np.tanh(l_gh_dist_xy)
+            reward -= np.tanh(l_gh_dist)
             # if r_gh_dist_xy > 0.05:
-            reward -= np.tanh(r_gh_dist_xy)
+            reward -= np.tanh(r_gh_dist)
  
             # l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle[:2])
             # r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle[:2])
@@ -149,13 +149,13 @@ class BaxterLiftEnv(BaxterEnv):
 
             # reward += handle_reward
 
-            contact_reward = 0.25
-            for contact in self.find_contacts(self.gripper_left.contact_geoms(),
-                                              self.pot.handle_1_geoms()):
-                reward += contact_reward
-            for contact in self.find_contacts(self.gripper_right.contact_geoms(),
-                                              self.pot.handle_2_geoms()):
-                reward += contact_reward
+            # contact_reward = 0.25
+            # for contact in self.find_contacts(self.gripper_left.contact_geoms(),
+            #                                   self.pot.handle_1_geoms()):
+            #     reward += contact_reward
+            # for contact in self.find_contacts(self.gripper_right.contact_geoms(),
+            #                                   self.pot.handle_2_geoms()):
+            #     reward += contact_reward
 
             # Allow flipping no more than 30 degrees
             handle_1_pos = self._handle_1_xpos
