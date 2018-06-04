@@ -5,7 +5,6 @@ from MujocoManip.environments.baxter import BaxterEnv
 from MujocoManip.models import *
 from MujocoManip.models.model_util import xml_path_completion
 from MujocoManip.miscellaneous.transformations import quaternion_matrix
-from MujocoManip.miscellaneous.utils import range_to_reward
 
 
 class BaxterLiftEnv(BaxterEnv):
@@ -98,6 +97,14 @@ class BaxterLiftEnv(BaxterEnv):
         self.model.place_objects()
 
     def reward(self, action):
+        """
+        1. the agent only gets the lifting reward when flipping no more than 30 degrees.
+        2. the lifting reward is smoothed and ranged from 0 to 2, capped at 2.0. the initial lifting reward is 0 when the pot is on the table; and the agent gets the maximum 2.0 reward when the pot’s height is above a threshold. 
+        3. make the reaching rewards positive and scale them down `reward += (1 - np.tanh(l_gh_dist)) * 0.5`
+        4. the reaching reward is 0.5 when the left gripper touches the left handle, or when the right gripper touches the right handle
+
+        so, when the agent solves the task, it gets 3.0 reward per step (2.0 for lifting above threshold and 0.5 for touching left handle and 0.5 for touching right handle)
+        """
         reward = 0
         cube_height = self.sim.data.site_xpos[self.pot_center_id][2] - 0.07
         table_height = self.sim.data.site_xpos[self.table_top_id][2]
@@ -108,8 +115,7 @@ class BaxterLiftEnv(BaxterEnv):
 
         # use a shaping reward
         if self.reward_shaping:
-            handle_1_pos = self._handle_1_xpos
-            handle_2_pos = self._handle_2_xpos
+            reward = 0
 
             mat = quaternion_matrix(self._pot_quat)[0:3, 0:3]
             z_unit = [0, 0, 1]
@@ -119,8 +125,10 @@ class BaxterLiftEnv(BaxterEnv):
             # Allow flipping no more than 30 degrees, 
             # height gets no reward with flipping of 45 degrees
             cos_30 = np.cos(np.pi / 6)
-            cos_45 = np.cos(np.pi / 4)
-            direction_coef = range_to_reward(1, 1 - cos_30, 1 - cos_45, cos_z)
+            if cos_z >= cos_30:
+                direction_coef = 1
+            else:
+                direction_coef = 0
 
             # Height reward
             reward += 10. * direction_coef * min(cube_height - table_height, 0.2)
@@ -134,45 +142,10 @@ class BaxterLiftEnv(BaxterEnv):
             l_gh_dist = np.linalg.norm(l_gripper_to_handle)
             r_gh_dist = np.linalg.norm(r_gripper_to_handle)
             # if l_gh_dist_xy > 0.05:
-            reward -= np.tanh(l_gh_dist)
+            reward += 0.5 * (1 - np.tanh(l_gh_dist))
             # if r_gh_dist_xy > 0.05:
-            reward -= np.tanh(r_gh_dist)
+            reward += 0.5 * (1 - np.tanh(r_gh_dist))
  
-            # l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle[:2])
-            # r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle[:2])
-
-            # l_gh_z_diff = l_gripper_to_handle[2]
-            # r_gh_z_diff = r_gripper_to_handle[2]
-
-            # handle_reward = 0
-
-            # When gripper is close and above, tell them to move away and down
-            # When gripper is close and below, tell them to move close and up
-            # coef_z = 2
-            # coef_xy = 1
-            # if l_gh_z_diff > 0: # gripper below handle
-            #     handle_reward -= coef_z * l_gh_z_diff
-            #     handle_reward -= coef_xy * l_gh_dist_xy
-            # else:
-            #     handle_reward += coef_z * l_gh_z_diff
-            #     handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
-            # if r_gh_z_diff > 0:
-            #     handle_reward -= coef_z * r_gh_z_diff
-            #     handle_reward -= coef_xy * r_gh_dist_xy
-            # else:
-            #     handle_reward += coef_z * l_gh_z_diff
-            #     handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
-
-            # reward += handle_reward
-
-            # contact_reward = 0.25
-            # for contact in self.find_contacts(self.gripper_left.contact_geoms(),
-            #                                   self.pot.handle_1_geoms()):
-            #     reward += contact_reward
-            # for contact in self.find_contacts(self.gripper_right.contact_geoms(),
-            #                                   self.pot.handle_2_geoms()):
-            #     reward += contact_reward
-
         return reward
 
     @property
