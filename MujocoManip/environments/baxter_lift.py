@@ -127,7 +127,7 @@ class BaxterLiftEnv(BaxterEnv):
 
             # lifting reward
             elevation = cube_height - table_height
-            r_lift = min(max(elevation-0.10, 0), 0.2)
+            r_lift = min(max(elevation-0.05, 0), 0.2)
             reward += 10. * direction_coef * r_lift
 
             l_gripper_to_handle = self._l_gripper_to_handle
@@ -150,7 +150,6 @@ class BaxterLiftEnv(BaxterEnv):
             else:
                 reward += 0.5 * (1 - np.tanh(r_gh_dist))
 
-        print(reward)
         return reward
 
     @property
