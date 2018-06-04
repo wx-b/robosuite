@@ -34,10 +34,7 @@ class BaxterLiftEnv(BaxterEnv):
             @reward_shaping, using a shaping reward
         """
         # initialize objects of interest
-        # cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-        #                        size_max=[0.025, 0.025, 0.025])
         self.pot = GeneratedPotObject()
-        #pot = cube
         self.mujoco_objects = OrderedDict([('pot', self.pot)])
 
         # settings for table top
@@ -99,53 +96,61 @@ class BaxterLiftEnv(BaxterEnv):
     def reward(self, action):
         """
         1. the agent only gets the lifting reward when flipping no more than 30 degrees.
-        2. the lifting reward is smoothed and ranged from 0 to 2, capped at 2.0. the initial lifting reward is 0 when the pot is on the table; and the agent gets the maximum 2.0 reward when the pot’s height is above a threshold. 
-        3. make the reaching rewards positive and scale them down `reward += (1 - np.tanh(l_gh_dist)) * 0.5`
-        4. the reaching reward is 0.5 when the left gripper touches the left handle, or when the right gripper touches the right handle
-
-        so, when the agent solves the task, it gets 3.0 reward per step (2.0 for lifting above threshold and 0.5 for touching left handle and 0.5 for touching right handle)
+        2. the lifting reward is smoothed and ranged from 0 to 2, capped at 2.0. 
+           the initial lifting reward is 0 when the pot is on the table;
+           the agent gets the maximum 2.0 reward when the pot’s height is above a threshold.
+        3. the reaching reward is 0.5 when the left gripper touches the left handle,
+           or when the right gripper touches the right handle before the gripper geom 
+           touches the handle geom, and once it touches we use 0.5
         """
         reward = 0
+
+        #(TODO) remove hardcoded pot dimension
         cube_height = self.sim.data.site_xpos[self.pot_center_id][2] - 0.07
         table_height = self.sim.data.site_xpos[self.table_top_id][2]
 
+        # check if the pot is tilted more than 30 degrees
+        mat = quaternion_matrix(self._pot_quat)[0:3, 0:3]
+        z_unit = [0, 0, 1]
+        z_rotated = np.matmul(mat, z_unit)
+        cos_z = np.dot(z_unit, z_rotated)
+        cos_30 = np.cos(np.pi / 6)
+        direction_coef = 1 if cos_z >= cos_30 else 0
+
         # cube is higher than the table top above a margin
         if cube_height > table_height + 0.15:
-            reward = 1.5
+            reward = 1.0 * direction_coef
 
         # use a shaping reward
         if self.reward_shaping:
             reward = 0
 
-            mat = quaternion_matrix(self._pot_quat)[0:3, 0:3]
-            z_unit = [0, 0, 1]
-            z_rotated = np.matmul(mat, z_unit)
-            cos_z = np.dot(z_unit, z_rotated)
-
-            # Allow flipping no more than 30 degrees, 
-            # height gets no reward with flipping of 45 degrees
-            cos_30 = np.cos(np.pi / 6)
-            if cos_z >= cos_30:
-                direction_coef = 1
-            else:
-                direction_coef = 0
-
-            # Height reward
-            reward += 10. * direction_coef * min(cube_height - table_height, 0.2)
+            # lifting reward
+            elevation = cube_height - table_height
+            r_lift = min(max(elevation-0.10, 0), 0.2)
+            reward += 10. * direction_coef * r_lift
 
             l_gripper_to_handle = self._l_gripper_to_handle
             r_gripper_to_handle = self._r_gripper_to_handle
 
             # gh stands for gripper-handle
-
             # When grippers are far away, tell them to be closer
+            l_contacts = list(self.find_contacts(self.gripper_left.contact_geoms(),  self.pot.handle_1_geoms()))
+            r_contacts = list(self.find_contacts(self.gripper_right.contact_geoms(), self.pot.handle_2_geoms()))
             l_gh_dist = np.linalg.norm(l_gripper_to_handle)
             r_gh_dist = np.linalg.norm(r_gripper_to_handle)
-            # if l_gh_dist_xy > 0.05:
-            reward += 0.5 * (1 - np.tanh(l_gh_dist))
-            # if r_gh_dist_xy > 0.05:
-            reward += 0.5 * (1 - np.tanh(r_gh_dist))
- 
+
+            if len(l_contacts) > 0:
+                reward += 0.5
+            else:
+                reward += 0.5 * (1 - np.tanh(l_gh_dist))
+
+            if len(r_contacts) > 0:
+                reward += 0.5
+            else:
+                reward += 0.5 * (1 - np.tanh(r_gh_dist))
+
+        print(reward)
         return reward
 
     @property
