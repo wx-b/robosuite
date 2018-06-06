@@ -91,7 +91,8 @@ class SawyerBinsEnv(SawyerEnv):
 
         # load model for table top workspace
         self.mujoco_arena = BinsArena()
-
+        if self.use_indicator_object:
+            self.mujoco_arena.add_pos_indicator()
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2,-0.3,0])
 
