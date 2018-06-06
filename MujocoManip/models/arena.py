@@ -12,6 +12,12 @@ class Arena(MujocoXML):
             new_pos = cur_pos + pos
             node.set('pos', array_to_string(new_pos))
 
+    def add_pos_indicator(self):
+        body = gen_body(name='pos_indicator')
+        body.append(gen_geom('sphere', [0.03], rgba=[1,0,0,0.5], group=1))
+        body.append(joint(type='free',name='pos_indicator'))
+        self.worldbody.append(body)
+
 class TableArena(Arena):
     def __init__(self, full_size=(0.8,0.8,0.8), friction=(1, 0.005, 0.0001)):
         self.full_size = np.array(full_size)

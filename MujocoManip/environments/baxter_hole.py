@@ -69,7 +69,10 @@ class BaxterHoleEnv(BaxterEnv):
         """
 
         self.model = MujocoWorldBase()
-        self.model.merge(EmptyArena())
+        self.arena = EmptyArena()
+        if self.use_indicator_object:
+            self.arena.add_pos_indicator()
+        self.model.merge(self.arena)
         self.model.merge(self.mujoco_robot)
 
         self.hole_obj = self.hole.get_collision(name='hole', site=True)

@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
     #env = make("BaxterStackEnv", display=True, ignore_done=True, show_gripper_visualization=True, use_camera_obs=False)
-    env = make("BaxterLiftEnv",
+    env = make("BaxterHoleEnv",
                has_renderer=True,
                ignore_done=True,
                show_gripper_visualization=True,
@@ -53,6 +53,7 @@ if __name__ == '__main__':
             action = 0.5 * np.random.randn(dof)
             obs, reward, done, info = env.step(action)
             env.render()
+            env.move_indicator([0.5,0.5,0.5])
             print(reward)
             # print(env._peg_pose_in_hole_frame())
 
