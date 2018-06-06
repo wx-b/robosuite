@@ -212,6 +212,7 @@ class BaxterHoleEnv(BaxterEnv):
         """
         Returns True if gripper is in contact with an object.
         """
+        return False
         collision = False
         contact_geoms = self.gripper_right.contact_geoms() + self.gripper_left.contact_geoms()
         for contact in self.sim.data.contact[:self.sim.data.ncon]:

@@ -99,6 +99,7 @@ class BaxterEnv(MujocoEnv):
 
     # Note: Overrides super
     def _pre_action(self, action):
+        #print("action is", action)
         action = np.clip(action, -1, 1)    
         last = self.mujoco_robot.dof
         arm_action = action[:last]
@@ -118,7 +119,7 @@ class BaxterEnv(MujocoEnv):
         bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
         weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
         applied_action = bias + weight * action
-        self.sim.data.ctrl[:] = applied_action
+        self.sim.data.ctrl[:] = action#applied_action
 
         # gravity compensation
         self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
