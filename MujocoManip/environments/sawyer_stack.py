@@ -140,6 +140,7 @@ class SawyerStackEnv(SawyerEnv):
         # reaching is successful when the gripper site is close to
         # the center of the cube
         cubeA_pos = self.sim.data.body_xpos[self.cubeA_body_id]
+        cubeB_pos = self.sim.data.body_xpos[self.cubeB_body_id]
         gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
         dist = np.linalg.norm(gripper_site_pos - cubeA_pos)
         r_reach = (1 - np.tanh(10.0 * dist)) * 0.25
@@ -172,7 +173,13 @@ class SawyerStackEnv(SawyerEnv):
         # by a margin
         cubeA_height = cubeA_pos[2]
         table_height = self.table_size[2]
-        r_lift = 1.0 if cubeA_height > table_height + 0.04 else 0.0
+        cubeA_lifted = cubeA_height > table_height + 0.04
+        r_lift = 1.0 if cubeA_lifted else 0.0
+
+        # Aligning is successful when cubeA is right above cubeB
+        if cubeA_lifted:
+            horiz_dist = np.linalg.norm(cubaA_pos[:2], cubeB_pos[:2])
+            r_lift += 0.5 * (1 - np.tanh(horiz_dist))
 
         # stacking is successful when the block is lifted and
         # the gripper is not holding the object
