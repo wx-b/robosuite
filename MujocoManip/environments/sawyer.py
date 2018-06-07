@@ -11,7 +11,7 @@ class SawyerEnv(MujocoEnv):
                  gripper_type=None,
                  use_eef_ctrl=False,
                  gripper_visualization=False,
-                 use_indicator_object=True, #TODO: change to False
+                 use_indicator_object=False, #TODO: change to False
                  **kwargs):
 
         self.has_gripper = not (gripper_type is None)

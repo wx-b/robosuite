@@ -11,7 +11,7 @@ class BaxterEnv(MujocoEnv):
                  gripper_right=None,
                  gripper_left=None,
                  gripper_visualization=False,
-                 use_indicator_object=True, #TODO: change to False
+                 use_indicator_object=False, #TODO: change to False
                  **kwargs):
         self.has_gripper_right = not (gripper_right is None)
         self.has_gripper_left = not (gripper_left is None)
