@@ -44,7 +44,7 @@
       <body name="collision_head_link_1" pos="0.11 0 0.75">
         <inertial pos="0 0 0" mass="0.0001" diaginertia="1e-008 1e-008 1e-008" />
         <geom margin="0.001" type="sphere" class="viz" size="0.001" rgba="0.8 0.3 0.3 0.3" pos="0 0 0" />
-        <geom margin="0.001" type="sphere" size="0.22" rgba="0.8 0.3 0.3 0.3" pos="-0.07 -0.04 0" conaffinity="0"/>
+        <geom margin="0.001" type="sphere" size="0.22" rgba="0.8 0.3 0.3 0.3" pos="-0.07 -0.04 0"/>
       </body>
       <body name="collision_head_link_2" pos="0.11 0 0.75">
         <inertial pos="0 0 0" mass="0.0001" diaginertia="1e-008 1e-008 1e-008" />
@@ -99,7 +99,7 @@
                     <joint limited="true" damping="0" armature=".01" name="right_w0" type="hinge" pos="0 0 0" axis="0 0 1" range="-3.059 3.059" />
                     <geom margin="0.001" class="viz" rgba="0.5 0.1 0.1 1" mesh="W0" />
                     <geom margin="0.001" type="cylinder" size="0.06 0.044" rgba="0.5 0.1 0.1 1" pos="0 0 -0.044" />
-                    <geom margin="0.001" name="right_upper_forearm_visual" type="cylinder" size="0.06 0.1036" pos="0 0 0.1" />
+                    <geom margin="0.001" name="right_upper_forearm_visual" type="cylinder" size="0.06 0.1036" pos="0 0 0.1" class="viz"/>
                     <body name="right_lower_forearm" pos="0.01 0 0.2707" quat="0.5 -0.5 -0.5 -0.5">
                       <inertial pos="0.06041 0.00697 0.006" quat="0.456911 0.468526 0.475683 0.587743" mass="1.60979" diaginertia="0.00708828 0.00552689 0.00379383" />
                       <joint limited="true" damping="0" armature=".01" name="right_w1" type="hinge" pos="0 0 0" axis="0 0 1" range="-1.5708 2.094" />
@@ -179,7 +179,7 @@
                     <joint limited="true" damping="0" armature=".01" name="left_w0" type="hinge" pos="0 0 0" axis="0 0 1" range="-3.059 3.059" />
                     <geom margin="0.001" class="viz" rgba="0.5 0.1 0.1 1" mesh="W0" />
                     <geom margin="0.001" type="cylinder" size="0.06 0.044" rgba="0.5 0.1 0.1 1" pos="0 0 -0.044" />
-                    <geom margin="0.001" name="left_upper_forearm_visual" type="cylinder" size="0.06 0.136" pos="0 0 0.136" />
+                    <geom margin="0.001" name="left_upper_forearm_visual" type="cylinder" size="0.06 0.136" pos="0 0 0.136" class="viz"/>
                     <body name="left_lower_forearm" pos="0.01 0 0.2707" quat="0.5 -0.5 -0.5 -0.5">
                       <inertial pos="0.06041 0.00697 0.006" quat="0.456911 0.468526 0.475683 0.587743" mass="1.60979" diaginertia="0.00708828 0.00552689 0.00379383" />
                       <joint limited="true" damping="0" armature=".01" name="left_w1" type="hinge" pos="0 0 0" axis="0 0 1" range="-1.5708 2.094" />
