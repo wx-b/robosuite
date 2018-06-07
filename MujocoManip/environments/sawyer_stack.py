@@ -178,7 +178,7 @@ class SawyerStackEnv(SawyerEnv):
 
         # Aligning is successful when cubeA is right above cubeB
         if cubeA_lifted:
-            horiz_dist = np.linalg.norm(cubaA_pos[:2], cubeB_pos[:2])
+            horiz_dist = np.linalg.norm(cubeA_pos[:2], cubeB_pos[:2])
             r_lift += 0.5 * (1 - np.tanh(horiz_dist))
 
         # stacking is successful when the block is lifted and
