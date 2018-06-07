@@ -71,6 +71,8 @@ class BaxterLiftEnv(BaxterEnv):
         # load model for table top workspace
         self.mujoco_arena = TableArena(full_size=self.table_size,
                                        friction=self.table_friction)
+        if self.use_indicator_object:
+            self.mujoco_arena.add_pos_indicator()
 
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.45 + self.table_size[0] / 2,0,0])
