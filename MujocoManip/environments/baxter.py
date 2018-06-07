@@ -139,7 +139,7 @@ class BaxterEnv(MujocoEnv):
     def _post_action(self, action):
         ret = super()._post_action(action)
         for contact in self.sim.data.contact[0:self.sim.data.ncon]:
-            print('contact {} - {}'.format(contact.goem1, contact.geom2))
+            print('contact {} - {}'.format(contact.geom1, contact.geom2))
         self._gripper_visualization()
         return ret
 
