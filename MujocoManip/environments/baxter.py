@@ -11,7 +11,8 @@ class BaxterEnv(MujocoEnv):
                  gripper_right=None,
                  gripper_left=None,
                  gripper_visualization=False,
-                 use_indicator_object=False, #TODO: change to False
+                 use_indicator_object=False,
+                 rescale_actions=True,
                  **kwargs):
         self.has_gripper_right = not (gripper_right is None)
         self.has_gripper_left = not (gripper_left is None)
@@ -19,6 +20,7 @@ class BaxterEnv(MujocoEnv):
         self.gripper_left_name = gripper_left
         self.gripper_visualization = gripper_visualization
         self.use_indicator_object = use_indicator_object
+        self.rescale_actions = rescale_actions
         super().__init__(**kwargs)
 
     def _setup_mocap(self):
@@ -109,8 +111,8 @@ class BaxterEnv(MujocoEnv):
 
     # Note: Overrides super
     def _pre_action(self, action):
-        #print("action is", action)
-        action = np.clip(action, -1, 1)    
+        if self.rescale_actions:
+            action = np.clip(action, -1, 1)
         last = self.mujoco_robot.dof
         arm_action = action[:last]
         if self.has_gripper_right:
@@ -124,12 +126,16 @@ class BaxterEnv(MujocoEnv):
             arm_action = np.concatenate([arm_action, gripper_left_action_actual])
         action = arm_action
 
-        # rescale normalized action to control ranges
-        ctrl_range = self.sim.model.actuator_ctrlrange
-        bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
-        weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
-        applied_action = bias + weight * action
-        self.sim.data.ctrl[:] = action#applied_action
+        if self.rescale_actions:
+            # rescale normalized action to control ranges
+            ctrl_range = self.sim.model.actuator_ctrlrange
+            bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
+            weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
+            applied_action = bias + weight * action
+        else:
+            applied_action = action
+
+        self.sim.data.ctrl[:] = applied_action
 
         # gravity compensation
         self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
