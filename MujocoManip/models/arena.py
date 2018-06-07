@@ -14,9 +14,15 @@ class Arena(MujocoXML):
 
     def add_pos_indicator(self):
         body = gen_body(name='pos_indicator')
-        body.append(gen_geom('sphere', [0.03], rgba=[1,0,0,0.5], group=1))
+        body.append(gen_geom('sphere', [0.03], rgba=[1,0,0,0.5], group=1, 
+                             contype="0", conaffinity="0"))
         body.append(joint(type='free',name='pos_indicator'))
         self.worldbody.append(body)
+        # body_2 = gen_body(name='pos_indicator_2')
+        # body_2.append(gen_geom('sphere', [0.03], rgba=[0,1,0,0.5], group=1, 
+        #                        contype="0", conaffinity="0"))
+        # body_2.append(joint(type='free',name='pos_indicator_2'))
+        # self.worldbody.append(body_2)
 
 class TableArena(Arena):
     def __init__(self, full_size=(0.8,0.8,0.8), friction=(1, 0.005, 0.0001)):
