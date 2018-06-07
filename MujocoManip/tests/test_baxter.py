@@ -53,7 +53,6 @@ if __name__ == '__main__':
             action = 0.5 * np.random.randn(dof)
             obs, reward, done, info = env.step(action)
             env.render()
-            env.move_indicator([0.5,0.5,0.5])
             print(reward)
             # print(env._peg_pose_in_hole_frame())
 
