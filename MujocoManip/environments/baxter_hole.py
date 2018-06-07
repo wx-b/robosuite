@@ -32,13 +32,11 @@ class BaxterHoleEnv(BaxterEnv):
             @reward_shaping, using a shaping reward
         """
         # initialize objects of interest
-        cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-                               size_max=[0.025, 0.025, 0.025])
-        #pot = DefaultPotObject()
         self.hole = DefaultHoleObject()
 
-        self.cylinder = CylinderObject(size=(0.01, 0.13))
-        #pot = cube
+        cylinder_radius = np.random.uniform(0.015, 0.03)
+        self.cylinder = CylinderObject(size=(cylinder_radius, 0.13))
+
         self.mujoco_objects = OrderedDict()
 
         # whether to use ground-truth object states

@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     # a test case: do completely random actions at each time step
     #env = make("BaxterStackEnv", display=True, ignore_done=True, show_gripper_visualization=True, use_camera_obs=False)
-    env = make("BaxterLiftEnv",
+    env = make("BaxterLiftEnv",#"BaxterHoleEnv",
                has_renderer=True,
                ignore_done=True,
                show_gripper_visualization=True,

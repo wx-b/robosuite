@@ -579,6 +579,18 @@ def mjpy_reset_mocap2body_xpos(sim):
         sim.data.mocap_pos[mocap_id][:] = sim.data.body_xpos[body_idx]
         sim.data.mocap_quat[mocap_id][:] = sim.data.body_xquat[body_idx]
 
-
+def range_to_reward(x, r1, r2, y):
+    """
+    A function f(y) such that:
+        f(y) = 1 for y in [x - r_1, x + r_1]
+        f(y) = 0 for y in [x - r_2, x + r_2]
+    And the function decreases linearly between that
+    """
+    if abs(y - x) <= r1:
+        return 1
+    elif abs(y - x) >= r2:
+        return 0
+    else:
+        return 1 - (abs(y - x) - r1) / (r2 - r1)
 
 

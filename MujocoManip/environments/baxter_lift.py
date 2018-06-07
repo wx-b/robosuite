@@ -4,6 +4,7 @@ from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.baxter import BaxterEnv
 from MujocoManip.models import *
 from MujocoManip.models.model_util import xml_path_completion
+from MujocoManip.miscellaneous.transformations import quaternion_matrix
 
 
 class BaxterLiftEnv(BaxterEnv):
@@ -33,10 +34,7 @@ class BaxterLiftEnv(BaxterEnv):
             @reward_shaping, using a shaping reward
         """
         # initialize objects of interest
-        # cube = RandomBoxObject(size_min=[0.02, 0.02, 0.02],
-        #                        size_max=[0.025, 0.025, 0.025])
         self.pot = GeneratedPotObject()
-        #pot = cube
         self.mujoco_objects = OrderedDict([('pot', self.pot)])
 
         # settings for table top
@@ -98,75 +96,61 @@ class BaxterLiftEnv(BaxterEnv):
         self.model.place_objects()
 
     def reward(self, action):
+        """
+        1. the agent only gets the lifting reward when flipping no more than 30 degrees.
+        2. the lifting reward is smoothed and ranged from 0 to 2, capped at 2.0. 
+           the initial lifting reward is 0 when the pot is on the table;
+           the agent gets the maximum 2.0 reward when the pot’s height is above a threshold.
+        3. the reaching reward is 0.5 when the left gripper touches the left handle,
+           or when the right gripper touches the right handle before the gripper geom 
+           touches the handle geom, and once it touches we use 0.5
+        """
         reward = 0
+
+        #(TODO) remove hardcoded pot dimension
         cube_height = self.sim.data.site_xpos[self.pot_center_id][2] - 0.07
         table_height = self.sim.data.site_xpos[self.table_top_id][2]
 
+        # check if the pot is tilted more than 30 degrees
+        mat = quaternion_matrix(self._pot_quat)[0:3, 0:3]
+        z_unit = [0, 0, 1]
+        z_rotated = np.matmul(mat, z_unit)
+        cos_z = np.dot(z_unit, z_rotated)
+        cos_30 = np.cos(np.pi / 6)
+        direction_coef = 1 if cos_z >= cos_30 else 0
+
         # cube is higher than the table top above a margin
-        if cube_height > table_height + 0.10:
-            reward = 1.0
+        if cube_height > table_height + 0.15:
+            reward = 1.0 * direction_coef
 
         # use a shaping reward
         if self.reward_shaping:
-            # Height reward
-            reward = 10 * min(cube_height - table_height, 0.2)
+            reward = 0
+
+            # lifting reward
+            elevation = cube_height - table_height
+            r_lift = min(max(elevation-0.05, 0), 0.2)
+            reward += 10. * direction_coef * r_lift
 
             l_gripper_to_handle = self._l_gripper_to_handle
             r_gripper_to_handle = self._r_gripper_to_handle
 
             # gh stands for gripper-handle
-
             # When grippers are far away, tell them to be closer
-            l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle)
-            r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle)
-            # if l_gh_dist_xy > 0.05:
-            reward += 1 - np.tanh(l_gh_dist_xy)
-            # if r_gh_dist_xy > 0.05:
-            reward += 1 - np.tanh(r_gh_dist_xy)
- 
-            # l_gh_dist_xy = np.linalg.norm(l_gripper_to_handle[:2])
-            # r_gh_dist_xy = np.linalg.norm(r_gripper_to_handle[:2])
+            l_contacts = list(self.find_contacts(self.gripper_left.contact_geoms(),  self.pot.handle_1_geoms()))
+            r_contacts = list(self.find_contacts(self.gripper_right.contact_geoms(), self.pot.handle_2_geoms()))
+            l_gh_dist = np.linalg.norm(l_gripper_to_handle)
+            r_gh_dist = np.linalg.norm(r_gripper_to_handle)
 
-            # l_gh_z_diff = l_gripper_to_handle[2]
-            # r_gh_z_diff = r_gripper_to_handle[2]
+            if len(l_contacts) > 0:
+                reward += 0.5
+            else:
+                reward += 0.5 * (1 - np.tanh(l_gh_dist))
 
-            # handle_reward = 0
-
-            # When gripper is close and above, tell them to move away and down
-            # When gripper is close and below, tell them to move close and up
-            # coef_z = 2
-            # coef_xy = 1
-            # if l_gh_z_diff > 0: # gripper below handle
-            #     handle_reward -= coef_z * l_gh_z_diff
-            #     handle_reward -= coef_xy * l_gh_dist_xy
-            # else:
-            #     handle_reward += coef_z * l_gh_z_diff
-            #     handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
-            # if r_gh_z_diff > 0:
-            #     handle_reward -= coef_z * r_gh_z_diff
-            #     handle_reward -= coef_xy * r_gh_dist_xy
-            # else:
-            #     handle_reward += coef_z * l_gh_z_diff
-            #     handle_reward += coef_xy * min(0, -0.05 + l_gh_dist_xy) # force the gripper to move away a bit
-
-            # reward += handle_reward
-
-            contact_reward = 0.25
-            for contact in self.find_contacts(self.gripper_left.contact_geoms(),
-                                              self.pot.handle_1_geoms()):
-                reward += contact_reward
-            for contact in self.find_contacts(self.gripper_right.contact_geoms(),
-                                              self.pot.handle_2_geoms()):
-                reward += contact_reward
-
-            # Allow flipping no more than 30 degrees
-            handle_1_pos = self._handle_1_xpos
-            handle_2_pos = self._handle_2_xpos
-            z_diff = abs(handle_1_pos[2] - handle_2_pos[2])
-            angle = np.pi / 4 # 45 degrees
-            handle_distance = self.pot.handle_distance
-            z_diff_tolerance = np.sin(angle) * handle_distance
-            reward -= 2 * max(z_diff - z_diff_tolerance, 0)
+            if len(r_contacts) > 0:
+                reward += 0.5
+            else:
+                reward += 0.5 * (1 - np.tanh(r_gh_dist))
 
         return reward
 
@@ -185,6 +169,14 @@ class BaxterLiftEnv(BaxterEnv):
     @property
     def _handle_2_xpos(self):
         return self.sim.data.site_xpos[self.handle_2_site_id]
+
+    @property
+    def _pot_quat(self):
+        return self.sim.data.body_xquat[self.cube_body_id]
+
+    @property
+    def _world_quat(self):
+        return np.array([1, 0, 0, 0])
 
     @property
     def _l_gripper_to_handle(self):

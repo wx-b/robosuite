@@ -382,6 +382,39 @@ class MujocoGeneratedObject(MujocoObject):
             main_body.append(ET.Element('site', attrib=template))
         return main_body
 
+def five_sided_box(size, rgba, group, thickness):
+    """
+    Returns an array of geoms
+    """
+    geoms = []
+    x, y, z = size
+    r = thickness / 2
+    geoms.append(gen_geom(geom_type='box',
+                          size=[x, y, r],
+                          pos=[0, 0, - z + r],
+                          rgba=rgba,
+                          group=group))
+    geoms.append(gen_geom(geom_type='box',
+                          size=[x, r, z],
+                          pos=[0, -y + r, 0],
+                          rgba=rgba,
+                          group=group))
+    geoms.append(gen_geom(geom_type='box',
+                          size=[x, r, z],
+                          pos=[0, y - r, 0],
+                          rgba=rgba,
+                          group=group))
+    geoms.append(gen_geom(geom_type='box',
+                          size=[r, y, z],
+                          pos=[x - r, 0, 0],
+                          rgba=rgba,
+                          group=group))
+    geoms.append(gen_geom(geom_type='box',
+                          size=[r, y, z],
+                          pos=[- x + r, 0, 0],
+                          rgba=rgba,
+                          group=group))
+    return geoms
 
 class GeneratedPotObject(MujocoGeneratedObject):
     """ 
@@ -405,20 +438,22 @@ class GeneratedPotObject(MujocoGeneratedObject):
     """
     def __init__(self,
                  body_half_size=None,
-                 handle_radius=0.005,
+                 handle_radius=0.02,
                  handle_length=0.09,
                  handle_width=0.09,
                  rgba_body=None,
                  rgba_handle_1=None,
                  rgba_handle_2=None,
                  solid_handle=True,
-                 density=3000, # 3 * water, 3 * mujoco default DEPRECATED for now
+                 thickness=0.025, # For body
+                 density=3000, # DEPRECATED!!
                 ):
         super().__init__()
         if body_half_size: 
             self.body_half_size = body_half_size 
         else: 
             self.body_half_size =  np.array([0.07, 0.07, 0.07])
+        self.thickness = thickness
         self.handle_radius = handle_radius
         self.handle_length = handle_length
         self.handle_width = handle_width
@@ -452,15 +487,18 @@ class GeneratedPotObject(MujocoGeneratedObject):
     def handle_distance(self):
         return self.body_half_size[1] * 2 + self.handle_length * 2
 
-
     def get_collision(self, name=None, site=None):
         main_body = gen_body()
         if name is not None:
             main_body.set('name', name)
-        main_body.append(gen_geom(geom_type='box',
-                         size=self.body_half_size,
-                         rgba=self.rgba_body,
-                         group=1))
+        # main_body.append(gen_geom(geom_type='box',
+        #                  size=self.body_half_size,
+        #                  rgba=self.rgba_body,
+        #                  group=1))
+        for geom in five_sided_box(self.body_half_size,
+                                   self.rgba_body,
+                                   1, self.thickness):
+            main_body.append(geom)
         handle_z = self.body_half_size[2] - self.handle_radius
         handle_1_center = [0,
                            self.body_half_size[1] + self.handle_length,
@@ -551,19 +589,19 @@ class GeneratedPotObject(MujocoGeneratedObject):
         main_body.append(handle_2)
         main_body.append(gen_site(name="pot_handle_1",
                          rgba=self.rgba_handle_1,
-                         pos=handle_1_center,
-                         size=[self.handle_radius]))
+                         pos=handle_1_center - np.array([0, 0.005, 0]),
+                         size=[0.005]))
         main_body.append(gen_site(name="pot_handle_2",
                          rgba=self.rgba_handle_2,
-                         pos=handle_2_center,
-                         size=[self.handle_radius]))
-        main_body.append(gen_site(name="pot_center", pos=[0, 0, 0]))
-        if site:
-            # add a site as well
-            template = self.get_site_attrib_template()
-            if name is not None:
-                template['name'] = name
-            main_body.append(ET.Element('site', attrib=template))
+                         pos=handle_2_center + np.array([0, 0.005, 0]),
+                         size=[0.005]))
+        main_body.append(gen_site(name="pot_center", pos=[0, 0, 0], rgba=[1, 0, 0, 0]))
+        # if site:
+        #     # add a site as well
+        #     template = self.get_site_attrib_template()
+        #     if name is not None:
+        #         template['name'] = name
+        #     main_body.append(ET.Element('site', attrib=template))
         return main_body
 
     def handle_geoms(self):
