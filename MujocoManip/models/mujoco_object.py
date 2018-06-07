@@ -444,7 +444,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
                  rgba_body=None,
                  rgba_handle_1=None,
                  rgba_handle_2=None,
-                 solid_handle=True,
+                 solid_handle=False,
                  thickness=0.025, # For body
                  density=3000, # DEPRECATED!!
                 ):
