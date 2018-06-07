@@ -263,3 +263,6 @@ class BaxterLiftEnv(BaxterEnv):
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
         table_height = self.table_size[2]
         return (cube_height > table_height + 0.10)
+
+    def render(self, camera_id=0):
+        self.viewer.render(camera_name=self.camera_name)

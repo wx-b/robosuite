@@ -13,6 +13,7 @@
 		<!-- birdview -->
 		<camera mode="fixed" name="birdview" pos="0.0 0 3.0" quat="0.7071 0 0 0.7071"/>
 		<!-- tabletop -->
-		<camera mode="fixed" name="tabletop" pos="3.0 0 1.85" quat="0.56 0.43 0.43 0.56"/>
+		<camera mode="fixed" name="tabletop" pos="0.0 0 3.0" quat="0.7071 0 0 0.7071"/>
+		<!-- <camera mode="fixed" name="tabletop" pos="3.0 0 1.85" quat="0.56 0.43 0.43 0.56"/> -->
 	</worldbody>
 </mujoco>
