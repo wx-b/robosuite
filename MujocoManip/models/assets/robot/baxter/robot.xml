@@ -59,7 +59,7 @@
           <inertial pos="0 0 0" quat="0.659267 -0.259505 -0.260945 0.655692" mass="60.864" diaginertia="6.0869 5.81635 4.20915" />
           <geom margin="0.001" class="viz" rgba="0.2 0.2 0.2 1" mesh="PEDESTAL" />
           <geom margin="0.001" pos="-.04 0 -.8" rgba="0.2 0.2 0.2 1" type="box" size=".46 .425 .16" />
-          <geom margin="0.001" pos="0 0 -.35" rgba="0.2 0.2 0.2 1" type="capsule" size=".165 .25" />
+          <geom margin="0.001" pos="0 0 -.35" rgba="0.2 0.2 0.2 1" type="capsule" size=".165 .25" conaffinity="0"/>
         </body>
         <body name="head" pos="0.06 0 0.686">
           <inertial pos="0 0 0" quat="0.339345 0.850736 -0.347392 0.201027" mass="0.547767" diaginertia="0.00474065 0.00461087 0.00199949" />
