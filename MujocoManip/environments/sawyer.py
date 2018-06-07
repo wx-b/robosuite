@@ -89,7 +89,8 @@ class SawyerEnv(MujocoEnv):
         self.eef_cylinder_id = self.sim.model.site_name2id('grip_site_cylinder')
 
     def move_indicator(self, pos):
-        self.sim.data.qpos[self._ref_indicator_pos_low:self._ref_indicator_pos_low+3] = pos
+        if self.use_indicator_object:
+            self.sim.data.qpos[self._ref_indicator_pos_low:self._ref_indicator_pos_low+3] = pos
 
     # Note: Overrides super
     def _pre_action(self, action):
