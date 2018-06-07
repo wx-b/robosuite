@@ -7,12 +7,23 @@ from MujocoManip import *
 import mujoco_py
 import pickle
 import os
+import zipfile
+import time
 
 from MujocoManip.models import *
 
 def extract_file(f):
-    d = sys.argv[1]
-    l = sorted(x for x in os.listdir(f) if x.startswith('state_'))
+    if f.endswith('.zip'):
+        d = '/tmp/%d.%d' % (int(time.time()), int(hash(f))) 
+        print("Extracting zip file onto %s" % d)
+        zip_ref = zipfile.ZipFile(f, 'r')
+        zip_ref.extractall(d)
+        zip_ref.close() 
+    else:
+        print("Reading directory of numpy arrays")
+        d = f
+    print(d, os.listdir(d))
+    l = sorted(x for x in os.listdir(d) if x.startswith('state_'))
     st = np.vstack([np.load(os.path.join(d, i))["states"] for i in l])
     with open(os.path.join(d, 'model.xml')) as ff:
         xmlstring = ff.read()
