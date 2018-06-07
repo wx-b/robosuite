@@ -18,7 +18,8 @@ if __name__ == '__main__':
                 ignore_done=True, 
                 show_gripper_visualization=True, 
                 use_camera_obs=False,
-                placement_initializer=initializer)
+                placement_initializer=initializer,
+                reward_shaping=True)
 
     obs = env.reset()
     # rotate the gripper so we can see it easily 
