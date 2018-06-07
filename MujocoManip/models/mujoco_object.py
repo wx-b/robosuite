@@ -438,7 +438,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
     """
     def __init__(self,
                  body_half_size=None,
-                 handle_radius=0.02,
+                 handle_radius=0.01,
                  handle_length=0.09,
                  handle_width=0.09,
                  rgba_body=None,
@@ -452,7 +452,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         if body_half_size: 
             self.body_half_size = body_half_size 
         else: 
-            self.body_half_size =  np.array([0.07, 0.07, 0.07])
+            self.body_half_size =  np.array([0.07, 0.07, 0.1])
         self.thickness = thickness
         self.handle_radius = handle_radius
         self.handle_length = handle_length
