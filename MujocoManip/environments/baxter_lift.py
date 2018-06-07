@@ -50,9 +50,10 @@ class BaxterLiftEnv(BaxterEnv):
         # reward configuration
         self.reward_shaping = reward_shaping
 
-        self.object_initializer = UniformRandomSampler(x_range=(-0.2, 0),
-                                                       y_range=(-0.2, 0.2),
-                                                       z_rotation=(-0.2 * np.pi, 0.2 * np.pi))
+        self.object_initializer = UniformRandomSampler(x_range=(-0.06, -0.04),
+                                                       y_range=(-0.01, 0.01),
+                                                       z_rotation=(-0.05 * np.pi, 0.05 * np.pi),
+                                                       ensure_object_boundary_in_range=False)
 
         super().__init__(gripper_left='LeftTwoFingerGripper',
                          gripper_right='TwoFingerGripper',
