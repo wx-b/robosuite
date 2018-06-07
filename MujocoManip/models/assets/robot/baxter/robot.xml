@@ -54,7 +54,7 @@
       <body name="torso" pos="0 0 0">
         <inertial pos="0 0 0" quat="0.997433 0.00167178 0.0715546 -0.00209003" mass="35.3365" diaginertia="1.87139 1.66268 0.779991" />
         <geom margin="0.001" class="viz" mesh="base_link" />
-        <geom margin="0.001" type="mesh" mesh="base_link_collision" />
+        <geom margin="0.001" type="mesh" mesh="base_link_collision" class="viz"/>
         <body name="pedestal" pos="0 0 0">
           <inertial pos="0 0 0" quat="0.659267 -0.259505 -0.260945 0.655692" mass="60.864" diaginertia="6.0869 5.81635 4.20915" />
           <geom margin="0.001" class="viz" rgba="0.2 0.2 0.2 1" mesh="PEDESTAL" />
@@ -87,7 +87,7 @@
                 <inertial pos="-0.00276 0.00132 0.18086" quat="0.838995 -0.0423128 -0.121287 0.52876" mass="4.31272" diaginertia="0.0287695 0.0273625 0.011409" />
                 <joint limited="true" damping="0" armature=".01" name="right_e0" type="hinge" pos="0 0 0" axis="0 0 1" range="-3.05418 3.05418" />
                 <geom margin="0.001" class="viz" rgba="0.5 0.1 0.1 1" mesh="E0" />
-                <geom margin="0.001" type="cylinder" size="0.06 0.0535" rgba="0.5 0.1 0.1 1" pos="0 0 -0.0535" />
+                <geom margin="0.001" type="cylinder" size="0.06 0.0535" rgba="0.5 0.1 0.1 1" pos="0 0 -0.0535"/>
                 <geom margin="0.001" name="right_upper_elbow_visual" type="cylinder" size="0.06 0.1365" pos="0 0 0.1365" class="viz"/>
                 <body name="right_lower_elbow" pos="0.069 0 0.26242" quat="0.5 -0.5 -0.5 -0.5">
                   <inertial pos="0.02611 0.00159 -0.01117" quat="0.440433 0.577149 0.562777 0.395221" mass="2.07206" diaginertia="0.0132096 0.00950002 0.00685697" />
