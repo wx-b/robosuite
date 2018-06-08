@@ -11,12 +11,16 @@ class BaxterEnv(MujocoEnv):
                  gripper_right=None,
                  gripper_left=None,
                  gripper_visualization=False,
+                 use_indicator_object=False,
+                 rescale_actions=True,
                  **kwargs):
         self.has_gripper_right = not (gripper_right is None)
         self.has_gripper_left = not (gripper_left is None)
         self.gripper_right_name = gripper_right
         self.gripper_left_name = gripper_left
         self.gripper_visualization = gripper_visualization
+        self.use_indicator_object = use_indicator_object
+        self.rescale_actions = rescale_actions
         super().__init__(**kwargs)
 
     def _setup_mocap(self):
@@ -50,7 +54,7 @@ class BaxterEnv(MujocoEnv):
 
     def _reset_internal(self):
         super()._reset_internal()
-        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos + 0.03 * np.random.normal(len(self._ref_joint_pos_indexes))
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos + 0.01 * np.random.normal(len(self._ref_joint_pos_indexes))
 
         if self.has_gripper_right:
             self.sim.data.qpos[self._ref_joint_gripper_right_actuator_indexes] = self.gripper_right.init_qpos
@@ -63,6 +67,10 @@ class BaxterEnv(MujocoEnv):
         self.robot_joints = list(self.mujoco_robot.joints)
         self._ref_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.robot_joints]
         self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.robot_joints]
+        if self.use_indicator_object:
+            self._ref_indicator_pos_low, self._ref_indicator_pos_high = self.sim.model.get_joint_qpos_addr('pos_indicator')
+            self._ref_indicator_vel_low, self._ref_indicator_vel_high = self.sim.model.get_joint_qvel_addr('pos_indicator')
+            self.indicator_id = self.sim.model.body_name2id('pos_indicator')
 
         # indices for grippers in qpos, qvel
         if self.has_gripper_left:
@@ -97,9 +105,14 @@ class BaxterEnv(MujocoEnv):
             self.eef_site_id = self.sim.model.site_name2id('grip_site')
             self.eef_cylinder_id = self.sim.model.site_name2id('grip_site_cylinder')
 
+    def move_indicator(self, pos):
+        if self.use_indicator_object:
+            self.sim.data.qpos[self._ref_indicator_pos_low:self._ref_indicator_pos_low+3] = pos
+
     # Note: Overrides super
     def _pre_action(self, action):
-        action = np.clip(action, -1, 1)    
+        if self.rescale_actions:
+            action = np.clip(action, -1, 1)
         last = self.mujoco_robot.dof
         arm_action = action[:last]
         if self.has_gripper_right:
@@ -113,18 +126,26 @@ class BaxterEnv(MujocoEnv):
             arm_action = np.concatenate([arm_action, gripper_left_action_actual])
         action = arm_action
 
-        # rescale normalized action to control ranges
-        ctrl_range = self.sim.model.actuator_ctrlrange
-        bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
-        weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
-        applied_action = bias + weight * action
+        if self.rescale_actions:
+            # rescale normalized action to control ranges
+            ctrl_range = self.sim.model.actuator_ctrlrange
+            bias = 0.5 * (ctrl_range[:,1] + ctrl_range[:,0])
+            weight = 0.5 * (ctrl_range[:,1] - ctrl_range[:,0])
+            applied_action = bias + weight * action
+        else:
+            applied_action = action
+
         self.sim.data.ctrl[:] = applied_action
 
         # gravity compensation
         self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+        if self.use_indicator_object:
+            self.sim.data.qfrc_applied[self._ref_indicator_vel_low:self._ref_indicator_vel_high] = self.sim.data.qfrc_bias[self._ref_indicator_vel_low:self._ref_indicator_vel_high]
 
     def _post_action(self, action):
         ret = super()._post_action(action)
+        # for contact in self.sim.data.contact[0:self.sim.data.ncon]:
+        #     print('contact {} - {}'.format(contact.geom1, contact.geom2))
         self._gripper_visualization()
         return ret
 

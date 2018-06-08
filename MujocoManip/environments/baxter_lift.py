@@ -50,9 +50,10 @@ class BaxterLiftEnv(BaxterEnv):
         # reward configuration
         self.reward_shaping = reward_shaping
 
-        self.object_initializer = UniformRandomSampler(x_range=(-0.2, 0),
-                                                       y_range=(-0.2, 0.2),
-                                                       z_rotation=(-0.2 * np.pi, 0.2 * np.pi))
+        self.object_initializer = UniformRandomSampler(x_range=(-0.15, -0.04),
+                                                       y_range=(-0.015, 0.015),
+                                                       z_rotation=(-0.15 * np.pi, 0.15 * np.pi),
+                                                       ensure_object_boundary_in_range=False)
 
         super().__init__(gripper_left='LeftTwoFingerGripper',
                          gripper_right='TwoFingerGripper',
@@ -69,6 +70,8 @@ class BaxterLiftEnv(BaxterEnv):
         # load model for table top workspace
         self.mujoco_arena = TableArena(full_size=self.table_size,
                                        friction=self.table_friction)
+        if self.use_indicator_object:
+            self.mujoco_arena.add_pos_indicator()
 
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.45 + self.table_size[0] / 2,0,0])

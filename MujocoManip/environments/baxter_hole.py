@@ -67,7 +67,10 @@ class BaxterHoleEnv(BaxterEnv):
         """
 
         self.model = MujocoWorldBase()
-        self.model.merge(EmptyArena())
+        self.arena = EmptyArena()
+        if self.use_indicator_object:
+            self.arena.add_pos_indicator()
+        self.model.merge(self.arena)
         self.model.merge(self.mujoco_robot)
 
         self.hole_obj = self.hole.get_collision(name='hole', site=True)
@@ -210,6 +213,7 @@ class BaxterHoleEnv(BaxterEnv):
         """
         Returns True if gripper is in contact with an object.
         """
+        return False
         collision = False
         contact_geoms = self.gripper_right.contact_geoms() + self.gripper_left.contact_geoms()
         for contact in self.sim.data.contact[:self.sim.data.ncon]:

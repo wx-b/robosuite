@@ -438,13 +438,13 @@ class GeneratedPotObject(MujocoGeneratedObject):
     """
     def __init__(self,
                  body_half_size=None,
-                 handle_radius=0.02,
+                 handle_radius=0.01,
                  handle_length=0.09,
                  handle_width=0.09,
                  rgba_body=None,
                  rgba_handle_1=None,
                  rgba_handle_2=None,
-                 solid_handle=True,
+                 solid_handle=False,
                  thickness=0.025, # For body
                  density=3000, # DEPRECATED!!
                 ):

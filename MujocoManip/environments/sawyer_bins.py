@@ -34,7 +34,7 @@ class SawyerBinsEnv(SawyerEnv):
         """
         # initialize objects of interest
 
-        self.n_each_object = 2
+        self.n_each_object = 1
         # ob_inits = [DefaultCerealObject, DefaultBreadObject, DefaultLemonObject, DefaultMilkObject]
         self.ob_inits = [DefaultMilkObject, DefaultBreadObject, DefaultCerealObject, DefaultCanObject]
         self.vis_inits = [DefaultMilkVisualObject, DefaultBreadVisualObject, DefaultCerealVisualObject, DefaultCanVisualObject]
@@ -91,7 +91,8 @@ class SawyerBinsEnv(SawyerEnv):
 
         # load model for table top workspace
         self.mujoco_arena = BinsArena()
-
+        if self.use_indicator_object:
+            self.mujoco_arena.add_pos_indicator()
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2,-0.3,0])
 

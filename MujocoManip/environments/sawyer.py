@@ -11,12 +11,14 @@ class SawyerEnv(MujocoEnv):
                  gripper_type=None,
                  use_eef_ctrl=False,
                  gripper_visualization=False,
+                 use_indicator_object=False, #TODO: change to False
                  **kwargs):
 
         self.has_gripper = not (gripper_type is None)
         self.gripper_type = gripper_type
         self.use_eef_ctrl = use_eef_ctrl
         self.gripper_visualization = gripper_visualization
+        self.use_indicator_object = use_indicator_object
         super().__init__(**kwargs)
 
         # setup mocap stuff if necessary
@@ -59,6 +61,11 @@ class SawyerEnv(MujocoEnv):
         self.robot_joints = list(self.mujoco_robot.joints)
         self._ref_joint_pos_indexes = [self.sim.model.get_joint_qpos_addr(x) for x in self.robot_joints]
         self._ref_joint_vel_indexes = [self.sim.model.get_joint_qvel_addr(x) for x in self.robot_joints]
+        
+        if self.use_indicator_object:
+            self._ref_indicator_pos_low, self._ref_indicator_pos_high = self.sim.model.get_joint_qpos_addr('pos_indicator')
+            self._ref_indicator_vel_low, self._ref_indicator_vel_high = self.sim.model.get_joint_qvel_addr('pos_indicator')
+            self.indicator_id = self.sim.model.body_name2id('pos_indicator')
 
         # indices for grippers in qpos, qvel
         if self.has_gripper:
@@ -80,6 +87,10 @@ class SawyerEnv(MujocoEnv):
         # IDs of sites for gripper visualization
         self.eef_site_id = self.sim.model.site_name2id('grip_site')
         self.eef_cylinder_id = self.sim.model.site_name2id('grip_site_cylinder')
+
+    def move_indicator(self, pos):
+        if self.use_indicator_object:
+            self.sim.data.qpos[self._ref_indicator_pos_low:self._ref_indicator_pos_low+3] = pos
 
     # Note: Overrides super
     def _pre_action(self, action):
@@ -118,6 +129,8 @@ class SawyerEnv(MujocoEnv):
 
             # gravity compensation
             self.sim.data.qfrc_applied[self._ref_joint_vel_indexes] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+        if self.use_indicator_object:
+            self.sim.data.qfrc_applied[self._ref_indicator_vel_low:self._ref_indicator_vel_high] = self.sim.data.qfrc_bias[self._ref_indicator_vel_low:self._ref_indicator_vel_high]
 
     def _post_action(self, action):
         ret = super()._post_action(action)
