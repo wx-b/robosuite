@@ -54,7 +54,7 @@ class BaxterEnv(MujocoEnv):
 
     def _reset_internal(self):
         super()._reset_internal()
-        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos + 0.03 * np.random.normal(len(self._ref_joint_pos_indexes))
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos + 0.01 * np.random.normal(len(self._ref_joint_pos_indexes))
 
         if self.has_gripper_right:
             self.sim.data.qpos[self._ref_joint_gripper_right_actuator_indexes] = self.gripper_right.init_qpos
