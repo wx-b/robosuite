@@ -166,6 +166,11 @@ class SawyerLiftEnv(SawyerEnv):
             di['gripper_site_pos'] = gripper_site_pos
             di['gripper_to_cube'] = gripper_site_pos - cube_pos
 
+            di['low-level'] = np.concatenate([cube_pos,
+                                              cube_quat,
+                                              di['gripper_to_cube'],
+                                              di['gripper_site_pos']])
+
         # proprioception
         di['proprio'] = np.concatenate([
             np.sin(di['joint_pos']),

@@ -14,9 +14,10 @@ if __name__ == '__main__':
                                        y_range=[0,0.1],
                                        ensure_object_boundary_in_range=False,
                                        z_rotation=False)
-    env = make("SawyerStackEnv", 
+    env = make("SawyerLiftEnv", 
                 ignore_done=True, 
                 show_gripper_visualization=True, 
+                use_object_obs=True,
                 use_camera_obs=False,
                 placement_initializer=initializer,
                 reward_shaping=True)
@@ -42,6 +43,7 @@ if __name__ == '__main__':
 
             action = 0.5 * np.random.randn(dof)
             obs, reward, done, info = env.step(action)
+            print(obs)
             env.render()
 
             if i % 100 == 0:

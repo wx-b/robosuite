@@ -227,8 +227,18 @@ class SawyerStackEnv(SawyerEnv):
             di['cubeA_to_cubeB'] = cubeA_pos - cubeB_pos
 
             # gripper orientation
-            di['gripper_quat'] = self._right_hand_quat
+            di['gripper_site_pos'] = gripper_site_pos
+            di['gripper_quat'] = self._right_hand_quat # This is unfortunately in robot base instead of world frame
 
+            di['low-level'] = np.concatenate([cubeA_pos,
+                                              cubeA_quat,
+                                              cubeB_pos,
+                                              cubeB_quat,
+                                              di['gripper_to_cubeA'],
+                                              di['gripper_to_cubeB'],
+                                              di['cubeA_to_cubeB'],
+                                              di['gripper_site_pos'],
+                                              di['gripper_quat']])
         # proprioception
         di['proprio'] = np.concatenate([
             np.sin(di['joint_pos']),
