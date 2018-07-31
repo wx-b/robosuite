@@ -72,7 +72,7 @@ class SawyerPegsEnv(SawyerEnv):
         self.mujoco_arena = PegsArena()
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, -0.15, 0])
+        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, 0.0, 0])
 
         # define mujoco objects
         self.ob_inits = [DefaultSquareNutObject, DefaultRoundNutObject]
