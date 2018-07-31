@@ -3,6 +3,7 @@ from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.sawyer import SawyerEnv
 from MujocoManip.models import *
+import MujocoManip.miscellaneous.utils as U
 
 
 class SawyerPegsEnv(SawyerEnv):
@@ -18,6 +19,8 @@ class SawyerPegsEnv(SawyerEnv):
                  reward_shaping=False,
                  gripper_visualization=False,
                  placement_initializer=None,
+                 n_each_object=2,
+                 single_object_mode=False,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -34,7 +37,8 @@ class SawyerPegsEnv(SawyerEnv):
             @gripper_visualization: visualizing gripper site
         """
         # number of objects per category
-        self.n_each_object = 2
+        self.n_each_object = n_each_object
+        self.single_object_mode = single_object_mode
 
         # settings for table top
         self.table_size = table_size
@@ -72,17 +76,29 @@ class SawyerPegsEnv(SawyerEnv):
         self.mujoco_arena = PegsArena()
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, -0.15, 0])
+        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, 0.0, 0])
 
         # define mujoco objects
         self.ob_inits = [DefaultSquareNutObject, DefaultRoundNutObject]
-        lst = []
-        for i in range(self.n_each_object):
-            for j in range(len(self.ob_inits)):
-                ob = self.ob_inits[j]()
-                lst.append((str(self.ob_inits[j])+'{}'.format(i), ob))
-        self.mujoco_objects = OrderedDict(lst)
+        self.item_names = ["SquareNut", "RoundNut"]
+        self.item_names_org = list(self.item_names)
+        self.ngeoms = [5, 9]
 
+        if self.single_object_mode:
+            self.n_each_object = 1
+            self.selected_peg = np.random.randint(len(self.ob_inits))
+            self.ob_inits = [self.ob_inits[self.selected_peg]]
+            self.item_names = [self.item_names[self.selected_peg]]
+            self.ngeoms = [self.ngeoms[self.selected_peg]]
+            lst = [(str(self.item_names[0])+'{}'.format(0), self.ob_inits[0]())]
+        else:
+            lst = []
+            for i in range(self.n_each_object):
+                for j in range(len(self.ob_inits)):
+                    ob = self.ob_inits[j]()
+                    lst.append((str(self.item_names[j])+'{}'.format(i), ob))
+
+        self.mujoco_objects = OrderedDict(lst)
         self.n_objects = len(self.mujoco_objects)
 
         # task includes arena, robot, and objects of interest
@@ -96,11 +112,16 @@ class SawyerPegsEnv(SawyerEnv):
     def _get_reference(self):
         super()._get_reference()
         self.obj_body_id={}
+        self.obj_geom_id = {}
 
         for i in range(self.n_each_object):
             for j in range(len(self.ob_inits)):
-                obj_str = str(self.ob_inits[j]) + '{}'.format(i)
+                obj_str = str(self.item_names[j]) + '{}'.format(i)
                 self.obj_body_id[obj_str] = self.sim.model.body_name2id(obj_str)
+                geom_ids = []
+                for k in range(self.ngeoms[j]):
+                    geom_ids.append(self.sim.model.geom_name2id(obj_str + '-{}'.format(k)))
+                self.obj_geom_id[obj_str] = geom_ids
 
         # information of objects
         self.object_names = list(self.mujoco_objects.keys())
@@ -114,37 +135,148 @@ class SawyerPegsEnv(SawyerEnv):
         self.collision_check_geom_names = self.sim.model._geom_name2id.keys()
         self.collision_check_geom_ids = [self.sim.model._geom_name2id[k] for k in self.collision_check_geom_names]
 
+        # keep track of which objects are on their corresponding pegs
+        self.objects_on_pegs = np.zeros((self.n_each_object, len(self.ob_inits)))
+
     def _reset_internal(self):
         super()._reset_internal()
         # inherited class should reset positions of objects
         self.model.place_objects()
 
     def reward(self, action = None):
-        reward = 0
-        num_obj_on_peg = 0
-        num_obj_total = self.n_each_object * len(self.ob_inits)
+        if self.reward_shaping:
+            r_goal = 0.
+            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            for i in range(self.n_each_object):
+                for j in range(len(self.ob_inits)):
+                    obj_str = str(self.item_names[j]) + '{}'.format(i)
+                    obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
+                    dist = np.linalg.norm(gripper_site_pos - obj_pos)
+                    r_reach = 1 - np.tanh(10.0 * dist)
+                    peg_id = j
+                    if self.single_object_mode:
+                        peg_id = self.selected_peg
+                    r_obj_goal = int(self.on_peg(obj_pos, peg_id) and r_reach < 0.6)
+                    self.objects_on_pegs[i, j] = r_obj_goal
+                    r_goal += r_obj_goal
+            staged_rewards = self.staged_rewards()
+            return r_goal + max(staged_rewards)
 
-        gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-        for i in range(self.n_each_object):
-            for j in range(len(self.ob_inits)):
-                r_on_peg, r_lift = 0, 0
-                obj_str = str(self.ob_inits[j]) + '{}'.format(i)
-                obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
-                dist = np.linalg.norm(gripper_site_pos - obj_pos)
-                r_reach = 1 - np.tanh(10.0 * dist)
-                if r_reach < 0.6 and self.on_peg(obj_pos,j):
-                    r_on_peg = 0.25
-                if self._check_contact() and obj_pos[2] > self.model.shelf_offset[2] + 0.05:
-                    r_lift = 0.05
-                if r_on_peg > 0:
-                    num_obj_on_peg += 1
-                if self.reward_shaping:
-                    reward += max(r_on_peg, r_lift)
+        else:
+            # +1 for every object on a peg
+            reward = 0
+            num_obj_on_peg = 0
+            num_obj_total = self.n_each_object * len(self.ob_inits)
 
-        if num_obj_total == num_obj_on_peg:
-            reward += 1.0
+            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            for i in range(self.n_each_object):
+                for j in range(len(self.ob_inits)):
+                    r_on_peg, r_lift = 0, 0
+                    # obj_str = str(self.ob_inits[j]) + '{}'.format(i)
+                    obj_str = str(self.item_names[j]) + '{}'.format(i)
+                    obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
+                    dist = np.linalg.norm(gripper_site_pos - obj_pos)
+                    r_reach = 1 - np.tanh(10.0 * dist)
+                    peg_id = j
+                    if self.single_object_mode:
+                        peg_id = self.selected_peg
+                    if r_reach < 0.6 and self.on_peg(obj_pos, peg_id):
+                        reward += 1.
 
         return reward
+
+    def staged_rewards(self):
+        """
+        Returns staged rewards based on current physical states.
+
+        Stages consist of reaching, grasping, lifting, and hovering.
+        """
+
+        reach_mult = 0.1
+        grasp_mult = 0.35
+        lift_mult = 0.5
+        hover_mult = 0.7
+
+        # filter out objects that are already in the correct bins
+        names_to_reach = []
+        objs_to_reach = []
+        geoms_to_grasp = []
+        geoms_by_array = []
+
+        for i in range(self.n_each_object):
+            for j in range(len(self.ob_inits)):
+                if self.objects_on_pegs[i, j]:
+                    continue
+                obj_str = str(self.item_names[j]) + '{}'.format(i)
+                names_to_reach.append(obj_str)
+                objs_to_reach.append(self.obj_body_id[obj_str])
+                geoms_to_grasp.extend(self.obj_geom_id[obj_str])
+                geoms_by_array.append(self.obj_geom_id[obj_str])
+
+        ### reaching reward governed by distance to closest object ###
+        r_reach = 0.
+        if len(objs_to_reach):
+            # # get reaching reward via minimum distance to a target object
+            # target_object_pos = self.sim.data.body_xpos[objs_to_reach]
+            # gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            # dists = target_object_pos - gripper_site_pos.reshape(1, -1)
+            # dist_norms = np.linalg.norm(target_object_pos - gripper_site_pos.reshape(1, -1), axis=1)
+            # r_reach = (1 - np.tanh(10.0 * min(dist_norms))) * reach_mult
+
+            # reaching reward via minimum distance to the handles of the objects (the last geom of each nut)
+            geom_ids = [elem[-1] for elem in geoms_by_array]
+            target_geom_pos = self.sim.data.geom_xpos[geom_ids]
+            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            dists = np.linalg.norm(target_geom_pos - gripper_site_pos.reshape(1, -1), axis=1)
+            r_reach = (1 - np.tanh(10.0 * min(dists))) * reach_mult
+
+        ### grasping reward for touching any objects of interest ###
+        touch_left_finger = False
+        touch_right_finger = False
+        for i in range(self.sim.data.ncon):
+            c = self.sim.data.contact[i]
+            if c.geom1 in geoms_to_grasp:
+                if c.geom2 == self.l_finger_geom_id:
+                    touch_left_finger = True
+                if c.geom2 == self.r_finger_geom_id:
+                    touch_right_finger = True
+            elif c.geom2 in geoms_to_grasp:
+                if c.geom1 == self.l_finger_geom_id:
+                    touch_left_finger = True
+                if c.geom1 == self.r_finger_geom_id:
+                    touch_right_finger = True
+        has_grasp = touch_left_finger and touch_right_finger
+        r_grasp = int(has_grasp) * grasp_mult
+
+        ### lifting reward for picking up an object ###
+        r_lift = 0.
+        if len(objs_to_reach) and r_grasp > 0.:
+            z_target = self.bin_pos[2] + 0.2
+            object_z_locs = self.sim.data.body_xpos[objs_to_reach][:, 2]
+            z_dists = np.maximum(z_target - object_z_locs, 0.)
+            r_lift = grasp_mult + (1 - np.tanh(15.0 * min(z_dists))) * (lift_mult - grasp_mult)
+
+        ### hover reward for getting object above bin ###
+        r_hover = 0.
+        if len(objs_to_reach):
+            r_hovers = np.zeros(len(objs_to_reach))
+            for i in range(len(objs_to_reach)):
+                if names_to_reach[i] == self.item_names[0]:
+                    peg_pos = self.peg2_pos[:2]
+                else:
+                    peg_pos = self.peg1_pos[:2]
+                ob_xy = self.sim.data.body_xpos[objs_to_reach[i]][:2]
+                dist = np.linalg.norm(peg_pos - ob_xy)
+
+                ### TODO: tune this, should we even have this reward component? ###
+                # if dist < 0.1:
+                #     r_hovers[i] = lift_mult + (1 - np.tanh(10.0 * dist)) * (hover_mult - lift_mult)
+                # else:
+                #     r_hovers[i] = r_lift + (1 - np.tanh(10.0 * dist)) * (hover_mult - lift_mult)
+                r_hovers[i] = r_lift + (1 - np.tanh(10.0 * dist)) * (hover_mult - lift_mult)
+            r_hover = np.max(r_hovers)
+
+        return r_reach, r_grasp, r_lift, r_hover
 
     def on_peg(self, obj_pos, peg_id):
 
@@ -179,16 +311,50 @@ class SawyerPegsEnv(SawyerEnv):
         # low-level object information
         if self.use_object_obs:
 
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+            ### TODO: everything is in world frame right now... ###
 
+            # gripper orientation
+            di['gripper_pos'] = self.sim.data.site_xpos[self.eef_site_id]
+            di['gripper_quat'] = self.sim.data.get_body_xquat('right_hand')
+
+            gripper_pose = U.pose2mat((di['gripper_pos'], di['gripper_quat']))
+            world_pose_in_gripper = U.pose_inv(gripper_pose)
+
+            ### TODO: should we transform these poses to robot base frame? ###
             for i in range(self.n_each_object):
-                for j in range(len(self.ob_inits)):
-                    obj_str = str(self.ob_inits[j]) + '{}'.format(i)
+                for j in range(len(self.item_names_org)): 
+                    
+                    if self.single_object_mode and self.selected_peg != j:
+                        obj_str = str(self.item_names_org[j]) + '{}'.format(i)
+                        di["{}_pos".format(obj_str)] = np.zeros(3)
+                        di["{}_quat".format(obj_str)] = np.zeros(4)
+                        di["{}_to_gripper_pos".format(obj_str)] = np.zeros(3) 
+                        di["{}_to_gripper_quat".format(obj_str)] = np.zeros(4)
+                        continue
+
+                    obj_str = str(self.item_names_org[j]) + '{}'.format(i)
                     obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
                     obj_quat = self.sim.data.body_xquat[self.obj_body_id[obj_str]]
-                    di[obj_str + '_pos'] = obj_pos
-                    di[obj_str + '_quat'] = obj_quat
-                    di['gripper_to_' + obj_str] = gripper_site_pos - obj_pos
+                    di["{}_pos".format(obj_str)] = obj_pos
+                    di["{}_quat".format(obj_str)] = obj_quat
+
+                    object_pose = U.pose2mat((obj_pos, obj_quat))
+                    rel_pose = U.pose_in_A_to_pose_in_B(object_pose, world_pose_in_gripper)
+                    rel_pos, rel_quat = U.mat2pose(rel_pose)
+                    # gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+                    # di["gripper_to_{}".format(obj_str)] = gripper_site_pos - obj_pos 
+                    di["{}_to_gripper_pos".format(obj_str)] = rel_pos 
+                    di["{}_to_gripper_quat".format(obj_str)] = rel_quat
+
+        # proprioception
+        di['proprio'] = np.concatenate([
+            np.sin(di['joint_pos']),
+            np.cos(di['joint_pos']),
+            di['joint_vel'],
+            di['gripper_pos'],
+        ])
+
+
 
         return di
 
