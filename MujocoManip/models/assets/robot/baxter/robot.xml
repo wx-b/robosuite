@@ -1,5 +1,5 @@
 <mujoco model="baxter">
-	<compiler coordinate="local" angle="radian" meshdir="meshes/" strippath="false" />
+  <compiler coordinate="local" angle="radian" meshdir="meshes/" strippath="false" />
   <size njmax="795" nconmax="250" nstack="631875" />
   <asset>
     <mesh name="base_link" file="meshes/torso/base_link.STL" />
@@ -17,7 +17,6 @@
     <mesh name="W2" file="meshes/wrist/W2.STL" />
     <mesh name="paddle_tip" file="meshes/electric_gripper/fingers/paddle_tip.STL" />
   </asset>
-        
 
   <visual>
     <map fogstart="1.5" fogend="3" />
@@ -111,8 +110,8 @@
                         <geom margin="0.001" class="viz" rgba="0.1 0.1 0.1 1" mesh="W2" />
                         <geom margin="0.001" type="cylinder" size="0.06 0.0825" rgba="0.1 0.1 0.1 1" pos="0 0 0" />
                         <body name="right_hand" pos="0 0 0.11355">
-				<!--<inertial pos="0.01093 0.00042 -0.01532" quat="0.025365 0.814618 0.0196357 0.579109" mass="0.19125" diaginertia="0.000246058 0.000211549 0.000167391" />
-			  <geom margin="0.001" type="cylinder" size="0.04 0.0232" pos="0 0 -0.0232" />
+        <!--<inertial pos="0.01093 0.00042 -0.01532" quat="0.025365 0.814618 0.0196357 0.579109" mass="0.19125" diaginertia="0.000246058 0.000211549 0.000167391" />
+        <geom margin="0.001" type="cylinder" size="0.04 0.0232" pos="0 0 -0.0232" />
                           <body name="right_gripper_base" pos="0 0 0.025">
                             <inertial pos="0 0 0" quat="-0.5 0.5 0.5 0.5" mass="0.3" diaginertia="3e-08 2e-08 2e-08" />
                             <geom margin="0.001" quat="0 0 0.707107 0.707107" class="viz" mesh="electric_gripper_base" />
@@ -141,7 +140,7 @@
                                 <geom margin="0.001" size="0.008 0.0185" pos="0 0.0045 -0.015" type="cylinder" />
                               </body>
                             </body>
-			  </body>-->
+        </body>-->
                         </body>
                       </body>
                     </body>
@@ -191,7 +190,7 @@
                         <geom margin="0.001" class="viz" rgba="0.1 0.1 0.1 1" mesh="W2" />
                         <geom margin="0.001" type="cylinder" size="0.06 0.0825" rgba="0.1 0.1 0.1 1" pos="0 0 0" />
                         <body name="left_hand" pos="0 0 0.11355">
-				<!--<inertial pos="0.01093 0.00042 -0.01532" quat="0.025365 0.814618 0.0196357 0.579109" mass="0.19125" diaginertia="0.000246058 0.000211549 0.000167391" />
+        <!--<inertial pos="0.01093 0.00042 -0.01532" quat="0.025365 0.814618 0.0196357 0.579109" mass="0.19125" diaginertia="0.000246058 0.000211549 0.000167391" />
                           <geom margin="0.001" type="cylinder" size="0.04 0.0232" pos="0 0 -0.0232" />
                           <body name="left_gripper_base" pos="0 0 0.025">
                             <inertial pos="0 0 0" quat="-0.5 0.5 0.5 0.5" mass="0.3" diaginertia="3e-08 2e-08 2e-08" />
@@ -221,7 +220,7 @@
                                 <geom margin="0.001" size="0.021 0.00325 0.0185" pos="0 0.0045 -0.015" type="box" />
                               </body>
                             </body>
-		    </body>-->
+        </body>-->
                         </body>
                       </body>
                     </body>

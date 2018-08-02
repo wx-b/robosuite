@@ -157,6 +157,12 @@ class MujocoMeshObject(MujocoXML, MujocoObject):
         collision.attrib.pop('name')
         if name is not None:
             collision.attrib['name'] = name
+            geoms = collision.findall('geom')
+            if len(geoms) == 1:
+                geoms[0].set('name', name)
+            else:
+                for i in range(len(geoms)):
+                    geoms[i].set('name', "{}-{}".format(name, i))
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
