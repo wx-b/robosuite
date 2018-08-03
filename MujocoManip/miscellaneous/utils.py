@@ -7,6 +7,8 @@ NOTE: convention for quaternions is (x, y, z, w)
 import numpy as np
 import math
 import mujoco_py
+import xml.etree.ElementTree as ET
+import os 
 
 pi = np.pi
 EPS = np.finfo(float).eps * 4.
@@ -26,6 +28,23 @@ _AXES2TUPLE = {
     'rzxz': (2, 0, 1, 1), 'rxyz': (2, 1, 0, 1), 'rzyz': (2, 1, 1, 1)}
 
 _TUPLE2AXES = dict((v, k) for k, v in _AXES2TUPLE.items())
+
+def convert_quat(q, to='xyzw'):
+    """
+    Converts quaternion from one convention to another. 
+    The convention to convert TO is specified as an optional argument. 
+    If to == 'xyzw', then the input is in 'wxyz' format, and vice-versa.
+
+    :param q: a 4-dim numpy array corresponding to a quaternion
+    :param to: a string, either 'xyzw' or 'wxyz', determining 
+               which convention to convert to.
+    """
+    if to == 'xyzw':
+        return q[[1, 2, 3, 0]]
+    elif to == 'wxyz':
+        return q[[3, 0, 1, 2]]
+    else:
+        raise Exception("convert_quat: choose a valid `to` argument (xyzw or wxyz)")
 
 def vec(values):
     """
@@ -168,7 +187,7 @@ def pose2mat(pose):
 
 def quat2mat(quaternion):
     """
-    Convert given quaternion  (x, y, z, w) to matrix
+    Convert given quaternion (x, y, z, w) to matrix
     :param quaternion: vec4 float angles
     :return: 3x3 rotation matrix
     """
@@ -578,6 +597,34 @@ def mjpy_reset_mocap2body_xpos(sim):
         assert (mocap_id != -1)
         sim.data.mocap_pos[mocap_id][:] = sim.data.body_xpos[body_idx]
         sim.data.mocap_quat[mocap_id][:] = sim.data.body_xquat[body_idx]
+
+def postprocess_model_xml(xml_str):
+    """
+    This function postprocesses the model.xml collected from a MuJoCo demonstration
+    in order to make sure that the STL files can be found.
+    """
+    import MujocoManip as MM
+    path = os.path.split(MM.__file__)[0]
+    path_split = path.split('/')
+
+    # replace mesh and texture file paths
+    tree = ET.fromstring(xml_str)
+    root = tree
+    e = root.find('asset')
+    meshes = e.findall('mesh')
+    textures = e.findall('texture')
+    all_elements = meshes + textures
+
+    for elem in all_elements:
+        old_path = elem.get('file')
+        if old_path is None:
+            continue
+        old_path_split = old_path.split('/')
+        ind = old_path_split.index('MujocoManip')
+        new_path_split = path_split + old_path_split[ind + 1:]
+        new_path = '/'.join(new_path_split)
+        elem.set('file', new_path)
+    return ET.tostring(root, encoding='utf8').decode('utf8')
 
 def range_to_reward(x, r1, r2, y):
     """

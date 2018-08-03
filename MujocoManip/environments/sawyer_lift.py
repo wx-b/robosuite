@@ -1,9 +1,12 @@
 import numpy as np
 from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
+from MujocoManip.miscellaneous.utils import postprocess_model_xml
 from MujocoManip.environments.sawyer import SawyerEnv
+from MujocoManip.environments.demo_sampler import DemoSampler
 from MujocoManip.models import *
 from MujocoManip.models.model_util import xml_path_completion
+import MujocoManip.miscellaneous.utils as U
 
 
 class SawyerLiftEnv(SawyerEnv):
@@ -19,6 +22,7 @@ class SawyerLiftEnv(SawyerEnv):
                  reward_shaping=False,
                  gripper_visualization=False,
                  placement_initializer=None,
+                 demo_config=None,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -46,6 +50,13 @@ class SawyerLiftEnv(SawyerEnv):
 
         # reward configuration
         self.reward_shaping = reward_shaping
+
+        self.demo_config = demo_config
+        if self.demo_config is not None :
+            self.demo_sampler = DemoSampler('demonstrations/sawyer-lift.pkl',
+                                            self.demo_config,
+                                            need_xml=True)
+        self.eps_reward = 0
 
         # object placement initializer
         if placement_initializer:
@@ -94,17 +105,31 @@ class SawyerLiftEnv(SawyerEnv):
         self.r_finger_geom_id = self.sim.model.geom_name2id('r_fingertip_g0')
         self.cube_geom_id = self.sim.model.geom_name2id('cube')
 
-    def _reset_internal(self):
-        super()._reset_internal()
+    def _reset_from_random(self):
         # inherited class should reset positions of objects
         self.model.place_objects()
         # reset joint positions
-        init_pos = np.array([-0.5538, -0.8208,  0.4155, 1.8409,
-                             -0.4955, 0.6482,  1.9628])
+        init_pos = np.array([-0.5538, -0.8208, 0.4155, 1.8409,
+                             -0.4955, 0.6482, 1.9628])
         init_pos += np.random.randn(init_pos.shape[0]) * 0.02
         self.sim.data.qpos[self._ref_joint_pos_indexes] = np.array(init_pos)
 
-    def reward(self, action):
+    def _reset_internal(self):
+        super()._reset_internal()
+        if self.demo_config is not None:
+            self.demo_sampler.log_score(self.eps_reward)
+            state = self.demo_sampler.sample()
+            if state is None:
+                self._reset_from_random()
+            else:
+                # state, xml = self.demo_sampler.uniform_sample()
+                state, xml = state
+                self.reset_from_xml_string(xml)
+                self.sim.set_state_from_flattened(state)
+                self.sim.forward()
+        else: self._reset_from_random()
+
+    def reward(self, action=None):
         reward = 0
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
         table_height = self.table_size[2]
@@ -139,6 +164,7 @@ class SawyerLiftEnv(SawyerEnv):
             if touch_left_finger and touch_right_finger:
                 reward += 0.25
 
+        self.eps_reward = max(reward, self.eps_reward)
         return reward
 
     def _get_observation(self):
@@ -158,7 +184,7 @@ class SawyerLiftEnv(SawyerEnv):
         if self.use_object_obs:
             # position and rotation of object
             cube_pos = np.array(self.sim.data.body_xpos[self.cube_body_id])
-            cube_quat = np.array(self.sim.data.body_xquat[self.cube_body_id])
+            cube_quat = U.convert_quat(np.array(self.sim.data.body_xquat[self.cube_body_id]), to='xyzw')
             di['cube_pos'] = cube_pos
             di['cube_quat'] = cube_quat
 

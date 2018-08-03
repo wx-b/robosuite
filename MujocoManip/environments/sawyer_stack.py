@@ -2,8 +2,11 @@ import numpy as np
 from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.sawyer import SawyerEnv
+from MujocoManip.environments.demo_sampler import DemoSampler
 from MujocoManip.models import *
-
+import MujocoManip.miscellaneous.utils as U
+import pickle
+import random
 
 class SawyerStackEnv(SawyerEnv):
 
@@ -18,6 +21,7 @@ class SawyerStackEnv(SawyerEnv):
                  reward_shaping=False,
                  gripper_visualization=False,
                  placement_initializer=None,
+                 demo_config=None,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -44,6 +48,12 @@ class SawyerStackEnv(SawyerEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
+        self.demo_config = demo_config
+        if self.demo_config is not None :
+            self.demo_sampler = DemoSampler('demonstrations/sawyer-stack.pkl',
+                                            self.demo_config)
+        
+        self.eps_reward = 0      
         # object placement initializer
         if placement_initializer:
             self.placement_initializer = placement_initializer
@@ -115,8 +125,7 @@ class SawyerStackEnv(SawyerEnv):
         self.cubeA_geom_id = self.sim.model.geom_name2id('cubeA')
         self.cubeB_geom_id = self.sim.model.geom_name2id('cubeB')
 
-    def _reset_internal(self):
-        super()._reset_internal()
+    def _reset_from_random(self):
         # inherited class should reset positions of objects
         self.model.place_objects()
         # reset joint positions
@@ -125,12 +134,27 @@ class SawyerStackEnv(SawyerEnv):
         init_pos += np.random.randn(init_pos.shape[0]) * 0.02
         self.sim.data.qpos[self._ref_joint_pos_indexes] = np.array(init_pos)
 
+    def _reset_internal(self):
+        super()._reset_internal()
+        if self.demo_config is not None:
+            self.demo_sampler.log_score(self.eps_reward)
+            state = self.demo_sampler.sample()
+            if state is None:
+                self._reset_from_random()
+            else:
+                self.sim.set_state(state)
+                self.sim.forward()
+        else: self._reset_from_random()
+
+
     def reward(self, action):
         r_reach, r_lift, r_stack = self.staged_rewards()
         if self.reward_shaping:
             reward = max(r_reach, r_lift, r_stack)
         else:
             reward = 1.0 if r_stack > 0 else 0.0
+            
+        self.eps_reward = max(reward, self.eps_reward)
         return reward
 
     def staged_rewards(self):
@@ -210,13 +234,13 @@ class SawyerStackEnv(SawyerEnv):
         if self.use_object_obs:
             # position and rotation of the first cube
             cubeA_pos = np.array(self.sim.data.body_xpos[self.cubeA_body_id])
-            cubeA_quat = np.array(self.sim.data.body_xquat[self.cubeA_body_id])
+            cubeA_quat = U.convert_quat(np.array(self.sim.data.body_xquat[self.cubeA_body_id]), to='xyzw')
             di['cubeA_pos'] = cubeA_pos
             di['cubeA_quat'] = cubeA_quat
 
             # position and rotation of the second cube
             cubeB_pos = np.array(self.sim.data.body_xpos[self.cubeB_body_id])
-            cubeB_quat = np.array(self.sim.data.body_xquat[self.cubeB_body_id])
+            cubeB_quat = U.convert_quat(np.array(self.sim.data.body_xquat[self.cubeB_body_id]), to='xyzw')
             di['cubeB_pos'] = cubeB_pos
             di['cubeB_quat'] = cubeB_quat
 

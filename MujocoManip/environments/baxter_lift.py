@@ -2,10 +2,12 @@ import numpy as np
 from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.baxter import BaxterEnv
+from MujocoManip.environments.demo_sampler import DemoSampler
 from MujocoManip.models import *
 from MujocoManip.models.model_util import xml_path_completion
-from MujocoManip.miscellaneous.transformations import quaternion_matrix
-
+import MujocoManip.miscellaneous.utils as U
+import pickle
+import random
 
 class BaxterLiftEnv(BaxterEnv):
 
@@ -19,6 +21,7 @@ class BaxterLiftEnv(BaxterEnv):
                  camera_name='frontview',
                  reward_shaping=True,
                  gripper_visualization=False,
+                 demo_config=None,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -47,6 +50,12 @@ class BaxterLiftEnv(BaxterEnv):
         # whether to show visual aid about where is the gripper
         self.gripper_visualization = gripper_visualization
 
+        self.demo_config = demo_config
+        if self.demo_config is not None :
+            self.demo_sampler = DemoSampler('demonstrations/baxter-lift.pkl',
+                                            self.demo_config)
+
+        self.eps_reward = 0
         # reward configuration
         self.reward_shaping = reward_shaping
 
@@ -91,10 +100,21 @@ class BaxterLiftEnv(BaxterEnv):
         self.table_top_id = self.sim.model.site_name2id('table_top')
         self.pot_center_id = self.sim.model.site_name2id('pot_center')
 
-    def _reset_internal(self):
-        super()._reset_internal()
+    def _reset_from_random(self):
         # inherited class should reset positions of objects
         self.model.place_objects()
+
+    def _reset_internal(self):
+        super()._reset_internal()
+        if self.demo_config is not None:
+            self.demo_sampler.log_score(self.eps_reward)
+            state = self.demo_sampler.sample()
+            if state is None:
+                self._reset_from_random()
+            else:
+                self.sim.set_state_from_flattened(state)
+                self.sim.forward()
+        else: self._reset_from_random()
 
     def reward(self, action):
         """
@@ -113,7 +133,7 @@ class BaxterLiftEnv(BaxterEnv):
         table_height = self.sim.data.site_xpos[self.table_top_id][2]
 
         # check if the pot is tilted more than 30 degrees
-        mat = quaternion_matrix(self._pot_quat)[0:3, 0:3]
+        mat = U.quat2mat(self._pot_quat)
         z_unit = [0, 0, 1]
         z_rotated = np.matmul(mat, z_unit)
         cos_z = np.dot(z_unit, z_rotated)
@@ -153,6 +173,7 @@ class BaxterLiftEnv(BaxterEnv):
             else:
                 reward += 0.5 * (1 - np.tanh(r_gh_dist))
 
+        self.eps_reward = max(reward, self.eps_reward)
         return reward
 
     @property
@@ -173,11 +194,11 @@ class BaxterLiftEnv(BaxterEnv):
 
     @property
     def _pot_quat(self):
-        return self.sim.data.body_xquat[self.cube_body_id]
+        return U.convert_quat(self.sim.data.body_xquat[self.cube_body_id], to='xyzw')
 
     @property
     def _world_quat(self):
-        return np.array([1, 0, 0, 0])
+        return U.convert_quat(np.array([1, 0, 0, 0]), to='xyzw')
 
     @property
     def _l_gripper_to_handle(self):
@@ -204,7 +225,7 @@ class BaxterLiftEnv(BaxterEnv):
         if self.use_object_obs:
             # position and rotation of object
             cube_pos = self.sim.data.body_xpos[self.cube_body_id]
-            cube_quat = self.sim.data.body_xquat[self.cube_body_id]
+            cube_quat = U.convert_quat(self.sim.data.body_xquat[self.cube_body_id], to='xyzw')
             di['cube_pos'] = cube_pos
             di['cube_quat'] = cube_quat
 

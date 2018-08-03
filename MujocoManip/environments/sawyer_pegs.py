@@ -2,8 +2,10 @@ import numpy as np
 from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.sawyer import SawyerEnv
+from MujocoManip.environments.demo_sampler import DemoSampler
 from MujocoManip.models import *
 import MujocoManip.miscellaneous.utils as U
+import random
 
 
 class SawyerPegsEnv(SawyerEnv):
@@ -19,8 +21,10 @@ class SawyerPegsEnv(SawyerEnv):
                  reward_shaping=False,
                  gripper_visualization=False,
                  placement_initializer=None,
-                 n_each_object=2,
-                 single_object_mode=False,
+                 n_each_object=1,
+                 single_object_mode=0, # 0 full, 1 single obj with full obs 2 single with single obs
+                 selected_peg=None,
+                 demo_config=None,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -39,6 +43,8 @@ class SawyerPegsEnv(SawyerEnv):
         # number of objects per category
         self.n_each_object = n_each_object
         self.single_object_mode = single_object_mode
+        self.selected_peg = selected_peg
+        self.obj_to_use = None
 
         # settings for table top
         self.table_size = table_size
@@ -52,6 +58,12 @@ class SawyerPegsEnv(SawyerEnv):
 
         # reward configuration
         self.reward_shaping = reward_shaping
+
+        self.demo_config = demo_config
+        if self.demo_config is not None :
+            self.demo_sampler = DemoSampler('demonstrations/pegs.pkl',
+                                            self.demo_config)
+        self.eps_reward = 0
 
         # placement initilizer
         if placement_initializer:
@@ -82,21 +94,14 @@ class SawyerPegsEnv(SawyerEnv):
         self.ob_inits = [DefaultSquareNutObject, DefaultRoundNutObject]
         self.item_names = ["SquareNut", "RoundNut"]
         self.item_names_org = list(self.item_names)
+        self.obj_to_use = (self.item_names[1]+'{}').format(0)
         self.ngeoms = [5, 9]
 
-        if self.single_object_mode:
-            self.n_each_object = 1
-            self.selected_peg = np.random.randint(len(self.ob_inits))
-            self.ob_inits = [self.ob_inits[self.selected_peg]]
-            self.item_names = [self.item_names[self.selected_peg]]
-            self.ngeoms = [self.ngeoms[self.selected_peg]]
-            lst = [(str(self.item_names[0])+'{}'.format(0), self.ob_inits[0]())]
-        else:
-            lst = []
-            for i in range(self.n_each_object):
-                for j in range(len(self.ob_inits)):
-                    ob = self.ob_inits[j]()
-                    lst.append((str(self.item_names[j])+'{}'.format(i), ob))
+        lst = []
+        for i in range(self.n_each_object):
+            for j in range(len(self.ob_inits)):
+                ob = self.ob_inits[j]()
+                lst.append((str(self.item_names[j])+'{}'.format(i), ob))
 
         self.mujoco_objects = OrderedDict(lst)
         self.n_objects = len(self.mujoco_objects)
@@ -105,9 +110,20 @@ class SawyerPegsEnv(SawyerEnv):
         self.model = PegsTask(self.mujoco_arena, self.mujoco_robot, self.mujoco_objects, self.placement_initializer)
         self.model.place_objects()
         self.bin_pos = string_to_array(self.model.bin1_body.get('pos'))
-        self.peg1_pos = string_to_array(self.model.peg1_body.get('pos'))
-        self.peg2_pos = string_to_array(self.model.peg2_body.get('pos'))
+        self.peg1_pos = string_to_array(self.model.peg1_body.get('pos')) # square
+        self.peg2_pos = string_to_array(self.model.peg2_body.get('pos')) # round
         self.bin_size = self.model.shelf_size
+        
+    def clear_objects(self, obj):
+        for obj_name, obj_mjcf in self.mujoco_objects.items():
+            if obj_name == obj:
+                continue
+            else:
+                sim_state = self.sim.get_state()
+                # print(self.sim.model.get_joint_qpos_addr(obj_name))
+                sim_state.qpos[self.sim.model.get_joint_qpos_addr(obj_name)[0]] = 10
+                self.sim.set_state(sim_state)
+                self.sim.forward()
 
     def _get_reference(self):
         super()._get_reference()
@@ -131,6 +147,7 @@ class SawyerPegsEnv(SawyerEnv):
         self.finger_names = self.gripper.contact_geoms()
         self.l_finger_geom_id = self.sim.model.geom_name2id('l_fingertip_g0')
         self.r_finger_geom_id = self.sim.model.geom_name2id('r_fingertip_g0')
+
         # self.sim.data.contact # list, geom1, geom2
         self.collision_check_geom_names = self.sim.model._geom_name2id.keys()
         self.collision_check_geom_ids = [self.sim.model._geom_name2id[k] for k in self.collision_check_geom_names]
@@ -138,10 +155,28 @@ class SawyerPegsEnv(SawyerEnv):
         # keep track of which objects are on their corresponding pegs
         self.objects_on_pegs = np.zeros((self.n_each_object, len(self.ob_inits)))
 
-    def _reset_internal(self):
-        super()._reset_internal()
+    def _reset_from_random(self):
         # inherited class should reset positions of objects
         self.model.place_objects()
+        if (self.single_object_mode == 1):
+            self.obj_to_use = (random.choice(self.item_names)+'{}').format(0)
+            self.clear_objects(self.obj_to_use)
+        elif (self.single_object_mode == 2):
+            self.obj_to_use = (self.item_names[self.selected_peg]+'{}').format(0)
+            self.clear_objects(self.obj_to_use)
+
+    def _reset_internal(self):
+        super()._reset_internal()
+        if self.demo_config is not None:
+            self.demo_sampler.log_score(self.eps_reward)
+            state = self.demo_sampler.sample()
+            if state is None:
+                self._reset_from_random()
+            else:
+                self.sim.set_state_from_flattened(state)
+                self.sim.forward()
+        else: 
+            self._reset_from_random()
 
     def reward(self, action = None):
         if self.reward_shaping:
@@ -153,10 +188,7 @@ class SawyerPegsEnv(SawyerEnv):
                     obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
                     dist = np.linalg.norm(gripper_site_pos - obj_pos)
                     r_reach = 1 - np.tanh(10.0 * dist)
-                    peg_id = j
-                    if self.single_object_mode:
-                        peg_id = self.selected_peg
-                    r_obj_goal = int(self.on_peg(obj_pos, peg_id) and r_reach < 0.6)
+                    r_obj_goal = int(self.on_peg(obj_pos, j) and r_reach < 0.6)
                     self.objects_on_pegs[i, j] = r_obj_goal
                     r_goal += r_obj_goal
             staged_rewards = self.staged_rewards()
@@ -165,22 +197,15 @@ class SawyerPegsEnv(SawyerEnv):
         else:
             # +1 for every object on a peg
             reward = 0
-            num_obj_on_peg = 0
-            num_obj_total = self.n_each_object * len(self.ob_inits)
-
             gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
             for i in range(self.n_each_object):
                 for j in range(len(self.ob_inits)):
                     r_on_peg, r_lift = 0, 0
-                    # obj_str = str(self.ob_inits[j]) + '{}'.format(i)
                     obj_str = str(self.item_names[j]) + '{}'.format(i)
                     obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
                     dist = np.linalg.norm(gripper_site_pos - obj_pos)
                     r_reach = 1 - np.tanh(10.0 * dist)
-                    peg_id = j
-                    if self.single_object_mode:
-                        peg_id = self.selected_peg
-                    if r_reach < 0.6 and self.on_peg(obj_pos, peg_id):
+                    if r_reach < 0.6 and self.on_peg(obj_pos, j):
                         reward += 1.
 
         return reward
@@ -197,7 +222,7 @@ class SawyerPegsEnv(SawyerEnv):
         lift_mult = 0.5
         hover_mult = 0.7
 
-        # filter out objects that are already in the correct bins
+        # filter out objects that are already on the correct pegs
         names_to_reach = []
         objs_to_reach = []
         geoms_to_grasp = []
@@ -216,13 +241,6 @@ class SawyerPegsEnv(SawyerEnv):
         ### reaching reward governed by distance to closest object ###
         r_reach = 0.
         if len(objs_to_reach):
-            # # get reaching reward via minimum distance to a target object
-            # target_object_pos = self.sim.data.body_xpos[objs_to_reach]
-            # gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            # dists = target_object_pos - gripper_site_pos.reshape(1, -1)
-            # dist_norms = np.linalg.norm(target_object_pos - gripper_site_pos.reshape(1, -1), axis=1)
-            # r_reach = (1 - np.tanh(10.0 * min(dist_norms))) * reach_mult
-
             # reaching reward via minimum distance to the handles of the objects (the last geom of each nut)
             geom_ids = [elem[-1] for elem in geoms_by_array]
             target_geom_pos = self.sim.data.geom_xpos[geom_ids]
@@ -256,23 +274,19 @@ class SawyerPegsEnv(SawyerEnv):
             z_dists = np.maximum(z_target - object_z_locs, 0.)
             r_lift = grasp_mult + (1 - np.tanh(15.0 * min(z_dists))) * (lift_mult - grasp_mult)
 
-        ### hover reward for getting object above bin ###
+        ### hover reward for getting object above peg ###
         r_hover = 0.
         if len(objs_to_reach):
             r_hovers = np.zeros(len(objs_to_reach))
             for i in range(len(objs_to_reach)):
-                if names_to_reach[i] == self.item_names[0]:
+                if names_to_reach[i].startswith(self.item_names[0]):
+                    peg_pos = self.peg1_pos[:2]
+                elif names_to_reach[i].startswith(self.item_names[1]):
                     peg_pos = self.peg2_pos[:2]
                 else:
-                    peg_pos = self.peg1_pos[:2]
+                    raise Exception("Got invalid object to reach: {}".format(names_to_reach[i]))
                 ob_xy = self.sim.data.body_xpos[objs_to_reach[i]][:2]
                 dist = np.linalg.norm(peg_pos - ob_xy)
-
-                ### TODO: tune this, should we even have this reward component? ###
-                # if dist < 0.1:
-                #     r_hovers[i] = lift_mult + (1 - np.tanh(10.0 * dist)) * (hover_mult - lift_mult)
-                # else:
-                #     r_hovers[i] = r_lift + (1 - np.tanh(10.0 * dist)) * (hover_mult - lift_mult)
                 r_hovers[i] = r_lift + (1 - np.tanh(10.0 * dist)) * (hover_mult - lift_mult)
             r_hover = np.max(r_hovers)
 
@@ -311,40 +325,45 @@ class SawyerPegsEnv(SawyerEnv):
         # low-level object information
         if self.use_object_obs:
 
-            ### TODO: everything is in world frame right now... ###
-
+            ### TODO: everything is in world frame right now...
             # gripper orientation
-            di['gripper_pos'] = self.sim.data.site_xpos[self.eef_site_id]
-            di['gripper_quat'] = self.sim.data.get_body_xquat('right_hand')
+            # di['gripper_pos'] = self.sim.data.get_body_xpos('right_hand')
+            di['eef_pos'] = self.sim.data.site_xpos[self.eef_site_id]
+            di['eef_quat'] = U.convert_quat(self.sim.data.get_body_xquat('right_hand'), to='xyzw')
 
-            gripper_pose = U.pose2mat((di['gripper_pos'], di['gripper_quat']))
+            gripper_pose = U.pose2mat((di['eef_pos'], di['eef_quat']))
             world_pose_in_gripper = U.pose_inv(gripper_pose)
 
-            ### TODO: should we transform these poses to robot base frame? ###
+            ### TODO: should we transform these poses to robot base frame?
             for i in range(self.n_each_object):
                 for j in range(len(self.item_names_org)): 
-                    
-                    if self.single_object_mode and self.selected_peg != j:
-                        obj_str = str(self.item_names_org[j]) + '{}'.format(i)
-                        di["{}_pos".format(obj_str)] = np.zeros(3)
-                        di["{}_quat".format(obj_str)] = np.zeros(4)
-                        di["{}_to_gripper_pos".format(obj_str)] = np.zeros(3) 
-                        di["{}_to_gripper_quat".format(obj_str)] = np.zeros(4)
+
+                    if self.single_object_mode == 2 and self.selected_peg != j:
+                        # skip observations
                         continue
 
                     obj_str = str(self.item_names_org[j]) + '{}'.format(i)
                     obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
-                    obj_quat = self.sim.data.body_xquat[self.obj_body_id[obj_str]]
+                    obj_quat = U.convert_quat(self.sim.data.body_xquat[self.obj_body_id[obj_str]], to='xyzw')
                     di["{}_pos".format(obj_str)] = obj_pos
                     di["{}_quat".format(obj_str)] = obj_quat
 
                     object_pose = U.pose2mat((obj_pos, obj_quat))
                     rel_pose = U.pose_in_A_to_pose_in_B(object_pose, world_pose_in_gripper)
                     rel_pos, rel_quat = U.mat2pose(rel_pose)
-                    # gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-                    # di["gripper_to_{}".format(obj_str)] = gripper_site_pos - obj_pos 
-                    di["{}_to_gripper_pos".format(obj_str)] = rel_pos 
-                    di["{}_to_gripper_quat".format(obj_str)] = rel_quat
+                    di["{}_to_eef_pos".format(obj_str)] = rel_pos 
+                    di["{}_to_eef_quat".format(obj_str)] = rel_quat
+
+            if self.single_object_mode == 1:   
+                # zero out other objs
+                for obj_str, obj_mjcf in self.mujoco_objects.items():
+                    if obj_str == self.obj_to_use :
+                        continue
+                    else :
+                        di["{}_pos".format(obj_str)] *= 0.0
+                        di["{}_quat".format(obj_str)] *= 0.0
+                        di["{}_to_eef_pos".format(obj_str)] *= 0.0 
+                        di["{}_to_eef_quat".format(obj_str)] *= 0.0
 
         # proprioception
         di['proprio'] = np.concatenate([
@@ -352,9 +371,9 @@ class SawyerPegsEnv(SawyerEnv):
             np.cos(di['joint_pos']),
             di['joint_vel'],
             di['gripper_pos'],
+            di['eef_pos'],
+            di['eef_quat'],
         ])
-
-
 
         return di
 
@@ -401,3 +420,29 @@ class SawyerPegsEnv(SawyerEnv):
             rgba[3] = 0.5
 
             self.sim.model.site_rgba[self.eef_site_id] = rgba
+
+class SawyerPegsSingleEnv(SawyerPegsEnv):
+    """
+    Easier version of task - place one round nut into its peg.
+    """
+    def __init__(self, **kwargs):
+        assert ('single_object_mode' not in kwargs), "invalid set of arguments"
+        super().__init__(single_object_mode=1, **kwargs)
+
+class SawyerPegsSquareEnv(SawyerPegsEnv):
+    """
+    Easier version of task - place one square nut into its peg.
+    """
+    def __init__(self, **kwargs):
+        assert ('single_object_mode' not in kwargs and 'selected_peg' not in kwargs), "invalid set of arguments"
+        super().__init__(single_object_mode=2, selected_peg=0, **kwargs)
+
+class SawyerPegsRoundEnv(SawyerPegsEnv):
+    """
+    Easier version of task - place one round nut into its peg.
+    """
+    def __init__(self, **kwargs):
+        assert ('single_object_mode' not in kwargs and 'selected_peg' not in kwargs), "invalid set of arguments"
+        super().__init__(single_object_mode=2, selected_peg=1, **kwargs)
+
+

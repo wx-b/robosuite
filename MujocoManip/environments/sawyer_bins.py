@@ -1,7 +1,9 @@
+import random
 import numpy as np
 from collections import OrderedDict
 from MujocoManip.miscellaneous import RandomizationError
 from MujocoManip.environments.sawyer import SawyerEnv
+from MujocoManip.environments.demo_sampler import DemoSampler
 from MujocoManip.models import *
 import MujocoManip.miscellaneous.utils as U
 
@@ -16,10 +18,12 @@ class SawyerBinsEnv(SawyerEnv):
                  use_camera_obs=True,
                  use_object_obs=True,
                  camera_name='frontview',
-                 reward_shaping=False,
+                 reward_shaping=True,
                  gripper_visualization=False,
                  n_each_object=1,
-                 single_object_mode=False,
+                 single_object_mode=0, # 0 full, 1 single obj with full obs 2 single with single obs
+                 selected_bin=None,
+                 demo_config=None,
                  **kwargs):
         """
             @gripper_type, string that specifies the gripper type
@@ -38,6 +42,9 @@ class SawyerBinsEnv(SawyerEnv):
         # initialize objects of interest
         self.n_each_object = n_each_object
         self.single_object_mode = single_object_mode
+        self.min_obj_dist = np.inf
+        self.selected_bin = selected_bin
+        self.obj_to_use = None
 
         # settings for table top
         self.table_size = table_size
@@ -48,6 +55,12 @@ class SawyerBinsEnv(SawyerEnv):
 
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
+
+        self.demo_config = demo_config
+        if self.demo_config is not None :
+            self.demo_sampler = DemoSampler('demonstrations/can10.pkl',
+                                            self.demo_config)
+        self.eps_reward = 0
 
         super().__init__(gripper_type=gripper_type,
                          use_eef_ctrl=use_eef_ctrl,
@@ -60,7 +73,6 @@ class SawyerBinsEnv(SawyerEnv):
         self.reward_shaping = reward_shaping
 
         # information of objects
-        # self.object_names = [o['object_name'] for o in self.object_metadata]
         self.object_names = list(self.mujoco_objects.keys())
         self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
 
@@ -73,14 +85,35 @@ class SawyerBinsEnv(SawyerEnv):
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_robot.set_base_xpos([0,0,0])
+        self.mujoco_robot.set_base_xpos([0, 0, 0])
 
         # load model for table top workspace
         self.mujoco_arena = BinsArena()
         if self.use_indicator_object:
             self.mujoco_arena.add_pos_indicator()
+
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2,-0.3,0])
+        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, -0.3, 0])
+
+        self.ob_inits = [DefaultMilkObject, DefaultBreadObject, DefaultCerealObject, DefaultCanObject]
+        self.vis_inits = [DefaultMilkVisualObject, DefaultBreadVisualObject, DefaultCerealVisualObject, DefaultCanVisualObject]
+        self.item_names = ["Milk", "Bread", "Cereal", "Can"]
+        self.item_names_org = list(self.item_names)
+        self.obj_to_use = (self.item_names[0]+'{}').format(0)
+
+        lst = []
+        for j in range(len(self.vis_inits)):
+            lst.append((str(self.vis_inits[j]), self.vis_inits[j]()))
+        self.visual_objects = lst
+
+        lst = []
+        for i in range(self.n_each_object):
+            for j in range(len(self.ob_inits)):
+                ob = self.ob_inits[j]()
+                lst.append((str(self.item_names[j])+'{}'.format(i), ob))
+
+        self.mujoco_objects = OrderedDict(lst)
+        self.n_objects = len(self.mujoco_objects)
 
         self.ob_inits = [DefaultMilkObject, DefaultBreadObject, DefaultCerealObject, DefaultCanObject]
         self.vis_inits = [DefaultMilkVisualObject, DefaultBreadVisualObject, DefaultCerealVisualObject, DefaultCanVisualObject]
@@ -115,6 +148,16 @@ class SawyerBinsEnv(SawyerEnv):
         self.bin_pos = string_to_array(self.model.bin2_body.get('pos'))
         self.bin_size = self.model.shelf_size
 
+    def clear_objects(self, obj):
+        for obj_name, obj_mjcf in self.mujoco_objects.items():
+            if obj_name == obj:
+                continue
+            else:
+                sim_state = self.sim.get_state()
+                sim_state.qpos[self.sim.model.get_joint_qpos_addr(obj_name)[0]] = 10
+                self.sim.set_state(sim_state)
+                self.sim.forward()
+
     def _get_reference(self):
         super()._get_reference()
         self.obj_body_id = {}
@@ -125,15 +168,53 @@ class SawyerBinsEnv(SawyerEnv):
 
         for i in range(self.n_each_object):
             for j in range(len(self.ob_inits)):
-                # obj_str = str(self.ob_inits[j]) + '{}'.format(i)
                 obj_str = str(self.item_names[j]) + '{}'.format(i)
                 self.obj_body_id[obj_str] = self.sim.model.body_name2id(obj_str)
                 self.obj_geom_id[obj_str] = self.sim.model.geom_name2id(obj_str)
 
-    def _reset_internal(self):
-        super()._reset_internal()
+    def _reset_from_random(self):
         # inherited class should reset positions of objects
         self.model.place_objects()
+        if self.single_object_mode == 1:
+            self.obj_to_use = (random.choice(self.item_names)+'{}').format(0)
+            self.clear_objects(self.obj_to_use)
+        elif (self.single_object_mode == 2):
+            self.obj_to_use = (self.item_names[self.selected_bin]+'{}').format(0)
+            self.clear_objects(self.obj_to_use)
+
+    def _reset_internal(self):
+        super()._reset_internal()
+        if self.demo_config is not None:
+            self.demo_sampler.log_score(self.eps_reward)
+            state = self.demo_sampler.sample()
+            if state is None:
+                self._reset_from_random()
+            else:
+                self.sim.set_state_from_flattened(state)
+                self.sim.forward()
+        else: 
+            self._reset_from_random()
+
+        # for checking distance to / contact with objects we want to pick up
+        self.target_object_body_ids = list(map(int, self.obj_body_id.values()))
+        self.contact_with_object_geom_ids = list(map(int, self.obj_geom_id.values()))
+
+        # keep track of which objects are in their corresponding bins
+        self.objects_in_bins = np.zeros((self.n_each_object, len(self.ob_inits)))
+
+        # target locations in bin for each object type
+        self.target_bin_placements = np.zeros((len(self.ob_inits), 3))
+        for j in range(len(self.ob_inits)):
+            bin_id = j
+            bin_x_low = self.bin_pos[0]
+            bin_y_low = self.bin_pos[1]
+            if bin_id == 0 or bin_id == 2:
+                bin_x_low -= self.bin_size[0] / 2.
+            if bin_id < 2 :
+                bin_y_low -= self.bin_size[1] / 2.
+            bin_x_low += self.bin_size[0] / 4.
+            bin_y_low += self.bin_size[1] / 4.
+            self.target_bin_placements[j, :] = [bin_x_low, bin_y_low, self.bin_pos[2]]
 
         # for checking distance to / contact with objects we want to pick up
         self.target_object_body_ids = list(map(int, self.obj_body_id.values()))
@@ -166,15 +247,11 @@ class SawyerBinsEnv(SawyerEnv):
             gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
             for i in range(self.n_each_object):
                 for j in range(len(self.ob_inits)):
-                    # obj_str = str(self.ob_inits[j]) + '{}'.format(i)
                     obj_str = str(self.item_names[j]) + '{}'.format(i)
                     obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
                     dist = np.linalg.norm(gripper_site_pos - obj_pos)
                     r_reach = 1 - np.tanh(10.0 * dist)
-                    bin_id = j
-                    if self.single_object_mode:
-                        bin_id = self.selected_bin
-                    r_obj_goal = int((not self.not_in_bin(obj_pos, bin_id)) and r_reach < 0.6)
+                    r_obj_goal = int((not self.not_in_bin(obj_pos, j)) and r_reach < 0.6)
                     self.objects_in_bins[i, j] = r_obj_goal
                     r_goal += r_obj_goal
             staged_rewards = self.staged_rewards()
@@ -186,15 +263,11 @@ class SawyerBinsEnv(SawyerEnv):
             gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
             for i in range(self.n_each_object):
                 for j in range(len(self.ob_inits)):
-                    # obj_str = str(self.ob_inits[j]) + '{}'.format(i)
                     obj_str = str(self.item_names[j]) + '{}'.format(i)
                     obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
                     dist = np.linalg.norm(gripper_site_pos - obj_pos)
                     r_reach = 1 - np.tanh(10.0 * dist)
-                    bin_id = j
-                    if self.single_object_mode:
-                        bin_id = self.selected_bin
-                    obj_not_in_bin = self.not_in_bin(obj_pos, bin_id)
+                    obj_not_in_bin = self.not_in_bin(obj_pos, j)
                     reward += int((r_reach < 0.6) and (not obj_not_in_bin))
                     self.objects_in_bins[i, j] = int(not obj_not_in_bin)
                             
@@ -206,11 +279,6 @@ class SawyerBinsEnv(SawyerEnv):
 
         Stages consist of reaching, grasping, lifting, and hovering.
         """
-
-        # reach_mult = 0.1
-        # grasp_mult = 0.25
-        # lift_mult = 0.4
-        # hover_mult = 0.7
 
         reach_mult = 0.1
         grasp_mult = 0.35
@@ -238,6 +306,7 @@ class SawyerBinsEnv(SawyerEnv):
             target_object_pos = self.sim.data.body_xpos[objs_to_reach]
             gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
             dists = np.linalg.norm(target_object_pos - gripper_site_pos.reshape(1, -1), axis=1)
+            self.min_obj_dist = min(dists)
             r_reach = (1 - np.tanh(10.0 * min(dists))) * reach_mult
 
         ### grasping reward for touching any objects of interest ###
@@ -270,23 +339,6 @@ class SawyerBinsEnv(SawyerEnv):
 
         ### hover reward for getting object above bin ###
         r_hover = 0.
-
-        ### uncomment for left vs. right segmentation ###
-
-        # if len(objs_to_reach):
-        #     # segment objects into left of the bins and above the bins
-        #     object_xy_locs = self.sim.data.body_xpos[objs_to_reach][:, :2]
-        #     objects_above_bins = (object_xy_locs[:, 1] - (self.bin_pos[1] - self.bin_size[1] / 2.)) > 0
-        #     objects_not_above_bins = (object_xy_locs[:, 1] - (self.bin_pos[1] - self.bin_size[1] / 2.)) <= 0
-        #     dists = np.linalg.norm(target_bin_placements[:, :2] - object_xy_locs, axis=1)
-        #     # objects to the left get r_lift added to hover reward, those on the right get max(r_lift) added (to encourage dropping)
-        #     r_hover_all = np.zeros(len(objs_to_reach))
-        #     r_hover_all[objects_above_bins] = lift_mult + (1 - np.tanh(10.0 * dists[objects_above_bins])) * (hover_mult - lift_mult)
-        #     r_hover_all[objects_not_above_bins] = r_lift + (1 - np.tanh(10.0 * dists[objects_not_above_bins])) * (hover_mult - lift_mult)
-        #     r_hover = np.max(r_hover_all)
-
-        ### separate by being above target bin or not ###
-
         if len(objs_to_reach):
             # segment objects into left of the bins and above the bins
             object_xy_locs = self.sim.data.body_xpos[objs_to_reach][:, :2]
@@ -343,39 +395,45 @@ class SawyerBinsEnv(SawyerEnv):
 
             ### TODO: everything is in world frame right now... ###
 
-            # gripper orientation
+            # gripper pose in world (note we use site here because its a fixed translation lower from right_hand body xpos)
             # di['gripper_pos'] = self.sim.data.get_body_xpos('right_hand')
-            di['gripper_pos'] = self.sim.data.site_xpos[self.eef_site_id]
-            di['gripper_quat'] = self.sim.data.get_body_xquat('right_hand')
+            di['eef_pos'] = self.sim.data.site_xpos[self.eef_site_id]
+            di['eef_quat'] = U.convert_quat(self.sim.data.get_body_xquat('right_hand'), to='xyzw')
 
-            gripper_pose = U.pose2mat((di['gripper_pos'], di['gripper_quat']))
+            gripper_pose = U.pose2mat((di['eef_pos'], di['eef_quat']))
             world_pose_in_gripper = U.pose_inv(gripper_pose)
 
             ### TODO: should we transform these poses to robot base frame? ###
             for i in range(self.n_each_object):
                 for j in range(len(self.item_names_org)): 
-                    
-                    if self.single_object_mode and self.selected_bin != j:
-                        obj_str = str(self.item_names_org[j]) + '{}'.format(i)
-                        di["{}_pos".format(obj_str)] = np.zeros(3)
-                        di["{}_quat".format(obj_str)] = np.zeros(4)
-                        di["{}_to_gripper_pos".format(obj_str)] = np.zeros(3) 
-                        di["{}_to_gripper_quat".format(obj_str)] = np.zeros(4)
+
+                    if self.single_object_mode == 2 and self.selected_bin != j:
+                        # Skip adding to observations
                         continue
 
                     obj_str = str(self.item_names_org[j]) + '{}'.format(i)
                     obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
-                    obj_quat = self.sim.data.body_xquat[self.obj_body_id[obj_str]]
+                    obj_quat = U.convert_quat(self.sim.data.body_xquat[self.obj_body_id[obj_str]], to='xyzw')
                     di["{}_pos".format(obj_str)] = obj_pos
                     di["{}_quat".format(obj_str)] = obj_quat
 
+                    # get relative pose of object in gripper frame
                     object_pose = U.pose2mat((obj_pos, obj_quat))
                     rel_pose = U.pose_in_A_to_pose_in_B(object_pose, world_pose_in_gripper)
                     rel_pos, rel_quat = U.mat2pose(rel_pose)
-                    # gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-                    # di["gripper_to_{}".format(obj_str)] = gripper_site_pos - obj_pos 
-                    di["{}_to_gripper_pos".format(obj_str)] = rel_pos 
-                    di["{}_to_gripper_quat".format(obj_str)] = rel_quat
+                    di["{}_to_eef_pos".format(obj_str)] = rel_pos 
+                    di["{}_to_eef_quat".format(obj_str)] = rel_quat
+
+            if self.single_object_mode == 1:
+                #Zero out other objects observations
+                for obj_str, obj_mjcf in self.mujoco_objects.items():
+                    if obj_str == self.obj_to_use :
+                        continue
+                    else :
+                        di["{}_pos".format(obj_str)] *= 0.0
+                        di["{}_quat".format(obj_str)] *= 0.0
+                        di["{}_to_eef_pos".format(obj_str)] *= 0.0 
+                        di["{}_to_eef_quat".format(obj_str)] *= 0.0
 
         # proprioception
         di['proprio'] = np.concatenate([
@@ -383,6 +441,8 @@ class SawyerBinsEnv(SawyerEnv):
             np.cos(di['joint_pos']),
             di['joint_vel'],
             di['gripper_pos'],
+            di['eef_pos'],
+            di['eef_quat'],
         ])
 
         return di
@@ -430,3 +490,45 @@ class SawyerBinsEnv(SawyerEnv):
             rgba[3] = 0.5
 
             self.sim.model.site_rgba[self.eef_site_id] = rgba
+
+class SawyerBinsSingleEnv(SawyerBinsEnv):
+    """
+    Easier version of task - place one object into its bin. 
+    A new object is sampled on every reset.
+    """
+    def __init__(self, **kwargs):
+        assert ('single_object_mode' not in kwargs), "invalid set of arguments"
+        super().__init__(single_object_mode=1, **kwargs)
+
+class SawyerBinsMilkEnv(SawyerBinsEnv):
+    """
+    Easier version of task - place one milk into its bin.
+    """
+    def __init__(self, **kwargs):
+        assert ('single_object_mode' not in kwargs and 'selected_bin' not in kwargs), "invalid set of arguments"
+        super().__init__(single_object_mode=2, selected_bin=0, **kwargs)
+
+class SawyerBinsBreadEnv(SawyerBinsEnv):
+    """
+    Easier version of task - place one bread into its bin.
+    """
+    def __init__(self, **kwargs):
+        assert ('single_object_mode' not in kwargs and 'selected_bin' not in kwargs), "invalid set of arguments"
+        super().__init__(single_object_mode=2, selected_bin=1, **kwargs)
+
+class SawyerBinsCerealEnv(SawyerBinsEnv):
+    """
+    Easier version of task - place one cereal into its bin.
+    """
+    def __init__(self, **kwargs):
+        assert ('single_object_mode' not in kwargs and 'selected_bin' not in kwargs), "invalid set of arguments"
+        super().__init__(single_object_mode=2, selected_bin=2, **kwargs)
+
+class SawyerBinsCanEnv(SawyerBinsEnv):
+    """
+    Easier version of task - place one can into its bin.
+    """
+    def __init__(self, **kwargs):
+        assert ('single_object_mode' not in kwargs and 'selected_bin' not in kwargs), "invalid set of arguments"
+        super().__init__(single_object_mode=2, selected_bin=3, **kwargs)
+

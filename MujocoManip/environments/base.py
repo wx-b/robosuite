@@ -39,6 +39,8 @@ class MujocoEnv(object, metaclass=EnvMeta):
                  camera_height=256,
                  camera_width=256,
                  camera_depth=False,
+                 demo_config=None,
+                 has_offscreen_renderer=True,
                  **kwargs):
         """
             Initialize a Mujoco Environment
@@ -60,6 +62,7 @@ class MujocoEnv(object, metaclass=EnvMeta):
         # self.done = False
         # self.t = 0
         self.has_renderer = has_renderer
+        self.has_offscreen_renderer = has_offscreen_renderer
         self.render_collision_mesh = render_collision_mesh
         self.render_visual_mesh = render_visual_mesh
         self.control_freq = control_freq
@@ -116,17 +119,16 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.mjpy_model = self.model.get_model(mode='mujoco_py')
         self.sim = MjSim(self.mjpy_model)
         self.initialize_time(self.control_freq)
-        if self.has_renderer:
+        if self.has_renderer and self.viewer is None:
             self.viewer = MujocoPyRenderer(self.sim)
             self.viewer.viewer.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
             self.viewer.viewer.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
-        else:
+        elif self.has_offscreen_renderer:
             if self.sim._render_context_offscreen is None :
                 render_context=MjRenderContextOffscreen(self.sim)
                 self.sim.add_render_context(render_context)
             self.sim._render_context_offscreen.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
             self.sim._render_context_offscreen.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
-
 
         self.sim_state_initial = self.sim.get_state()
         self._get_reference()
@@ -196,6 +198,14 @@ class MujocoEnv(object, metaclass=EnvMeta):
         self.initialize_time(self.control_freq)
         if self.has_renderer:
             self.viewer = MujocoPyRenderer(self.sim)
+            self.viewer.viewer.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
+            self.viewer.viewer.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
+        else:
+            render_context=MjRenderContextOffscreen(self.sim)
+            render_context.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
+            render_context.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
+            self.sim.add_render_context(render_context)
+
         self.sim_state_initial = self.sim.get_state()
         self._get_reference()
         self.cur_time = 0
@@ -209,8 +219,6 @@ class MujocoEnv(object, metaclass=EnvMeta):
             (self.sim.model.geom_id2name(contact.geom2) in geoms_1 \
             and self.sim.model.geom_id2name(contact.geom1) in geoms_2):
                 yield contact
-
-
 
     def _check_contact(self):
         """

@@ -12,15 +12,7 @@ from MujocoManip.miscellaneous.ik_controller import IKController
 
 if __name__ == '__main__':
 
-    # a test case: do completely random actions at each time step
-    # env = make("SawyerBinsEnv",
-    #            ignore_done=True,
-    #            use_camera_obs=False,
-    #            gripper_visualization=True,
-    #            reward_shaping=False,
-    #            single_object_mode=True)
-
-    env = make("SawyerPegsEnv",
+    env = make("SawyerBinsCanEnv",
                ignore_done=True,
                use_camera_obs=False,
                gripper_visualization=True,
@@ -36,7 +28,7 @@ if __name__ == '__main__':
     env.viewer.viewer._hide_overlay = True
 
     dof = env.dof
-    print('action space', env.action_space)
+    print('Action space', env.action_space)
     print('Obs: {}'.format(len(obs)))
     print('DOF: {}'.format(dof))
     env.render()
@@ -64,7 +56,6 @@ if __name__ == '__main__':
 
             obs, reward, done, info = env.step(action)
             env.render()
-            print('obs: ', obs)
             print('reward:', reward)
 
             if done:

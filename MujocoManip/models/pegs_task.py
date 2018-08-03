@@ -38,10 +38,11 @@ class UniformRandomPegsSampler(ObjectPositionSampler):
         self.ensure_object_boundary_in_range = ensure_object_boundary_in_range
         self.z_rotation = z_rotation
 
-    def sample_x(self, object_horizontal_radius):
-        x_range = self.x_range
+    def sample_x(self, object_horizontal_radius, x_range=None):
         if x_range is None:
-            x_range = [-self.table_size[0] / 2, self.table_size[0] / 2]
+            x_range = self.x_range
+            if x_range is None:
+                x_range = [-self.table_size[0] / 2, self.table_size[0] / 2]
         minimum = min(x_range)
         maximum = max(x_range)
         if self.ensure_object_boundary_in_range:
@@ -49,11 +50,11 @@ class UniformRandomPegsSampler(ObjectPositionSampler):
             maximum -= object_horizontal_radius
         return np.random.uniform(high=maximum, low=minimum)
         
-    def sample_y(self, object_horizontal_radius):
-        y_range = self.y_range
-
+    def sample_y(self, object_horizontal_radius, y_range=None):
         if y_range is None:
-            y_range = [-self.table_size[0] / 2, self.table_size[0] / 2]
+            y_range = self.y_range
+            if y_range is None:
+                y_range = [-self.table_size[0] / 2, self.table_size[0] / 2]
         minimum = min(y_range)
         maximum = max(y_range)
         if self.ensure_object_boundary_in_range:
@@ -61,10 +62,11 @@ class UniformRandomPegsSampler(ObjectPositionSampler):
             maximum -= object_horizontal_radius
         return np.random.uniform(high=maximum, low=minimum)
 
-    def sample_z(self, object_horizontal_radius):
-        z_range = self.z_range
+    def sample_z(self, object_horizontal_radius, z_range=None):
         if z_range is None:
-            z_range = [0, 1]
+            z_range = self.z_range
+            if z_range is None:
+                z_range = [0, 1]
         minimum = min(z_range)
         maximum = max(z_range)
         if self.ensure_object_boundary_in_range:
@@ -83,13 +85,20 @@ class UniformRandomPegsSampler(ObjectPositionSampler):
         pos_arr = []
         quat_arr = []
         placed_objects = []
-        for obj_mjcf in self.mujoco_objects:
+
+        for obj_name, obj_mjcf in self.mujoco_objects.items():
             horizontal_radius = obj_mjcf.get_horizontal_radius()
             bottom_offset = obj_mjcf.get_bottom_offset()
             success = False
             for i in range(5000): # 1000 retries
-                object_x = self.sample_x(horizontal_radius)
-                object_y = self.sample_y(horizontal_radius)
+                if obj_name.startswith("SquareNut"):
+                    x_range = [-self.table_size[0] / 2 + horizontal_radius, -horizontal_radius]
+                    y_range = [horizontal_radius, self.table_size[0] / 2]
+                else:
+                    x_range = [-self.table_size[0] / 2 + horizontal_radius, -horizontal_radius]
+                    y_range = [-self.table_size[0] / 2, -horizontal_radius]
+                object_x = self.sample_x(horizontal_radius, x_range=x_range)
+                object_y = self.sample_y(horizontal_radius, y_range=y_range)
                 object_z = self.sample_z(0.01)
                 # objects cannot overlap
                 location_valid = True
@@ -117,6 +126,20 @@ class UniformRandomPegsSampler(ObjectPositionSampler):
 
         return pos_arr, quat_arr
 
+    def setup(self, mujoco_objects, table_top_offset, table_size):
+        """
+        Note: overrides superclass implementation.
+
+        Args:
+            Mujoco_objcts(MujocoObject * n_obj): object to be placed
+            table_top_offset(float * 3): location of table top center
+            table_size(float * 3): x,y,z-FULLsize of the table
+        """
+        self.mujoco_objects = mujoco_objects # should be a dictionary - (name, mjcf)
+        self.n_obj = len(self.mujoco_objects)
+        self.table_top_offset = table_top_offset
+        self.table_size = table_size
+
 class PegsTask(MujocoWorldBase):
 
     """
@@ -137,9 +160,8 @@ class PegsTask(MujocoWorldBase):
 
         if initializer is None:
             initializer = UniformRandomPegsSampler()
-        mjcfs = [x for _, x in self.mujoco_objects.items()]
         self.initializer = initializer
-        self.initializer.setup(mjcfs, self.shelf_offset, self.shelf_size)
+        self.initializer.setup(self.mujoco_objects, self.shelf_offset, self.shelf_size)
 
     def merge_robot(self, mujoco_robot):
         self.robot = mujoco_robot
@@ -157,14 +179,14 @@ class PegsTask(MujocoWorldBase):
     def merge_objects(self, mujoco_objects):
         self.n_objects = len(mujoco_objects)
         self.mujoco_objects = mujoco_objects
-        self.objects = [] # xml manifestation
+        self.objects = {} # xml manifestation
         self.max_horizontal_radius = 0
         for obj_name, obj_mjcf in mujoco_objects.items():
             self.merge_asset(obj_mjcf)
             # Load object
             obj = obj_mjcf.get_collision(name=obj_name, site=True)
             obj.append(joint(name=obj_name, type='free', damping='0.0005'))
-            self.objects.append(obj)
+            self.objects[obj_name] = obj
             self.worldbody.append(obj)
 
             self.max_horizontal_radius = max(self.max_horizontal_radius,
@@ -185,6 +207,8 @@ class PegsTask(MujocoWorldBase):
             position_sampler: generate random positions to put objects
         """
         pos_arr, quat_arr = self.initializer.sample()
-        for i in range(len(self.objects)):
-            self.objects[i].set('pos', array_to_string(pos_arr[i]))
-            self.objects[i].set('quat', array_to_string(quat_arr[i]))
+        i = 0
+        for obj_name in self.objects:
+            self.objects[obj_name].set('pos', array_to_string(pos_arr[i]))
+            self.objects[obj_name].set('quat', array_to_string(quat_arr[i]))
+            i += 1
