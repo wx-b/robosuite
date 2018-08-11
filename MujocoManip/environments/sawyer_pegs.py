@@ -22,7 +22,7 @@ class SawyerPegsEnv(SawyerEnv):
                  gripper_visualization=False,
                  placement_initializer=None,
                  n_each_object=1,
-                 single_object_mode=0, # 0 full, 1 single obj with full obs 2 single with single obs
+                 single_object_mode=0,  # 0 full, 1 single obj with full obs 2 single with single obs
                  selected_peg=None,
                  demo_config=None,
                  **kwargs):
@@ -45,7 +45,6 @@ class SawyerPegsEnv(SawyerEnv):
         self.single_object_mode = single_object_mode
         self.selected_peg = selected_peg
         self.obj_to_use = None
-
         # settings for table top
         self.table_size = table_size
         self.table_friction = table_friction
@@ -61,10 +60,11 @@ class SawyerPegsEnv(SawyerEnv):
 
         self.demo_config = demo_config
         if self.demo_config is not None :
-            self.demo_sampler = DemoSampler('demonstrations/pegs.pkl',
-                                            self.demo_config)
+            self.demo_sampler = DemoSampler(self.demo_config.demo_file,
+                                            self.demo_config,
+                                            preload = self.demo_config.preload,
+                                            number = self.demo_config.num_samples)
         self.eps_reward = 0
-
         # placement initilizer
         if placement_initializer:
             self.placement_initializer = placement_initializer
@@ -88,7 +88,7 @@ class SawyerPegsEnv(SawyerEnv):
         self.mujoco_arena = PegsArena()
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, 0.0, 0])
+        self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, -0.15, 0])
 
         # define mujoco objects
         self.ob_inits = [DefaultSquareNutObject, DefaultRoundNutObject]
@@ -138,7 +138,6 @@ class SawyerPegsEnv(SawyerEnv):
                 for k in range(self.ngeoms[j]):
                     geom_ids.append(self.sim.model.geom_name2id(obj_str + '-{}'.format(k)))
                 self.obj_geom_id[obj_str] = geom_ids
-
         # information of objects
         self.object_names = list(self.mujoco_objects.keys())
         self.object_site_ids = [self.sim.model.site_name2id(ob_name) for ob_name in self.object_names]
@@ -147,7 +146,6 @@ class SawyerPegsEnv(SawyerEnv):
         self.finger_names = self.gripper.contact_geoms()
         self.l_finger_geom_id = self.sim.model.geom_name2id('l_fingertip_g0')
         self.r_finger_geom_id = self.sim.model.geom_name2id('r_fingertip_g0')
-
         # self.sim.data.contact # list, geom1, geom2
         self.collision_check_geom_names = self.sim.model._geom_name2id.keys()
         self.collision_check_geom_ids = [self.sim.model._geom_name2id[k] for k in self.collision_check_geom_names]
@@ -213,7 +211,6 @@ class SawyerPegsEnv(SawyerEnv):
     def staged_rewards(self):
         """
         Returns staged rewards based on current physical states.
-
         Stages consist of reaching, grasping, lifting, and hovering.
         """
 
@@ -326,6 +323,7 @@ class SawyerPegsEnv(SawyerEnv):
         if self.use_object_obs:
 
             ### TODO: everything is in world frame right now...
+
             # gripper orientation
             # di['gripper_pos'] = self.sim.data.get_body_xpos('right_hand')
             di['eef_pos'] = self.sim.data.site_xpos[self.eef_site_id]
@@ -364,7 +362,6 @@ class SawyerPegsEnv(SawyerEnv):
                         di["{}_quat".format(obj_str)] *= 0.0
                         di["{}_to_eef_pos".format(obj_str)] *= 0.0 
                         di["{}_to_eef_quat".format(obj_str)] *= 0.0
-
         # proprioception
         di['proprio'] = np.concatenate([
             np.sin(di['joint_pos']),
@@ -444,5 +441,3 @@ class SawyerPegsRoundEnv(SawyerPegsEnv):
     def __init__(self, **kwargs):
         assert ('single_object_mode' not in kwargs and 'selected_peg' not in kwargs), "invalid set of arguments"
         super().__init__(single_object_mode=2, selected_peg=1, **kwargs)
-
-

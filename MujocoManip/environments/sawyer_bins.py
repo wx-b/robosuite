@@ -45,7 +45,6 @@ class SawyerBinsEnv(SawyerEnv):
         self.min_obj_dist = np.inf
         self.selected_bin = selected_bin
         self.obj_to_use = None
-
         # settings for table top
         self.table_size = table_size
         self.table_friction = table_friction
@@ -58,8 +57,10 @@ class SawyerBinsEnv(SawyerEnv):
 
         self.demo_config = demo_config
         if self.demo_config is not None :
-            self.demo_sampler = DemoSampler('demonstrations/can10.pkl',
-                                            self.demo_config)
+            self.demo_sampler = DemoSampler(self.demo_config.demo_file,
+                                            self.demo_config,
+                                            preload = self.demo_config.preload,
+                                            number = self.demo_config.num_samples)
         self.eps_reward = 0
 
         super().__init__(gripper_type=gripper_type,
@@ -111,32 +112,6 @@ class SawyerBinsEnv(SawyerEnv):
             for j in range(len(self.ob_inits)):
                 ob = self.ob_inits[j]()
                 lst.append((str(self.item_names[j])+'{}'.format(i), ob))
-
-        self.mujoco_objects = OrderedDict(lst)
-        self.n_objects = len(self.mujoco_objects)
-
-        self.ob_inits = [DefaultMilkObject, DefaultBreadObject, DefaultCerealObject, DefaultCanObject]
-        self.vis_inits = [DefaultMilkVisualObject, DefaultBreadVisualObject, DefaultCerealVisualObject, DefaultCanVisualObject]
-        self.item_names = ["Milk", "Bread", "Cereal", "Can"]
-        self.item_names_org = list(self.item_names)
-
-        lst = []
-        for j in range(len(self.vis_inits)):
-            lst.append((str(self.vis_inits[j]),self.vis_inits[j]()))
-        self.visual_objects = lst
-
-        if self.single_object_mode:
-            self.n_each_object = 1
-            self.selected_bin = np.random.randint(len(self.ob_inits))
-            self.ob_inits = [self.ob_inits[self.selected_bin]]
-            self.item_names = [self.item_names[self.selected_bin]]
-            lst = [(str(self.item_names[0])+'{}'.format(0), self.ob_inits[0]())]
-        else:
-            lst = []
-            for i in range(self.n_each_object):
-                for j in range(len(self.ob_inits)):
-                    ob = self.ob_inits[j]()
-                    lst.append((str(self.item_names[j])+'{}'.format(i), ob))
 
         self.mujoco_objects = OrderedDict(lst)
         self.n_objects = len(self.mujoco_objects)
@@ -216,29 +191,6 @@ class SawyerBinsEnv(SawyerEnv):
             bin_y_low += self.bin_size[1] / 4.
             self.target_bin_placements[j, :] = [bin_x_low, bin_y_low, self.bin_pos[2]]
 
-        # for checking distance to / contact with objects we want to pick up
-        self.target_object_body_ids = list(map(int, self.obj_body_id.values()))
-        self.contact_with_object_geom_ids = list(map(int, self.obj_geom_id.values()))
-
-        # keep track of which objects are in their corresponding bins
-        self.objects_in_bins = np.zeros((self.n_each_object, len(self.ob_inits)))
-
-        # target locations in bin for each object type
-        self.target_bin_placements = np.zeros((len(self.ob_inits), 3))
-        for j in range(len(self.ob_inits)):
-            bin_id = j
-            if self.single_object_mode:
-                bin_id = self.selected_bin
-            bin_x_low = self.bin_pos[0]
-            bin_y_low = self.bin_pos[1]
-            if bin_id == 0 or bin_id == 2:
-                bin_x_low -= self.bin_size[0] / 2.
-            if bin_id < 2 :
-                bin_y_low -= self.bin_size[1] / 2.
-            bin_x_low += self.bin_size[0] / 4.
-            bin_y_low += self.bin_size[1] / 4.
-            self.target_bin_placements[j, :] = [bin_x_low, bin_y_low, self.bin_pos[2]]
-
     def reward(self, action = None):
         # stages: reaching, grasping, lifting, dropping, lifting
 
@@ -276,7 +228,6 @@ class SawyerBinsEnv(SawyerEnv):
     def staged_rewards(self):
         """
         Returns staged rewards based on current physical states.
-
         Stages consist of reaching, grasping, lifting, and hovering.
         """
 
@@ -434,7 +385,6 @@ class SawyerBinsEnv(SawyerEnv):
                         di["{}_quat".format(obj_str)] *= 0.0
                         di["{}_to_eef_pos".format(obj_str)] *= 0.0 
                         di["{}_to_eef_quat".format(obj_str)] *= 0.0
-
         # proprioception
         di['proprio'] = np.concatenate([
             np.sin(di['joint_pos']),
@@ -531,4 +481,3 @@ class SawyerBinsCanEnv(SawyerBinsEnv):
     def __init__(self, **kwargs):
         assert ('single_object_mode' not in kwargs and 'selected_bin' not in kwargs), "invalid set of arguments"
         super().__init__(single_object_mode=2, selected_bin=3, **kwargs)
-

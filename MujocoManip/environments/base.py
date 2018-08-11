@@ -196,11 +196,11 @@ class MujocoEnv(object, metaclass=EnvMeta):
 
         self.sim = MjSim(self.mjpy_model)
         self.initialize_time(self.control_freq)
-        if self.has_renderer:
+        if self.has_renderer and self.viewer is None:
             self.viewer = MujocoPyRenderer(self.sim)
             self.viewer.viewer.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
             self.viewer.viewer.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
-        else:
+        elif self.has_offscreen_renderer:
             render_context=MjRenderContextOffscreen(self.sim)
             render_context.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
             render_context.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0

@@ -2,12 +2,14 @@ from MujocoManip.miscellaneous.utils import postprocess_model_xml
 from MujocoManip.models.model_util import xml_path_completion
 import numpy as np
 import random
+import os
 import pickle
+import time
 
 from collections import deque
 
 class DemoSampler(object):
-    def __init__(self, file_path, demo_config, need_xml=False, preload=False):
+    def __init__(self, file_path, demo_config, need_xml=False, preload=False, number=-1):
         self.demo_config = demo_config
 
         """ Load the demo file...
@@ -20,9 +22,16 @@ class DemoSampler(object):
         """
         with open(xml_path_completion(file_path), "rb") as f:
             self.demo_data = pickle.load(f)
-            if self.demo_data[0] == 0:
+            is_bkl = (self.demo_data[0] == 0)
+            if number > 0:
+                random.seed(3141)
+                self.demo_data = random.sample(self.demo_data, number)
+                random.seed(time.time()*1000*ord(os.urandom(1)))
+                print('Subsampled:', self.demo_data)
+            if is_bkl:
                 self.demo_big_file = open(xml_path_completion(file_path).replace('.pkl','.bkl'),'rb')
                 if preload:
+                    print('Preloading...')
                     data = []
                     for ofs in self.demo_data:
                         self.demo_big_file.seek(ofs)
@@ -30,7 +39,9 @@ class DemoSampler(object):
                     self.demo_data = data
                     self.demo_big_file.close()
                     self.demo_big_file = None
+                    print('Preloaded!')
             else:
+                print('Not a bkl!')
                 self.demo_big_file = None
 
         self.need_xml = need_xml
@@ -108,6 +119,9 @@ class DemoSampler(object):
 
     def _reverse_sample_openloop(self):
         episode =  random.choice(self.demo_data)
+        if self.demo_big_file is not None:
+            self.demo_big_file.seek(episode)
+            episode = pickle.load(self.demo_big_file)
         eps_len = len(episode['states'])
         index = np.random.randint(max(eps_len - self.demo_config.sample_window_width, 0),
                                   eps_len)
@@ -127,6 +141,9 @@ class DemoSampler(object):
 
     def _forward_sample_openloop(self):
         episode =  random.choice(self.demo_data)
+        if self.demo_big_file is not None:
+            self.demo_big_file.seek(episode)
+            episode = pickle.load(self.demo_big_file)
         eps_len = len(episode['states'])
         index = np.random.randint(0, min(self.demo_config.sample_window_width, 
                                   eps_len))
@@ -146,6 +163,9 @@ class DemoSampler(object):
 
     def _reverse_sample_adaptive(self):
         episode =  random.choice(self.demo_data)
+        if self.demo_big_file is not None:
+            self.demo_big_file.seek(episode)
+            episode = pickle.load(self.demo_big_file)
         eps_len = len(episode['states'])
 
         index_start = max(eps_len - (self.current_curriculum + 1) * self.curriculum_length, 0)
@@ -160,6 +180,9 @@ class DemoSampler(object):
 
     def _forward_sample_adaptive(self):
         episode =  random.choice(self.demo_data)
+        if self.demo_big_file is not None:
+            self.demo_big_file.seek(episode)
+            episode = pickle.load(self.demo_big_file)
         eps_len = len(episode['states'])
 
         index_start = min(self.current_curriculum * self.curriculum_length, eps_len - self.curriculum_length)

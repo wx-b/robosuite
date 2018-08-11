@@ -10,15 +10,15 @@
   </asset>
   <worldbody>
     <geom condim="3" material="floorplane" name="floor" pos="0 0 0" size="3 3 .125" type="plane"/>
-    <body name="bin1" pos="0.08 0.0 0.8">
+    <body name="bin1" pos="0.08 0.15 0.8">
       <geom pos="0 0 0" size="0.35 0.4 0.02" type="box" friction="1 0.005 0.0001"/>
       <geom pos="0 0 0" material="light-wood" size="0.35 0.4 0.02" type="box" conaffinity="0" contype="0" group="1"/>
     </body>
-    <body name="peg1" pos="0.23 0.10 0.85">
+    <body name="peg1" pos="0.23 0.25 0.85">
       <geom pos="0 0 0" size="0.016 0.016 0.1" type="box" friction="1 0.005 0.0001"/>
       <geom pos="0 0 0" rgba="0.3 0.3 1 1" size="0.016 0.016 0.1" type="box" conaffinity="0" contype="0" group="1"/>
     </body>
-    <body name="peg2" pos="0.23 -0.10 0.85">
+    <body name="peg2" pos="0.23 0.05 0.85">
       <geom pos="0 0 0" size="0.02 0.1" type="cylinder" friction="1 0.005 0.0001"/>
       <geom pos="0 0 0" rgba="1 0.3 0.3 1" size="0.02 0.1" type="cylinder" conaffinity="0" contype="0" group="1"/>
     </body>
@@ -26,10 +26,10 @@
     <light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="1 1 4.0" specular="0.3 0.3 0.3" castshadow="false"/>
     <light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="-3. -3. 4.0" specular="0.3 0.3 0.3" castshadow="false"/>
     <!-- frontview -->
-    <camera mode="fixed" name="frontview" pos="1.6 0.0 1.45" quat="0.56 0.43 0.43 0.56"/>
+    <camera mode="fixed" name="frontview" pos="1.6 0.15 1.45" quat="0.56 0.43 0.43 0.56"/>
     <!-- birdview -->
-    <camera mode="fixed" name="birdview" pos="-0.2 0.0 3.0" quat="0.7071 0 0 0.7071"/>
+    <camera mode="fixed" name="birdview" pos="-0.2 0.15 3.0" quat="0.7071 0 0 0.7071"/>
     <!-- tabletop -->
-    <camera mode="fixed" name="tabletop" pos="0.8 0.0 1.65" quat="0.653 0.271 0.271 0.653"/>
+    <camera mode="fixed" name="tabletop" pos="0.8 0.15 1.65" quat="0.653 0.271 0.271 0.653"/>
   </worldbody>
 </mujoco>

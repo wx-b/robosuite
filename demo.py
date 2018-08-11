@@ -20,6 +20,6 @@ env = make("SawyerLiftEnv",
 while True:
     env.reset()
     env.render()
-    for i in range(100000):
+    for i in range(1000):
         obs, reward, done, _ = env.step(np.random.randn(env.dof))
         env.render()
