@@ -4,7 +4,7 @@ from RoboticsSuite.utils import RandomizationError
 from RoboticsSuite.environments.baxter import BaxterEnv
 from RoboticsSuite.models import *
 from RoboticsSuite.models.model_util import xml_path_completion, array_to_string, joint
-import RoboticsSuite.utils.utils as U
+import RoboticsSuite.utils as U
 
 
 class BaxterHoleEnv(BaxterEnv):

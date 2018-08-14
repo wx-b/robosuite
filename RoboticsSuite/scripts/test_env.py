@@ -6,7 +6,7 @@ from IPython import embed
 
 from RoboticsSuite.models import *
 from RoboticsSuite.wrappers import DataCollector
-import RoboticsSuite.utils.utils as U
+import RoboticsSuite.utils as U
 import RoboticsSuite.utils.transformations as T
 
 if __name__ == "__main__":

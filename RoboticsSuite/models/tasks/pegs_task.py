@@ -6,7 +6,7 @@ from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.utils import XMLError
 from RoboticsSuite.models.world import MujocoWorldBase
 from RoboticsSuite.models.model_util import *
-from RoboticsSuite.utils.utils import *
+from RoboticsSuite.utils import *
 from RoboticsSuite.models.tasks.placement_sampler import ObjectPositionSampler
 
 

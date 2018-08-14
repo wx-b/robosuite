@@ -5,7 +5,7 @@ from RoboticsSuite.environments.baxter import BaxterEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
 from RoboticsSuite.models.model_util import xml_path_completion
-import RoboticsSuite.utils.utils as U
+import RoboticsSuite.utils as U
 import pickle
 import random
 

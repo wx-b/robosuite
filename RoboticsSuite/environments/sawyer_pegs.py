@@ -7,7 +7,7 @@ from RoboticsSuite.environments.sawyer import SawyerEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
 from RoboticsSuite.models.tasks.placement_sampler import UniformRandomPegsSampler
-import RoboticsSuite.utils.utils as U
+import RoboticsSuite.utils as U
 
 
 class SawyerPegsEnv(SawyerEnv):

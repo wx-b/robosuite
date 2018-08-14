@@ -8,7 +8,7 @@ from RoboticsSuite.models import *
 from RoboticsSuite.wrappers import DataCollector
 
 from RoboticsSuite.utils.baxter_ik import BaxterIKController as IKController
-import RoboticsSuite.utils.utils as U
+import RoboticsSuite.utils as U
 
 import threading
 

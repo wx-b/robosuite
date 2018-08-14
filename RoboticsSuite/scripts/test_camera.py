@@ -1,5 +1,5 @@
 import RoboticsSuite as MM
-import RoboticsSuite.utils.utils as U
+import RoboticsSuite.utils as U
 import numpy as np
 
 

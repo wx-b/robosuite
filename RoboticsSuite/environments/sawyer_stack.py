@@ -4,7 +4,7 @@ from RoboticsSuite.utils import RandomizationError
 from RoboticsSuite.environments.sawyer import SawyerEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
-import RoboticsSuite.utils.utils as U
+import RoboticsSuite.utils as U
 import pickle
 import random
 

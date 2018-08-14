@@ -4,13 +4,11 @@ Some utility functions.
 NOTE: convention for quaternions is (x, y, z, w)
 """
 
-import numpy as np
 import math
-import mujoco_py
-import xml.etree.ElementTree as ET
-import os
+import numpy as np
 
-pi = np.pi
+
+PI = np.pi
 EPS = np.finfo(float).eps * 4.
 
 # axis sequences for Euler angles
@@ -49,20 +47,19 @@ _TUPLE2AXES = dict((v, k) for k, v in _AXES2TUPLE.items())
 
 def convert_quat(q, to="xyzw"):
     """
-    Converts quaternion from one convention to another. 
-    The convention to convert TO is specified as an optional argument. 
+    Converts quaternion from one convention to another.
+    The convention to convert TO is specified as an optional argument.
     If to == 'xyzw', then the input is in 'wxyz' format, and vice-versa.
 
     :param q: a 4-dim numpy array corresponding to a quaternion
-    :param to: a string, either 'xyzw' or 'wxyz', determining 
+    :param to: a string, either 'xyzw' or 'wxyz', determining
                which convention to convert to.
     """
     if to == "xyzw":
         return q[[1, 2, 3, 0]]
-    elif to == "wxyz":
+    if to == "wxyz":
         return q[[3, 0, 1, 2]]
-    else:
-        raise Exception("convert_quat: choose a valid `to` argument (xyzw or wxyz)")
+    raise Exception("convert_quat: choose a valid `to` argument (xyzw or wxyz)")
 
 
 def vec(values):
@@ -87,7 +84,7 @@ def mat2pose(hmat):
     """
     Convert a homogeneous 4x4 matrix into pose
     :param hmat: a 4x4 homogeneous matrix
-    :return: (pos, orn) tuple where pos is 
+    :return: (pos, orn) tuple where pos is
     vec3 float in cartesian, orn is vec4 float quaternion
     """
     pos = hmat[:3, 3]
@@ -237,12 +234,12 @@ def quat2mat(quaternion):
 
 def pose_in_A_to_pose_in_B(pose_A, pose_A_in_B):
     """
-    Converts a homogenous matrix corresponding to a point C in frame A 
+    Converts a homogenous matrix corresponding to a point C in frame A
     to a homogenous matrix corresponding to the same point C in frame B.
 
     :param pose_A: numpy array of shape (4,4) corresponding to the pose of C in frame A
     :param pose_A_in_B: numpy array of shape (4,4) corresponding to the pose of A in frame B
-    
+
     :return: numpy array of shape (4,4) corresponding to the pose of C in frame B
     """
 
@@ -451,7 +448,8 @@ def get_orientation_error(target_orn, current_orn):
     :param target_orn: 4-dim iterable, desired orientation as a (x, y, z, w) quaternion
     :param current_orn: 4-dim iterable, current orientation as a (x, y, z, w) quaternion
 
-    :return orn_error: 3-dim numpy array for current orientation error, corresponds to (target_orn - current_orn)
+    :return orn_error: 3-dim numpy array for current orientation error,
+                       corresponds to (target_orn - current_orn)
     """
 
     current_orn = np.array(
@@ -498,208 +496,3 @@ def get_pose_error(target_pose, current_pose):
     error[:3] = pos_err
     error[3:] = rot_err
     return error
-
-
-### support for mocap ###
-
-# def ctrl_set_action(physics, action):
-#     """For torque actuators it copies the action into mujoco ctrl field.
-#     For position actuators it sets the target relative to the current qpos.
-#     """
-
-#     if physics.model.nmocap > 0:
-#         ### note: this grabs gripper ctrl only... ###
-#         _, action = np.split(action, (physics.model.nmocap * 7, ))
-#     if physics.data.ctrl is not None:
-#         for i in range(action.shape[0]):
-#             if physics.model.actuator_biastype[i] == 0:
-#                 physics.data.ctrl[i] = action[i]
-#             else:
-#                 idx = physics.model.jnt_qposadr[physics.model.actuator_trnid[i, 0]]
-#                 physics.data.ctrl[i] = physics.data.qpos[idx] + action[i]
-
-
-# def mocap_set_action(physics, action):
-#     """The action controls the robot using mocaps. Specifically, bodies
-#     on the robot (for example the gripper wrist) is controlled with
-#     mocap bodies. In this case the action is the desired difference
-#     in position and orientation (quaternion), in world coordinates,
-#     of the of the target body. The mocap is positioned relative to
-#     the target body according to the delta, and the MuJoCo equality
-#     constraint optimizer tries to center the welded body on the mocap.
-#     """
-#     if physics.model.nmocap > 0:
-#         ### note: this grabs pos/orn control only... ###
-#         action, _ = np.split(action, (physics.model.nmocap * 7, ))
-#         action = action.reshape(physics.model.nmocap, 7)
-
-#         pos_delta = action[:, :3]
-#         quat_delta = action[:, 3:]
-
-#         reset_mocap2body_xpos(physics)
-#         physics.data.mocap_pos[:] = physics.data.mocap_pos + pos_delta
-#         physics.data.mocap_quat[:] = quat_delta #physics.data.mocap_quat + quat_delta
-
-
-# def reset_mocap_welds(physics):
-#     """Resets the mocap welds that we use for actuation.
-#     """
-#     if physics.model.nmocap > 0 and physics.model.eq_data is not None:
-#         for i in range(physics.model.eq_data.shape[0]):
-#             if physics.model.eq_type[i] == enums.mjtEq.mjEQ_WELD:
-#                 physics.model.eq_data[i, :] = np.array(
-#                     [0., 0., 0., 1., 0., 0., 0.])
-#     physics.forward()
-
-
-# def reset_mocap2body_xpos(physics):
-#     """Resets the position and orientation of the mocap bodies to the same
-#     values as the bodies they're welded to.
-#     """
-
-#     if (physics.model.eq_type is None or
-#         physics.model.eq_obj1id is None or
-#         physics.model.eq_obj2id is None):
-#         return
-
-#     for eq_type, obj1_id, obj2_id in zip(physics.model.eq_type,
-#                                          physics.model.eq_obj1id,
-#                                          physics.model.eq_obj2id):
-#         if eq_type != enums.mjtEq.mjEQ_WELD:
-#             continue
-
-#         mocap_id = physics.model.body_mocapid[obj1_id]
-#         if mocap_id != -1:
-#             # obj1 is the mocap, obj2 is the welded body
-#             body_idx = obj2_id
-#         else:
-#             # obj2 is the mocap, obj1 is the welded body
-#             mocap_id = physics.model.body_mocapid[obj2_id]
-#             body_idx = obj1_id
-
-#         assert (mocap_id != -1)
-#         physics.data.mocap_pos[mocap_id][:] = physics.data.xpos[body_idx]
-#         physics.data.mocap_quat[mocap_id][:] = physics.data.xquat[body_idx]
-
-
-def mjpy_ctrl_set_action(sim, action):
-    """For torque actuators it copies the action into mujoco ctrl field.
-    For position actuators it sets the target relative to the current qpos.
-    """
-    if sim.model.nmocap > 0:
-        ### note: this grabs gripper ctrl only... ###
-        _, action = np.split(action, (sim.model.nmocap * 7,))
-    if sim.data.ctrl is not None:
-        for i in range(action.shape[0]):
-            if sim.model.actuator_biastype[i] == 0:
-                sim.data.ctrl[i] = action[i]
-            else:
-                idx = sim.model.jnt_qposadr[sim.model.actuator_trnid[i, 0]]
-                sim.data.ctrl[i] = sim.data.qpos[idx] + action[i]
-
-
-def mjpy_mocap_set_action(sim, action):
-    """The action controls the robot using mocaps. Specifically, bodies
-    on the robot (for example the gripper wrist) is controlled with
-    mocap bodies. In this case the action is the desired difference
-    in position and orientation (quaternion), in world coordinates,
-    of the of the target body. The mocap is positioned relative to
-    the target body according to the delta, and the MuJoCo equality
-    constraint optimizer tries to center the welded body on the mocap.
-    """
-    if sim.model.nmocap > 0:
-        action, _ = np.split(action, (sim.model.nmocap * 7,))
-        action = action.reshape(sim.model.nmocap, 7)
-
-        pos_delta = action[:, :3]
-        quat_delta = action[:, 3:]
-
-        mjpy_reset_mocap2body_xpos(sim)
-        sim.data.mocap_pos[:] = sim.data.mocap_pos + pos_delta
-        sim.data.mocap_quat[:] = quat_delta  # sim.data.mocap_quat + quat_delta
-
-
-def mjpy_reset_mocap_welds(sim):
-    """Resets the mocap welds that we use for actuation.
-    """
-    if sim.model.nmocap > 0 and sim.model.eq_data is not None:
-        for i in range(sim.model.eq_data.shape[0]):
-            if sim.model.eq_type[i] == mujoco_py.const.EQ_WELD:
-                sim.model.eq_data[i, :] = np.array([0., 0., 0., 1., 0., 0., 0.])
-    sim.forward()
-
-
-def mjpy_reset_mocap2body_xpos(sim):
-    """Resets the position and orientation of the mocap bodies to the same
-    values as the bodies they're welded to.
-    """
-
-    if (
-        sim.model.eq_type is None
-        or sim.model.eq_obj1id is None
-        or sim.model.eq_obj2id is None
-    ):
-        return
-    for eq_type, obj1_id, obj2_id in zip(
-        sim.model.eq_type, sim.model.eq_obj1id, sim.model.eq_obj2id
-    ):
-        if eq_type != mujoco_py.const.EQ_WELD:
-            continue
-
-        mocap_id = sim.model.body_mocapid[obj1_id]
-        if mocap_id != -1:
-            # obj1 is the mocap, obj2 is the welded body
-            body_idx = obj2_id
-        else:
-            # obj2 is the mocap, obj1 is the welded body
-            mocap_id = sim.model.body_mocapid[obj2_id]
-            body_idx = obj1_id
-
-        assert mocap_id != -1
-        sim.data.mocap_pos[mocap_id][:] = sim.data.body_xpos[body_idx]
-        sim.data.mocap_quat[mocap_id][:] = sim.data.body_xquat[body_idx]
-
-
-def postprocess_model_xml(xml_str):
-    """
-    This function postprocesses the model.xml collected from a MuJoCo demonstration
-    in order to make sure that the STL files can be found.
-    """
-    import RoboticsSuite as MM
-
-    path = os.path.split(MM.__file__)[0]
-    path_split = path.split("/")
-
-    # replace mesh and texture file paths
-    tree = ET.fromstring(xml_str)
-    root = tree
-    e = root.find("asset")
-    meshes = e.findall("mesh")
-    textures = e.findall("texture")
-    all_elements = meshes + textures
-
-    for elem in all_elements:
-        old_path = elem.get("file")
-        if old_path is None:
-            continue
-        old_path_split = old_path.split("/")
-        ind = old_path_split.index("RoboticsSuite")
-        new_path_split = path_split + old_path_split[ind + 1 :]
-        new_path = "/".join(new_path_split)
-        elem.set("file", new_path)
-    return ET.tostring(root, encoding="utf8").decode("utf8")
-
-
-def range_to_reward(x, r1, r2, y):
-    """
-    A function f(y) such that:
-        f(y) = 1 for y in [x - r_1, x + r_1]
-        f(y) = 0 for y in [x - r_2, x + r_2]
-    And the function decreases linearly between that
-    """
-    if abs(y - x) <= r1:
-        return 1
-    elif abs(y - x) >= r2:
-        return 0
-    else:
-        return 1 - (abs(y - x) - r1) / (r2 - r1)
