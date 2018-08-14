@@ -1,11 +1,12 @@
 import numpy as np
+from collections import OrderedDict
 import xml.etree.ElementTree as ET
+
 from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.utils import XMLError
 from RoboticsSuite.models.world import MujocoWorldBase
 from RoboticsSuite.models.model_util import *
 from RoboticsSuite.utils.utils import *
-from collections import OrderedDict
 
 
 class BinsTask(MujocoWorldBase):
