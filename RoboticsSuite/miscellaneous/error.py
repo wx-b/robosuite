@@ -1,5 +1,5 @@
 class MujocoManipError(Exception):
-    """Base class for exceptions in MujocoManipulation."""
+    """Base class for exceptions in RoboticsSuite."""
 
     pass
 

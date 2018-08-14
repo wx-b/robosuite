@@ -113,8 +113,6 @@ class BaxterIKController(object):
         # self.robot_urdf = pjoin(self.bullet_data_path, "sawyer_description/urdf/sawyer_arm.urdf")
         # self.robot_urdf = pjoin(self.bullet_data_path, "baxter_custom_ikfast/baxter_arm.accurate.left.urdf")
         self.robot_urdf = self.bullet_data_path
-        # self.robot_urdf = '/home/joan/MujocoManipulation/MujocoManip/models/assets/bullet_data/baxter_common/left.urdf'
-        # self.robot_urdf = '/home/joan/MujocoManipulation/MujocoManip/models/assets/bullet_data/baxter_common/right.urdf'
 
         # load the urdfs
         self.ik_robot = p.loadURDF(self.robot_urdf, (0, 0, 0.9), useFixedBase=1)
