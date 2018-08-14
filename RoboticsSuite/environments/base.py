@@ -1,5 +1,5 @@
 import numpy as np
-from RoboticsSuite.miscellaneous import SimulationError, XMLError, MujocoPyRenderer
+from RoboticsSuite.utils import SimulationError, XMLError, MujocoPyRenderer
 from mujoco_py import MjSim, MjRenderContextOffscreen
 from collections import OrderedDict
 import glfw

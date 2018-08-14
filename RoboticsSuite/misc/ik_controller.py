@@ -2,7 +2,7 @@ import numpy as np
 import pybullet as p
 from os.path import join as pjoin
 
-import RoboticsSuite.miscellaneous.utils as U
+import RoboticsSuite.utils.utils as U
 
 
 class IKController(object):

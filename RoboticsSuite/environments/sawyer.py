@@ -2,7 +2,7 @@ import numpy as np
 from collections import OrderedDict
 from RoboticsSuite.environments.base import MujocoEnv
 from RoboticsSuite.models import SawyerRobot, gripper_factory
-import RoboticsSuite.miscellaneous.utils as U
+import RoboticsSuite.utils.utils as U
 
 
 class SawyerEnv(MujocoEnv):

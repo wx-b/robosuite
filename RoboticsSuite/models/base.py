@@ -5,7 +5,7 @@
 import os
 import xml.etree.ElementTree as ET
 import numpy as np
-from RoboticsSuite.miscellaneous import XMLError
+from RoboticsSuite.utils import XMLError
 import xml.dom.minidom
 import io
 

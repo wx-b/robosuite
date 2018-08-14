@@ -2,7 +2,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.models.model_util import *
-from RoboticsSuite.miscellaneous import XMLError
+from RoboticsSuite.utils import XMLError
 
 
 class Arena(MujocoXML):

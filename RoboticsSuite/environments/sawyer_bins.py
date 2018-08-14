@@ -1,11 +1,11 @@
 import random
 import numpy as np
 from collections import OrderedDict
-from RoboticsSuite.miscellaneous import RandomizationError
+from RoboticsSuite.utils import RandomizationError
 from RoboticsSuite.environments.sawyer import SawyerEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
-import RoboticsSuite.miscellaneous.utils as U
+import RoboticsSuite.utils.utils as U
 
 
 class SawyerBinsEnv(SawyerEnv):

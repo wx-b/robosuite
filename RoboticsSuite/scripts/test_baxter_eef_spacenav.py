@@ -7,8 +7,8 @@ from IPython import embed
 from RoboticsSuite.models import *
 from RoboticsSuite.wrappers import DataCollector
 
-from RoboticsSuite.miscellaneous.baxter_ik import BaxterIKController as IKController
-import RoboticsSuite.miscellaneous.utils as U
+from RoboticsSuite.utils.baxter_ik import BaxterIKController as IKController
+import RoboticsSuite.utils.utils as U
 
 import spacenav
 import threading

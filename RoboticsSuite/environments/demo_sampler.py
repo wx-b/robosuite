@@ -1,4 +1,4 @@
-from RoboticsSuite.miscellaneous.utils import postprocess_model_xml
+from RoboticsSuite.utils.utils import postprocess_model_xml
 from RoboticsSuite.models.model_util import xml_path_completion
 import numpy as np
 import random

@@ -3,7 +3,7 @@ import time
 import numpy as np
 import xml.etree.ElementTree as ET
 from RoboticsSuite.models.base import MujocoXML
-from RoboticsSuite.miscellaneous import XMLError
+from RoboticsSuite.utils import XMLError
 from RoboticsSuite.models.model_util import *
 
 

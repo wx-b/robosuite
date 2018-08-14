@@ -1,11 +1,11 @@
 import numpy as np
 from collections import OrderedDict
-from RoboticsSuite.miscellaneous import RandomizationError
+from RoboticsSuite.utils import RandomizationError
 from RoboticsSuite.environments.baxter import BaxterEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
 from RoboticsSuite.models.model_util import xml_path_completion
-import RoboticsSuite.miscellaneous.utils as U
+import RoboticsSuite.utils.utils as U
 import pickle
 import random
 

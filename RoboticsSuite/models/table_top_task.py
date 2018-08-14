@@ -2,10 +2,10 @@ import numpy as np
 import xml.etree.ElementTree as ET
 import collections
 from RoboticsSuite.models.base import MujocoXML
-from RoboticsSuite.miscellaneous import XMLError, RandomizationError
+from RoboticsSuite.utils import XMLError, RandomizationError
 from RoboticsSuite.models.world import MujocoWorldBase
 from RoboticsSuite.models.model_util import *
-from RoboticsSuite.miscellaneous.utils import *
+from RoboticsSuite.utils.utils import *
 
 
 class ObjectPositionSampler(object):

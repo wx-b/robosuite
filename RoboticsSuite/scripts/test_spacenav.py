@@ -7,8 +7,8 @@ from IPython import embed
 from RoboticsSuite.models import *
 from RoboticsSuite.wrappers import DataCollector
 
-from RoboticsSuite.miscellaneous.spacenavigator import SpaceNavigator
-from RoboticsSuite.miscellaneous.ik_controller import IKController
+from RoboticsSuite.utils.spacenavigator import SpaceNavigator
+from RoboticsSuite.utils.ik_controller import IKController
 
 if __name__ == "__main__":
 
