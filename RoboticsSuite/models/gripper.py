@@ -64,7 +64,7 @@ class MujocoGripper(MujocoXML):
 
 class TwoFingerGripperBase(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion("gripper/two_finger_gripper.xml"))
+        super().__init__(xml_path_completion("grippers/two_finger_gripper.xml"))
 
     def format_action(self, action):
         return action
@@ -115,7 +115,7 @@ class TwoFingerGripper(TwoFingerGripperBase):
 
 class LeftTwoFingerGripperBase(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion("gripper/left_two_finger_gripper.xml"))
+        super().__init__(xml_path_completion("grippers/left_two_finger_gripper.xml"))
 
     def format_action(self, action):
         return action
@@ -162,7 +162,7 @@ class LeftTwoFingerGripper(LeftTwoFingerGripperBase):
 
 class PR2Gripper(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion("gripper/pr2_gripper.xml"))
+        super().__init__(xml_path_completion("grippers/pr2_gripper.xml"))
 
     def format_action(self, action):
         return action
@@ -192,7 +192,7 @@ class PR2Gripper(MujocoGripper):
 
 class RobotiqGripper(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion("gripper/robotiq_gripper.xml"))
+        super().__init__(xml_path_completion("grippers/robotiq_gripper.xml"))
 
     def format_action(self, action):
         return action
@@ -238,7 +238,7 @@ class PushingGripper(TwoFingerGripper):
 
 class RobotiqThreeFingerGripper(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion("gripper/robotiq_gripper_s.xml"))
+        super().__init__(xml_path_completion("grippers/robotiq_gripper_s.xml"))
 
     def format_action(self, action):
         return action

@@ -195,112 +195,112 @@ class MujocoMeshObject(MujocoXML, MujocoObject):
 
 class DefaultBoxObject(MujocoXMLObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/object_box.xml"))
+        super().__init__(xml_path_completion("objects/object_box.xml"))
 
 
 class DefaultBallObject(MujocoXMLObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/object_ball.xml"))
+        super().__init__(xml_path_completion("objects/object_ball.xml"))
 
 
 class DefaultCylinderObject(MujocoXMLObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/object_cylinder.xml"))
+        super().__init__(xml_path_completion("objects/object_cylinder.xml"))
 
 
 class DefaultCapsuleObject(MujocoXMLObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/object_capsule.xml"))
+        super().__init__(xml_path_completion("objects/object_capsule.xml"))
 
 
 class DefaultBottleObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/bottle.xml"))
+        super().__init__(xml_path_completion("objects/bottle.xml"))
 
 
 class DefaultMugObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/mug.xml"))
+        super().__init__(xml_path_completion("objects/mug.xml"))
 
 
 class DefaultBowlObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/bowl.xml"))
+        super().__init__(xml_path_completion("objects/bowl.xml"))
 
 
 class DefaultCanObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/can.xml"))
+        super().__init__(xml_path_completion("objects/can.xml"))
 
 
 class DefaultCameraObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/camera.xml"))
+        super().__init__(xml_path_completion("objects/camera.xml"))
 
 
 class DefaultLemonObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/lemon.xml"))
+        super().__init__(xml_path_completion("objects/lemon.xml"))
 
 
 class DefaultMilkObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/milk.xml"))
+        super().__init__(xml_path_completion("objects/milk.xml"))
 
 
 class DefaultBreadObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/bread.xml"))
+        super().__init__(xml_path_completion("objects/bread.xml"))
 
 
 class DefaultCerealObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/cereal.xml"))
+        super().__init__(xml_path_completion("objects/cereal.xml"))
 
 
 class DefaultAtomizerObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/atomizer.xml"))
+        super().__init__(xml_path_completion("objects/atomizer.xml"))
 
 
 class DefaultSquareNutObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/square-nut.xml"))
+        super().__init__(xml_path_completion("objects/square-nut.xml"))
 
 
 class DefaultRoundNutObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/round-nut.xml"))
+        super().__init__(xml_path_completion("objects/round-nut.xml"))
 
 
 class DefaultMilkVisualObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/milk-visual.xml"))
+        super().__init__(xml_path_completion("objects/milk-visual.xml"))
 
 
 class DefaultBreadVisualObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/bread-visual.xml"))
+        super().__init__(xml_path_completion("objects/bread-visual.xml"))
 
 
 class DefaultCerealVisualObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/cereal-visual.xml"))
+        super().__init__(xml_path_completion("objects/cereal-visual.xml"))
 
 
 class DefaultCanVisualObject(MujocoMeshObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/can-visual.xml"))
+        super().__init__(xml_path_completion("objects/can-visual.xml"))
 
 
 class DefaultStockPotObject(MujocoXMLObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/object_pot.xml"))
+        super().__init__(xml_path_completion("objects/object_pot.xml"))
 
 
 class DefaultHoleObject(MujocoXMLObject):
     def __init__(self):
-        super().__init__(xml_path_completion("object/object_hole.xml"))
+        super().__init__(xml_path_completion("objects/object_hole.xml"))
 
 
 class MujocoGeneratedObject(MujocoObject):

@@ -37,7 +37,7 @@ class TableArena(Arena):
             friction = np.array([1, 0.005, 0.0001])
         self.friction = friction
 
-        super().__init__(xml_path_completion("arena/table_arena.xml"))
+        super().__init__(xml_path_completion("arenas/table_arena.xml"))
         self.floor = self.worldbody.find("./geom[@name='floor']")
         self.table_body = self.worldbody.find("./body[@name='table']")
         self.table_collision = self.table_body.find("./geom[@name='table_collision']")
@@ -68,7 +68,7 @@ class TableArena(Arena):
 
 class EmptyArena(Arena):
     def __init__(self):
-        super().__init__(xml_path_completion("arena/empty_arena.xml"))
+        super().__init__(xml_path_completion("arenas/empty_arena.xml"))
         self.floor = self.worldbody.find("./geom[@name='floor']")
 
 
@@ -80,7 +80,7 @@ class BinsArena(Arena):
             friction = np.array([1, 0.005, 0.0001])
         self.friction = friction
 
-        super().__init__(xml_path_completion("arena/bins_arena.xml"))
+        super().__init__(xml_path_completion("arenas/bins_arena.xml"))
         self.floor = self.worldbody.find("./geom[@name='floor']")
         self.bin1_body = self.worldbody.find("./body[@name='bin1']")
         self.bin2_body = self.worldbody.find("./body[@name='bin2']")
@@ -106,7 +106,7 @@ class PegsArena(Arena):
             friction = np.array([1, 0.005, 0.0001])
         self.friction = friction
 
-        super().__init__(xml_path_completion("arena/pegs_arena.xml"))
+        super().__init__(xml_path_completion("arenas/pegs_arena.xml"))
         self.floor = self.worldbody.find("./geom[@name='floor']")
         self.bin1_body = self.worldbody.find("./body[@name='bin1']")
         self.peg1_body = self.worldbody.find("./body[@name='peg1']")
