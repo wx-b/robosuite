@@ -3,14 +3,14 @@
 
 import numpy as np
 import sys
-from MujocoManip import *
+from RoboticsSuite import *
 import mujoco_py
 import pickle
 import os
 import zipfile
 import time
 
-from MujocoManip.models import *
+from RoboticsSuite.models import *
 
 
 def extract_file(f):

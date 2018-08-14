@@ -1,8 +1,8 @@
 import numpy as np
 import xml.etree.ElementTree as ET
-from MujocoManip.models.base import MujocoXML
-from MujocoManip.models.model_util import *
-from MujocoManip.miscellaneous import XMLError
+from RoboticsSuite.models.base import MujocoXML
+from RoboticsSuite.models.model_util import *
+from RoboticsSuite.miscellaneous import XMLError
 
 
 class Arena(MujocoXML):

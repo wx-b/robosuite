@@ -1,7 +1,7 @@
 import time
-from MujocoManip import make
+from RoboticsSuite import make
 import numpy as np
-from MujocoManip.environments.demo_sampler import DemoSampler
+from RoboticsSuite.environments.demo_sampler import DemoSampler
 
 
 class demo_config:

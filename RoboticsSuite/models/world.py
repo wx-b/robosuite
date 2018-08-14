@@ -1,8 +1,8 @@
 import numpy as np
 import xml.etree.ElementTree as ET
-from MujocoManip.models.base import MujocoXML
-from MujocoManip.miscellaneous import XMLError
-from MujocoManip.models.model_util import xml_path_completion
+from RoboticsSuite.models.base import MujocoXML
+from RoboticsSuite.miscellaneous import XMLError
+from RoboticsSuite.models.model_util import xml_path_completion
 
 ### Base class to inherit all mujoco worlds from
 class MujocoWorldBase(MujocoXML):

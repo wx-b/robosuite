@@ -1,11 +1,11 @@
 import numpy as np
 import xml.etree.ElementTree as ET
 import collections
-from MujocoManip.models.base import MujocoXML
-from MujocoManip.miscellaneous import XMLError, RandomizationError
-from MujocoManip.models.world import MujocoWorldBase
-from MujocoManip.models.model_util import *
-from MujocoManip.miscellaneous.utils import *
+from RoboticsSuite.models.base import MujocoXML
+from RoboticsSuite.miscellaneous import XMLError, RandomizationError
+from RoboticsSuite.models.world import MujocoWorldBase
+from RoboticsSuite.models.model_util import *
+from RoboticsSuite.miscellaneous.utils import *
 
 
 class ObjectPositionSampler(object):

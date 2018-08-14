@@ -665,7 +665,7 @@ def postprocess_model_xml(xml_str):
     This function postprocesses the model.xml collected from a MuJoCo demonstration
     in order to make sure that the STL files can be found.
     """
-    import MujocoManip as MM
+    import RoboticsSuite as MM
 
     path = os.path.split(MM.__file__)[0]
     path_split = path.split("/")
@@ -683,7 +683,7 @@ def postprocess_model_xml(xml_str):
         if old_path is None:
             continue
         old_path_split = old_path.split("/")
-        ind = old_path_split.index("MujocoManip")
+        ind = old_path_split.index("RoboticsSuite")
         new_path_split = path_split + old_path_split[ind + 1 :]
         new_path = "/".join(new_path_split)
         elem.set("file", new_path)

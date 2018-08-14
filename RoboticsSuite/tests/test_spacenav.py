@@ -1,14 +1,14 @@
-from MujocoManip import *
+from RoboticsSuite import *
 import numpy as np
 import time
 from PIL import Image
 from IPython import embed
 
-from MujocoManip.models import *
-from MujocoManip.wrappers import DataCollector
+from RoboticsSuite.models import *
+from RoboticsSuite.wrappers import DataCollector
 
-from MujocoManip.miscellaneous.spacenavigator import SpaceNavigator
-from MujocoManip.miscellaneous.ik_controller import IKController
+from RoboticsSuite.miscellaneous.spacenavigator import SpaceNavigator
+from RoboticsSuite.miscellaneous.ik_controller import IKController
 
 if __name__ == "__main__":
 

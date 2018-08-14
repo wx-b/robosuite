@@ -1,5 +1,5 @@
-import MujocoManip as MM
-import MujocoManip.miscellaneous.utils as U
+import RoboticsSuite as MM
+import RoboticsSuite.miscellaneous.utils as U
 import numpy as np
 
 

@@ -1,11 +1,11 @@
 import numpy as np
 from collections import OrderedDict
-from MujocoManip.miscellaneous import RandomizationError
-from MujocoManip.environments.baxter import BaxterEnv
-from MujocoManip.environments.demo_sampler import DemoSampler
-from MujocoManip.models import *
-from MujocoManip.models.model_util import xml_path_completion
-import MujocoManip.miscellaneous.utils as U
+from RoboticsSuite.miscellaneous import RandomizationError
+from RoboticsSuite.environments.baxter import BaxterEnv
+from RoboticsSuite.environments.demo_sampler import DemoSampler
+from RoboticsSuite.models import *
+from RoboticsSuite.models.model_util import xml_path_completion
+import RoboticsSuite.miscellaneous.utils as U
 import pickle
 import random
 

@@ -1,5 +1,5 @@
-from MujocoManip.miscellaneous.utils import postprocess_model_xml
-from MujocoManip.models.model_util import xml_path_completion
+from RoboticsSuite.miscellaneous.utils import postprocess_model_xml
+from RoboticsSuite.models.model_util import xml_path_completion
 import numpy as np
 import random
 import os

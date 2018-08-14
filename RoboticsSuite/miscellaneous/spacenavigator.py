@@ -8,7 +8,7 @@ import numpy as np
 
 from collections import namedtuple
 
-import MujocoManip.miscellaneous.utils as U
+import RoboticsSuite.miscellaneous.utils as U
 
 AxisSpec = namedtuple("AxisSpec", ["channel", "byte1", "byte2", "scale"])
 

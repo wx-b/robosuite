@@ -20,15 +20,15 @@ python demo.py
 
 ## Creating a new environment
 
-- Take a look at [sawyer\_lift.py](https://github.com/StanfordVL/RoboticsSuite/blob/master/MujocoManip/environments/sawyer_lift.py) and [sawyer\_stack.py](https://github.com/StanfordVL/RoboticsSuite/blob/master/MujocoManip/environments/sawyer_stack.py) for inspiration.
+- Take a look at [sawyer\_lift.py](https://github.com/StanfordVL/RoboticsSuite/blob/master/RoboticsSuite/environments/sawyer_lift.py) and [sawyer\_stack.py](https://github.com/StanfordVL/RoboticsSuite/blob/master/RoboticsSuite/environments/sawyer_stack.py) for inspiration.
 
-- When you are done implementing your environment, add the following line to [\_\_init\_\_.py](https://github.com/StanfordVL/RoboticsSuite/blob/master/MujocoManip/__init__.py) 
+- When you are done implementing your environment, add the following line to [\_\_init\_\_.py](https://github.com/StanfordVL/RoboticsSuite/blob/master/RoboticsSuite/__init__.py)
 
   ```python
-  from MujocoManip.environment.your_env_file import YourEnv
+  from RoboticsSuite.environment.your_env_file import YourEnv
   ```
 
-- Also register the environment in [base.py](https://github.com/StanfordVL/RoboticsSuite/blob/master/MujocoManip/environments/base.py) by importing the environment and adding it to the REGISTERED_ENVS dictionary.
+- Also register the environment in [base.py](https://github.com/StanfordVL/RoboticsSuite/blob/master/RoboticsSuite/environments/base.py) by importing the environment and adding it to the REGISTERED_ENVS dictionary.
 
 ## Prototyping new environments
 

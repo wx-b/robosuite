@@ -1,22 +1,22 @@
-class MujocoManipError(Exception):
+class RoboticsSuiteError(Exception):
     """Base class for exceptions in RoboticsSuite."""
 
     pass
 
 
-class XMLError(MujocoManipError):
+class XMLError(RoboticsSuiteError):
     """Exception raised for errors related to xml."""
 
     pass
 
 
-class SimulationError(MujocoManipError):
+class SimulationError(RoboticsSuiteError):
     """Exception raised for errors during runtime."""
 
     pass
 
 
-class RandomizationError(MujocoManipError):
+class RandomizationError(RoboticsSuiteError):
     """Exception raised for really really bad RNG."""
 
     pass

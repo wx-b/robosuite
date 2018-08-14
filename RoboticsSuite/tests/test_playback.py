@@ -2,7 +2,7 @@
 Testing script for playing back some data collected from the DataCollector wrapper.
 """
 
-from MujocoManip import SawyerStackEnv, make
+from RoboticsSuite import SawyerStackEnv, make
 import numpy as np
 import time
 import os
@@ -10,8 +10,8 @@ from PIL import Image
 from glob import glob
 from IPython import embed
 
-from MujocoManip.models import *
-from MujocoManip import DataCollector
+from RoboticsSuite.models import *
+from RoboticsSuite import DataCollector
 
 
 def collect_random_data(env, timesteps=1000):

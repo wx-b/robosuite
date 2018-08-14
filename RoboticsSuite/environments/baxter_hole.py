@@ -1,10 +1,10 @@
 import numpy as np
 from collections import OrderedDict
-from MujocoManip.miscellaneous import RandomizationError
-from MujocoManip.environments.baxter import BaxterEnv
-from MujocoManip.models import *
-from MujocoManip.models.model_util import xml_path_completion, array_to_string, joint
-import MujocoManip.miscellaneous.utils as U
+from RoboticsSuite.miscellaneous import RandomizationError
+from RoboticsSuite.environments.baxter import BaxterEnv
+from RoboticsSuite.models import *
+from RoboticsSuite.models.model_util import xml_path_completion, array_to_string, joint
+import RoboticsSuite.miscellaneous.utils as U
 
 
 class BaxterHoleEnv(BaxterEnv):

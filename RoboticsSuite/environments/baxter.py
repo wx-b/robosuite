@@ -1,8 +1,8 @@
 import numpy as np
 from collections import OrderedDict
-from MujocoManip.environments.base import MujocoEnv
-from MujocoManip.models import BaxterRobot, gripper_factory
-import MujocoManip.miscellaneous.utils as U
+from RoboticsSuite.environments.base import MujocoEnv
+from RoboticsSuite.models import BaxterRobot, gripper_factory
+import RoboticsSuite.miscellaneous.utils as U
 
 
 class BaxterEnv(MujocoEnv):

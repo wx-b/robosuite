@@ -1,12 +1,12 @@
 import numpy as np
 import xml.etree.ElementTree as ET
-from MujocoManip.models.base import MujocoXML
-from MujocoManip.miscellaneous import XMLError
-from MujocoManip.models.world import MujocoWorldBase
-from MujocoManip.models.model_util import *
-from MujocoManip.miscellaneous.utils import *
+from RoboticsSuite.models.base import MujocoXML
+from RoboticsSuite.miscellaneous import XMLError
+from RoboticsSuite.models.world import MujocoWorldBase
+from RoboticsSuite.models.model_util import *
+from RoboticsSuite.miscellaneous.utils import *
 from collections import OrderedDict
-from MujocoManip.models.table_top_task import ObjectPositionSampler
+from RoboticsSuite.models.table_top_task import ObjectPositionSampler
 
 
 class UniformRandomPegsSampler(ObjectPositionSampler):

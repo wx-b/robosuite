@@ -3,7 +3,7 @@ This file contains a wrapper for saving simulation states.
 This is useful for collecting demonstrations.
 """
 
-from MujocoManip.wrappers import Wrapper
+from RoboticsSuite.wrappers import Wrapper
 import os
 import time
 import numpy as np

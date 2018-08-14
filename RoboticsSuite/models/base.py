@@ -5,7 +5,7 @@
 import os
 import xml.etree.ElementTree as ET
 import numpy as np
-from MujocoManip.miscellaneous import XMLError
+from RoboticsSuite.miscellaneous import XMLError
 import xml.dom.minidom
 import io
 
@@ -87,7 +87,7 @@ class MujocoXML(object):
         with io.StringIO() as string:
             string.write(ET.tostring(self.root, encoding="unicode"))
             if mode == "dm_control":
-                from MujocoManip.dm_control_ext import Physics
+                from RoboticsSuite.dm_control_ext import Physics
 
                 model = Physics.from_xml_string(string.getvalue())
                 return model

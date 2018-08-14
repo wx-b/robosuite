@@ -1,5 +1,5 @@
 import time
-from MujocoManip import make
+from RoboticsSuite import make
 import numpy as np
 
 # env for training

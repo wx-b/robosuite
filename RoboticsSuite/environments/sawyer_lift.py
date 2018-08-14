@@ -1,12 +1,12 @@
 import numpy as np
 from collections import OrderedDict
-from MujocoManip.miscellaneous import RandomizationError
-from MujocoManip.miscellaneous.utils import postprocess_model_xml
-from MujocoManip.environments.sawyer import SawyerEnv
-from MujocoManip.environments.demo_sampler import DemoSampler
-from MujocoManip.models import *
-from MujocoManip.models.model_util import xml_path_completion
-import MujocoManip.miscellaneous.utils as U
+from RoboticsSuite.miscellaneous import RandomizationError
+from RoboticsSuite.miscellaneous.utils import postprocess_model_xml
+from RoboticsSuite.environments.sawyer import SawyerEnv
+from RoboticsSuite.environments.demo_sampler import DemoSampler
+from RoboticsSuite.models import *
+from RoboticsSuite.models.model_util import xml_path_completion
+import RoboticsSuite.miscellaneous.utils as U
 
 
 class SawyerLiftEnv(SawyerEnv):

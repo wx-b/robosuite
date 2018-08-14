@@ -1,13 +1,13 @@
-from MujocoManip import *
+from RoboticsSuite import *
 import numpy as np
 import time
 from PIL import Image
 from IPython import embed
 
-from MujocoManip.models import *
-from MujocoManip.wrappers import DataCollector
+from RoboticsSuite.models import *
+from RoboticsSuite.wrappers import DataCollector
 
-from MujocoManip.miscellaneous.baxter_ik import BaxterIKController as IKController
+from RoboticsSuite.miscellaneous.baxter_ik import BaxterIKController as IKController
 
 if __name__ == "__main__":
 

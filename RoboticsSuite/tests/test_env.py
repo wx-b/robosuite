@@ -1,13 +1,13 @@
-from MujocoManip import *
+from RoboticsSuite import *
 import numpy as np
 import time
 from PIL import Image
 from IPython import embed
 
-from MujocoManip.models import *
-from MujocoManip.wrappers import DataCollector
-import MujocoManip.miscellaneous.utils as U
-import MujocoManip.miscellaneous.transformations as T
+from RoboticsSuite.models import *
+from RoboticsSuite.wrappers import DataCollector
+import RoboticsSuite.miscellaneous.utils as U
+import RoboticsSuite.miscellaneous.transformations as T
 
 if __name__ == "__main__":
 

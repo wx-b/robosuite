@@ -1,11 +1,11 @@
 import random
 import numpy as np
 from collections import OrderedDict
-from MujocoManip.miscellaneous import RandomizationError
-from MujocoManip.environments.sawyer import SawyerEnv
-from MujocoManip.environments.demo_sampler import DemoSampler
-from MujocoManip.models import *
-import MujocoManip.miscellaneous.utils as U
+from RoboticsSuite.miscellaneous import RandomizationError
+from RoboticsSuite.environments.sawyer import SawyerEnv
+from RoboticsSuite.environments.demo_sampler import DemoSampler
+from RoboticsSuite.models import *
+import RoboticsSuite.miscellaneous.utils as U
 
 
 class SawyerBinsEnv(SawyerEnv):

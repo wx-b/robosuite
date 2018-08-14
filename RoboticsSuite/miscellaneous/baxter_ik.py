@@ -4,7 +4,7 @@ import sys
 import pybullet as p
 from os.path import join as pjoin
 
-import MujocoManip.miscellaneous.utils as U
+import RoboticsSuite.miscellaneous.utils as U
 
 
 class BaxterIKController(object):
