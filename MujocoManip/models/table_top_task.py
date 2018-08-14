@@ -34,14 +34,19 @@ class ObjectPositionSampler(object):
         """
         raise NotImplementedError
 
+
 class UniformRandomSampler(ObjectPositionSampler):
     """
         Places all objects within the table uniformly random
     """
-    def __init__(self, x_range=None, 
-                    y_range=None, 
-                    ensure_object_boundary_in_range=True,
-                    z_rotation='random'):
+
+    def __init__(
+        self,
+        x_range=None,
+        y_range=None,
+        ensure_object_boundary_in_range=True,
+        z_rotation="random",
+    ):
         """
         Args:
             x_range(float * 2): override the x_range used to uniformly place objects
@@ -74,7 +79,7 @@ class UniformRandomSampler(ObjectPositionSampler):
             minimum += object_horizontal_radius
             maximum -= object_horizontal_radius
         return np.random.uniform(high=maximum, low=minimum)
-        
+
     def sample_y(self, object_horizontal_radius):
         y_range = self.y_range
         if y_range is None:
@@ -88,9 +93,11 @@ class UniformRandomSampler(ObjectPositionSampler):
 
     def sample_quat(self):
         if self.z_rotation is None:
-            rot_angle = np.random.uniform(high=2 * np.pi,low=0)
+            rot_angle = np.random.uniform(high=2 * np.pi, low=0)
         elif isinstance(self.z_rotation, collections.Iterable):
-            rot_angle = np.random.uniform(high=max(self.z_rotation),low=min(self.z_rotation))
+            rot_angle = np.random.uniform(
+                high=max(self.z_rotation), low=min(self.z_rotation)
+            )
         else:
             rot_angle = self.z_rotation
 
@@ -105,31 +112,38 @@ class UniformRandomSampler(ObjectPositionSampler):
             horizontal_radius = obj_mjcf.get_horizontal_radius()
             bottom_offset = obj_mjcf.get_bottom_offset()
             success = False
-            for i in range(5000): # 1000 retries
+            for i in range(5000):  # 1000 retries
                 object_x = self.sample_x(horizontal_radius)
                 object_y = self.sample_y(horizontal_radius)
                 # objects cannot overlap
                 location_valid = True
                 for x, y, r in placed_objects:
-                    if np.linalg.norm([object_x - x, object_y - y], 2) <= r + horizontal_radius:
+                    if (
+                        np.linalg.norm([object_x - x, object_y - y], 2)
+                        <= r + horizontal_radius
+                    ):
                         location_valid = False
                         break
-                if location_valid: 
+                if location_valid:
                     # location is valid, put the object down
-                    pos = self.table_top_offset - bottom_offset + np.array([object_x, object_y, 0])
+                    pos = (
+                        self.table_top_offset
+                        - bottom_offset
+                        + np.array([object_x, object_y, 0])
+                    )
                     placed_objects.append((object_x, object_y, horizontal_radius))
                     # random z-rotation
-                    
+
                     quat = self.sample_quat()
-                    
+
                     quat_arr.append(quat)
                     pos_arr.append(pos)
                     success = True
                     break
-                
+
                 # bad luck, reroll
             if not success:
-                raise RandomizationError('Cannot place all objects on the desk')
+                raise RandomizationError("Cannot place all objects on the desk")
             index += 1
         return pos_arr, quat_arr
 
@@ -168,20 +182,21 @@ class TableTopTask(MujocoWorldBase):
     def merge_objects(self, mujoco_objects):
         self.n_objects = len(mujoco_objects)
         self.mujoco_objects = mujoco_objects
-        self.objects = [] # xml manifestation
-        self.targets = [] # xml manifestation
+        self.objects = []  # xml manifestation
+        self.targets = []  # xml manifestation
         self.max_horizontal_radius = 0
 
         for obj_name, obj_mjcf in mujoco_objects.items():
             self.merge_asset(obj_mjcf)
             # Load object
             obj = obj_mjcf.get_collision(name=obj_name, site=True)
-            obj.append(joint(name=obj_name, type='free'))
+            obj.append(joint(name=obj_name, type="free"))
             self.objects.append(obj)
             self.worldbody.append(obj)
 
-            self.max_horizontal_radius = max(self.max_horizontal_radius,
-                                             obj_mjcf.get_horizontal_radius())
+            self.max_horizontal_radius = max(
+                self.max_horizontal_radius, obj_mjcf.get_horizontal_radius()
+            )
 
     def place_objects(self):
         """
@@ -191,5 +206,5 @@ class TableTopTask(MujocoWorldBase):
         """
         pos_arr, quat_arr = self.initializer.sample()
         for i in range(len(self.objects)):
-            self.objects[i].set('pos', array_to_string(pos_arr[i]))
-            self.objects[i].set('quat', array_to_string(quat_arr[i]))
+            self.objects[i].set("pos", array_to_string(pos_arr[i]))
+            self.objects[i].set("quat", array_to_string(quat_arr[i]))

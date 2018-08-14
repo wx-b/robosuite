@@ -8,15 +8,20 @@ from MujocoManip.miscellaneous.utils import *
 from collections import OrderedDict
 from MujocoManip.models.table_top_task import ObjectPositionSampler
 
+
 class UniformRandomPegsSampler(ObjectPositionSampler):
     """
         Places all objects within the table uniformly random
     """
-    def __init__(self, x_range=None, 
-                    y_range=None,
-                    z_range=None, 
-                    ensure_object_boundary_in_range=True,
-                    z_rotation=True):
+
+    def __init__(
+        self,
+        x_range=None,
+        y_range=None,
+        z_range=None,
+        ensure_object_boundary_in_range=True,
+        z_rotation=True,
+    ):
         """
         Args:
             x_range(float * 2): override the x_range used to uniformly place objects
@@ -49,7 +54,7 @@ class UniformRandomPegsSampler(ObjectPositionSampler):
             minimum += object_horizontal_radius
             maximum -= object_horizontal_radius
         return np.random.uniform(high=maximum, low=minimum)
-        
+
     def sample_y(self, object_horizontal_radius, y_range=None):
         if y_range is None:
             y_range = self.y_range
@@ -76,7 +81,7 @@ class UniformRandomPegsSampler(ObjectPositionSampler):
 
     def sample_quat(self):
         if self.z_rotation:
-            rot_angle = np.random.uniform(high=2 * np.pi,low=0)
+            rot_angle = np.random.uniform(high=2 * np.pi, low=0)
             return [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
         else:
             return [1, 0, 0, 0]
@@ -90,39 +95,52 @@ class UniformRandomPegsSampler(ObjectPositionSampler):
             horizontal_radius = obj_mjcf.get_horizontal_radius()
             bottom_offset = obj_mjcf.get_bottom_offset()
             success = False
-            for i in range(5000): # 1000 retries
+            for i in range(5000):  # 1000 retries
                 if obj_name.startswith("SquareNut"):
-                    x_range = [-self.table_size[0] / 2 + horizontal_radius, -horizontal_radius]
+                    x_range = [
+                        -self.table_size[0] / 2 + horizontal_radius,
+                        -horizontal_radius,
+                    ]
                     y_range = [horizontal_radius, self.table_size[0] / 2]
                 else:
-                    x_range = [-self.table_size[0] / 2 + horizontal_radius, -horizontal_radius]
+                    x_range = [
+                        -self.table_size[0] / 2 + horizontal_radius,
+                        -horizontal_radius,
+                    ]
                     y_range = [-self.table_size[0] / 2, -horizontal_radius]
                 object_x = self.sample_x(horizontal_radius, x_range=x_range)
                 object_y = self.sample_y(horizontal_radius, y_range=y_range)
                 object_z = self.sample_z(0.01)
                 # objects cannot overlap
                 location_valid = True
-                pos = self.table_top_offset - bottom_offset + np.array([object_x, object_y, object_z])
+                pos = (
+                    self.table_top_offset
+                    - bottom_offset
+                    + np.array([object_x, object_y, object_z])
+                )
 
                 for pos2, r in placed_objects:
-                    if np.linalg.norm(pos - pos2, 2) <= r + horizontal_radius and abs(pos[2]-pos2[2])<0.021:
+                    if (
+                        np.linalg.norm(pos - pos2, 2) <= r + horizontal_radius
+                        and abs(pos[2] - pos2[2]) < 0.021
+                    ):
                         location_valid = False
                         break
-                if location_valid: 
+                if location_valid:
                     # location is valid, put the object down
                     placed_objects.append((pos, horizontal_radius))
                     # random z-rotation
-                    
+
                     quat = self.sample_quat()
-                    
+
                     quat_arr.append(quat)
                     pos_arr.append(pos)
                     success = True
                     break
-                
+
                 # bad luck, reroll
             if not success:
-                raise RandomizationError('Cannot place all objects on the desk')
+                raise RandomizationError("Cannot place all objects on the desk")
 
         return pos_arr, quat_arr
 
@@ -135,10 +153,11 @@ class UniformRandomPegsSampler(ObjectPositionSampler):
             table_top_offset(float * 3): location of table top center
             table_size(float * 3): x,y,z-FULLsize of the table
         """
-        self.mujoco_objects = mujoco_objects # should be a dictionary - (name, mjcf)
+        self.mujoco_objects = mujoco_objects  # should be a dictionary - (name, mjcf)
         self.n_obj = len(self.mujoco_objects)
         self.table_top_offset = table_top_offset
         self.table_size = table_size
+
 
 class PegsTask(MujocoWorldBase):
 
@@ -179,23 +198,23 @@ class PegsTask(MujocoWorldBase):
     def merge_objects(self, mujoco_objects):
         self.n_objects = len(mujoco_objects)
         self.mujoco_objects = mujoco_objects
-        self.objects = {} # xml manifestation
+        self.objects = {}  # xml manifestation
         self.max_horizontal_radius = 0
         for obj_name, obj_mjcf in mujoco_objects.items():
             self.merge_asset(obj_mjcf)
             # Load object
             obj = obj_mjcf.get_collision(name=obj_name, site=True)
-            obj.append(joint(name=obj_name, type='free', damping='0.0005'))
+            obj.append(joint(name=obj_name, type="free", damping="0.0005"))
             self.objects[obj_name] = obj
             self.worldbody.append(obj)
 
-            self.max_horizontal_radius = max(self.max_horizontal_radius,
-                                             obj_mjcf.get_horizontal_radius())
-
+            self.max_horizontal_radius = max(
+                self.max_horizontal_radius, obj_mjcf.get_horizontal_radius()
+            )
 
     def sample_quat(self):
         if self.z_rotation:
-            rot_angle = np.random.uniform(high=2 * np.pi,low=0)
+            rot_angle = np.random.uniform(high=2 * np.pi, low=0)
             return [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
         else:
             return [1, 0, 0, 0]
@@ -209,6 +228,6 @@ class PegsTask(MujocoWorldBase):
         pos_arr, quat_arr = self.initializer.sample()
         i = 0
         for obj_name in self.objects:
-            self.objects[obj_name].set('pos', array_to_string(pos_arr[i]))
-            self.objects[obj_name].set('quat', array_to_string(quat_arr[i]))
+            self.objects[obj_name].set("pos", array_to_string(pos_arr[i]))
+            self.objects[obj_name].set("quat", array_to_string(quat_arr[i]))
             i += 1

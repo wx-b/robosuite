@@ -3,11 +3,12 @@ from mujoco_py.generated import const
 import glfw
 from collections import defaultdict
 
+
 class CustomMjViewer(MjViewer):
 
     keypress = defaultdict(list)
     keyup = defaultdict(list)
- 
+
     def key_callback(self, window, key, scancode, action, mods):
         if action == glfw.PRESS:
             tgt = self.keypress
@@ -18,12 +19,13 @@ class CustomMjViewer(MjViewer):
         if tgt.get(key):
             for fn in tgt[key]:
                 fn(window, key, scancode, action, mods)
-        if tgt.get('any'):
-            for fn in tgt['any']:
+        if tgt.get("any"):
+            for fn in tgt["any"]:
                 fn(window, key, scancode, action, mods)
         super().key_callback(window, key, scancode, action, mods)
 
-class MujocoPyRenderer():
+
+class MujocoPyRenderer:
     def __init__(self, sim):
         """
         sim should be MjSim

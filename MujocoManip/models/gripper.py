@@ -5,7 +5,6 @@ from MujocoManip.miscellaneous import XMLError
 from MujocoManip.models.model_util import *
 
 
-
 class MujocoGripper(MujocoXML):
     """Base class for grippers"""
 
@@ -57,15 +56,15 @@ class MujocoGripper(MujocoXML):
     def hide_visualization(self):
         for site_name in self.visualization_sites():
             site = self.worldbody.find(".//site[@name='{}']".format(site_name))
-            site.set('rgba', '0 0 0 0')
+            site.set("rgba", "0 0 0 0")
         for geom_name in self.visualization_geoms():
             site = self.worldbody.find(".//geom[@name='{}']".format(geom_name))
-            geom.set('rgba', '0 0 0 0')
+            geom.set("rgba", "0 0 0 0")
 
 
 class TwoFingerGripperBase(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion('gripper/two_finger_gripper.xml'))
+        super().__init__(xml_path_completion("gripper/two_finger_gripper.xml"))
 
     def format_action(self, action):
         return action
@@ -77,22 +76,31 @@ class TwoFingerGripperBase(MujocoGripper):
 
     @property
     def joints(self):
-        return ['r_gripper_l_finger_joint', 'r_gripper_r_finger_joint']
+        return ["r_gripper_l_finger_joint", "r_gripper_r_finger_joint"]
 
     @property
     def dof(self):
         return 2
 
     def visualization_sites(self):
-        return ['grip_site', 'grip_site_cylinder']
+        return ["grip_site", "grip_site_cylinder"]
 
     def contact_geoms(self):
-        return ["r_finger_g0", "r_finger_g1", "l_finger_g0", "l_finger_g1", "r_fingertip_g0", "l_fingertip_g0"]
+        return [
+            "r_finger_g0",
+            "r_finger_g1",
+            "l_finger_g0",
+            "l_finger_g1",
+            "r_fingertip_g0",
+            "l_fingertip_g0",
+        ]
+
 
 class TwoFingerGripper(TwoFingerGripperBase):
     """
     Modifies two finger base to only take one action
     """
+
     def format_action(self, action):
         """
         1 => open, -1 => closed
@@ -104,9 +112,10 @@ class TwoFingerGripper(TwoFingerGripperBase):
     def dof(self):
         return 1
 
+
 class LeftTwoFingerGripperBase(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion('gripper/left_two_finger_gripper.xml'))
+        super().__init__(xml_path_completion("gripper/left_two_finger_gripper.xml"))
 
     def format_action(self, action):
         return action
@@ -118,17 +127,25 @@ class LeftTwoFingerGripperBase(MujocoGripper):
 
     @property
     def joints(self):
-        return ['l_gripper_l_finger_joint', 'l_gripper_r_finger_joint']
+        return ["l_gripper_l_finger_joint", "l_gripper_r_finger_joint"]
 
     @property
     def dof(self):
         return 2
 
     def visualization_sites(self):
-        return ['l_g_grip_site', 'l_g_grip_site_cylinder']
+        return ["l_g_grip_site", "l_g_grip_site_cylinder"]
 
     def contact_geoms(self):
-        return ["l_g_r_finger_g0", "l_g_r_finger_g1", "l_g_l_finger_g0", "l_g_l_finger_g1", "l_g_r_fingertip_g0", "l_fingertip_g0"]
+        return [
+            "l_g_r_finger_g0",
+            "l_g_r_finger_g1",
+            "l_g_l_finger_g0",
+            "l_g_l_finger_g1",
+            "l_g_r_fingertip_g0",
+            "l_fingertip_g0",
+        ]
+
 
 class LeftTwoFingerGripper(LeftTwoFingerGripperBase):
     def format_action(self, action):
@@ -142,13 +159,15 @@ class LeftTwoFingerGripper(LeftTwoFingerGripperBase):
     def dof(self):
         return 1
 
+
 class PR2Gripper(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion('gripper/pr2_gripper.xml'))
+        super().__init__(xml_path_completion("gripper/pr2_gripper.xml"))
 
     def format_action(self, action):
         return action
- #       return np.ones(4) * action
+
+    #       return np.ones(4) * action
 
     @property
     def init_qpos(self):
@@ -156,7 +175,12 @@ class PR2Gripper(MujocoGripper):
 
     @property
     def joints(self):
-        return ['r_gripper_r_finger_joint', 'r_gripper_l_finger_joint', 'r_gripper_r_finger_tip_joint', 'r_gripper_l_finger_tip_joint']
+        return [
+            "r_gripper_r_finger_joint",
+            "r_gripper_l_finger_joint",
+            "r_gripper_r_finger_tip_joint",
+            "r_gripper_l_finger_tip_joint",
+        ]
 
     @property
     def dof(self):
@@ -165,28 +189,30 @@ class PR2Gripper(MujocoGripper):
     def contact_geoms(self):
         raise NotImplementedError
 
+
 class RobotiqGripper(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion('gripper/robotiq_gripper.xml'))
+        super().__init__(xml_path_completion("gripper/robotiq_gripper.xml"))
 
     def format_action(self, action):
         return action
-#         return -1 * np.ones(6) * action
+
+    #         return -1 * np.ones(6) * action
 
     @property
     def init_qpos(self):
-        return [ 3.3161, 0., 0., 0., 0., 0.]
+        return [3.3161, 0., 0., 0., 0., 0.]
 
     @property
     def joints(self):
         return [
-            'robotiq_85_left_knuckle_joint', 
-            'robotiq_85_left_inner_knuckle_joint', 
-            'robotiq_85_left_finger_tip_joint',
-            'robotiq_85_right_knuckle_joint',
-            'robotiq_85_right_inner_knuckle_joint',
-            'robotiq_85_right_finger_tip_joint',
-            ]
+            "robotiq_85_left_knuckle_joint",
+            "robotiq_85_left_inner_knuckle_joint",
+            "robotiq_85_left_finger_tip_joint",
+            "robotiq_85_right_knuckle_joint",
+            "robotiq_85_right_inner_knuckle_joint",
+            "robotiq_85_right_finger_tip_joint",
+        ]
 
     @property
     def dof(self):
@@ -195,8 +221,10 @@ class RobotiqGripper(MujocoGripper):
     def contact_geoms(self):
         raise NotImplementedError
 
+
 class PushingGripper(TwoFingerGripper):
     """Same as Two FingerGripper, but always closed"""
+
     def format_action(self, action):
         return np.array([1, -1])
 
@@ -207,10 +235,10 @@ class PushingGripper(TwoFingerGripper):
     def contact_geoms(self):
         raise NotImplementedError
 
+
 class RobotiqThreeFingerGripper(MujocoGripper):
     def __init__(self):
-        super().__init__(xml_path_completion('gripper/robotiq_gripper_s.xml'))
-
+        super().__init__(xml_path_completion("gripper/robotiq_gripper_s.xml"))
 
     def format_action(self, action):
         return action
@@ -232,7 +260,7 @@ class RobotiqThreeFingerGripper(MujocoGripper):
             "finger_2_joint_3",
             "finger_middle_joint_1",
             "finger_middle_joint_2",
-            "finger_middle_joint_3"
+            "finger_middle_joint_3",
         ]
 
     @property
@@ -241,6 +269,7 @@ class RobotiqThreeFingerGripper(MujocoGripper):
 
     def contact_geoms(self):
         raise NotImplementedError
+
 
 def gripper_factory(name):
     """Genreator for grippers"""
@@ -260,7 +289,4 @@ def gripper_factory(name):
         return PushingGripper()
     if name == "RobotiqThreeFingerGripper":
         return RobotiqThreeFingerGripper()
-    raise XMLError('Unkown gripper name {}'.format(name))
-
-
-
+    raise XMLError("Unkown gripper name {}".format(name))

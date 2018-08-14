@@ -4,7 +4,6 @@ from os.path import join, expanduser
 import numpy as np
 
 
-
 def remove_empty_lines(string):
     lines = []
     for line in string.splitlines():
@@ -17,7 +16,7 @@ def rec_assign(node, assign):
     # Assigns values to node recursively.
     # This is neccessary to avoid overriding pointers in MuJoCo.
     for field in dir(node):
-        if field.find("__") == -1 and field != 'uintptr':
+        if field.find("__") == -1 and field != "uintptr":
             val = getattr(node, field)
             if isinstance(val, (int, bool, float, None.__class__, str)):
                 setattr(node, field, assign[field])
@@ -51,6 +50,6 @@ def discover_mujoco():
     - mjpro_path (str): Path to MuJoCo Pro 1.50 directory.
     - key_path (str): Path to the MuJoCo license key.
     """
-    key_path = join(expanduser('~'), '.mujoco', 'mjkey.txt')
-    mjpro_path = join(expanduser('~'), '.mujoco', 'mjpro150')
+    key_path = join(expanduser("~"), ".mujoco", "mjkey.txt")
+    mjpro_path = join(expanduser("~"), ".mujoco", "mjpro150")
     return (mjpro_path, key_path)

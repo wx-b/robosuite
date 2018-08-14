@@ -8,7 +8,7 @@ import numpy as np
 import math
 import mujoco_py
 import xml.etree.ElementTree as ET
-import os 
+import os
 
 pi = np.pi
 EPS = np.finfo(float).eps * 4.
@@ -18,18 +18,36 @@ _NEXT_AXIS = [1, 2, 0, 1]
 
 # map axes strings to/from tuples of inner axis, parity, repetition, frame
 _AXES2TUPLE = {
-    'sxyz': (0, 0, 0, 0), 'sxyx': (0, 0, 1, 0), 'sxzy': (0, 1, 0, 0),
-    'sxzx': (0, 1, 1, 0), 'syzx': (1, 0, 0, 0), 'syzy': (1, 0, 1, 0),
-    'syxz': (1, 1, 0, 0), 'syxy': (1, 1, 1, 0), 'szxy': (2, 0, 0, 0),
-    'szxz': (2, 0, 1, 0), 'szyx': (2, 1, 0, 0), 'szyz': (2, 1, 1, 0),
-    'rzyx': (0, 0, 0, 1), 'rxyx': (0, 0, 1, 1), 'ryzx': (0, 1, 0, 1),
-    'rxzx': (0, 1, 1, 1), 'rxzy': (1, 0, 0, 1), 'ryzy': (1, 0, 1, 1),
-    'rzxy': (1, 1, 0, 1), 'ryxy': (1, 1, 1, 1), 'ryxz': (2, 0, 0, 1),
-    'rzxz': (2, 0, 1, 1), 'rxyz': (2, 1, 0, 1), 'rzyz': (2, 1, 1, 1)}
+    "sxyz": (0, 0, 0, 0),
+    "sxyx": (0, 0, 1, 0),
+    "sxzy": (0, 1, 0, 0),
+    "sxzx": (0, 1, 1, 0),
+    "syzx": (1, 0, 0, 0),
+    "syzy": (1, 0, 1, 0),
+    "syxz": (1, 1, 0, 0),
+    "syxy": (1, 1, 1, 0),
+    "szxy": (2, 0, 0, 0),
+    "szxz": (2, 0, 1, 0),
+    "szyx": (2, 1, 0, 0),
+    "szyz": (2, 1, 1, 0),
+    "rzyx": (0, 0, 0, 1),
+    "rxyx": (0, 0, 1, 1),
+    "ryzx": (0, 1, 0, 1),
+    "rxzx": (0, 1, 1, 1),
+    "rxzy": (1, 0, 0, 1),
+    "ryzy": (1, 0, 1, 1),
+    "rzxy": (1, 1, 0, 1),
+    "ryxy": (1, 1, 1, 1),
+    "ryxz": (2, 0, 0, 1),
+    "rzxz": (2, 0, 1, 1),
+    "rxyz": (2, 1, 0, 1),
+    "rzyz": (2, 1, 1, 1),
+}
 
 _TUPLE2AXES = dict((v, k) for k, v in _AXES2TUPLE.items())
 
-def convert_quat(q, to='xyzw'):
+
+def convert_quat(q, to="xyzw"):
     """
     Converts quaternion from one convention to another. 
     The convention to convert TO is specified as an optional argument. 
@@ -39,12 +57,13 @@ def convert_quat(q, to='xyzw'):
     :param to: a string, either 'xyzw' or 'wxyz', determining 
                which convention to convert to.
     """
-    if to == 'xyzw':
+    if to == "xyzw":
         return q[[1, 2, 3, 0]]
-    elif to == 'wxyz':
+    elif to == "wxyz":
         return q[[3, 0, 1, 2]]
     else:
         raise Exception("convert_quat: choose a valid `to` argument (xyzw or wxyz)")
+
 
 def vec(values):
     """
@@ -54,6 +73,7 @@ def vec(values):
     """
     return np.array(values, dtype=np.float32)
 
+
 def mat4(array):
     """
     Convert an array to 4x4 matrix
@@ -61,6 +81,7 @@ def mat4(array):
     :return: 4x4 numpy matrix
     """
     return np.array(array, dtype=np.float32).reshape((4, 4))
+
 
 def mat2pose(hmat):
     """
@@ -72,6 +93,7 @@ def mat2pose(hmat):
     pos = hmat[:3, 3]
     orn = mat2quat(hmat[:3, :3])
     return pos, orn
+
 
 def mat2quat(rmat, precise=False):
     """
@@ -115,19 +137,24 @@ def mat2quat(rmat, precise=False):
         m21 = M[2, 1]
         m22 = M[2, 2]
         # symmetric matrix K
-        K = np.array([[m00 - m11 - m22, 0.0, 0.0, 0.0],
-                      [m01 + m10, m11 - m00 - m22, 0.0, 0.0],
-                      [m02 + m20, m12 + m21, m22 - m00 - m11, 0.0],
-                      [m21 - m12, m02 - m20, m10 - m01, m00 + m11 + m22]])
+        K = np.array(
+            [
+                [m00 - m11 - m22, 0.0, 0.0, 0.0],
+                [m01 + m10, m11 - m00 - m22, 0.0, 0.0],
+                [m02 + m20, m12 + m21, m22 - m00 - m11, 0.0],
+                [m21 - m12, m02 - m20, m10 - m01, m00 + m11 + m22],
+            ]
+        )
         K /= 3.0
         # quaternion is Eigen vector of K that corresponds to largest eigenvalue
         w, V = np.linalg.eigh(K)
         q = V[[3, 0, 1, 2], np.argmax(w)]
     if q[0] < 0.0:
         np.negative(q, q)
-    return q[[1,2,3,0]]
+    return q[[1, 2, 3, 0]]
 
-def mat2euler(rmat, axes='sxyz'):
+
+def mat2euler(rmat, axes="sxyz"):
     """
     Convert given rotation matrix to euler angles in radian.
     :param rmat: 3x3 rotation matrix
@@ -169,7 +196,8 @@ def mat2euler(rmat, axes='sxyz'):
         ax, ay, az = -ax, -ay, -az
     if frame:
         ax, az = az, ax
-    return vec((ax, ay, az)) 
+    return vec((ax, ay, az))
+
 
 def pose2mat(pose):
     """
@@ -185,22 +213,27 @@ def pose2mat(pose):
     homo_pose_mat[3, 3] = 1.
     return homo_pose_mat
 
+
 def quat2mat(quaternion):
     """
     Convert given quaternion (x, y, z, w) to matrix
     :param quaternion: vec4 float angles
     :return: 3x3 rotation matrix
     """
-    q = np.array(quaternion, dtype=np.float32, copy=True)[[3,0,1,2]]
+    q = np.array(quaternion, dtype=np.float32, copy=True)[[3, 0, 1, 2]]
     n = np.dot(q, q)
     if n < EPS:
         return np.identity(3)
     q *= math.sqrt(2.0 / n)
     q = np.outer(q, q)
-    return np.array([
-        [1.0 - q[2, 2] - q[3, 3], q[1, 2] - q[3, 0], q[1, 3] + q[2, 0]],
-        [q[1, 2] + q[3, 0], 1.0 - q[1, 1] - q[3, 3], q[2, 3] - q[1, 0]],
-        [q[1, 3] - q[2, 0], q[2, 3] + q[1, 0], 1.0 - q[1, 1] - q[2, 2]]])
+    return np.array(
+        [
+            [1.0 - q[2, 2] - q[3, 3], q[1, 2] - q[3, 0], q[1, 3] + q[2, 0]],
+            [q[1, 2] + q[3, 0], 1.0 - q[1, 1] - q[3, 3], q[2, 3] - q[1, 0]],
+            [q[1, 3] - q[2, 0], q[2, 3] + q[1, 0], 1.0 - q[1, 1] - q[2, 2]],
+        ]
+    )
+
 
 def pose_in_A_to_pose_in_B(pose_A, pose_A_in_B):
     """
@@ -220,6 +253,7 @@ def pose_in_A_to_pose_in_B(pose_A, pose_A_in_B):
     # T_B^C = T_A^C * T_B^A
     return pose_A_in_B.dot(pose_A)
 
+
 def pose_inv(pose):
     """
     Computes the inverse of a homogenous matrix corresponding to the pose of some
@@ -233,27 +267,39 @@ def pose_inv(pose):
     # Note, the inverse of a pose matrix is the following
     # [R t; 0 1]^-1 = [R.T -R.T*t; 0 1]
 
-    # Intuitively, this makes sense. 
+    # Intuitively, this makes sense.
     # The original pose matrix translates by t, then rotates by R.
     # We just invert the rotation by applying R-1 = R.T, and also translate back.
-    # Since we apply translation first before rotation, we need to translate by 
-    # -t in the original frame, which is -R-1*t in the new frame, and then rotate back by 
-    # R-1 to align the axis again. 
-    
-    pose_inv = np.zeros((4,4))
+    # Since we apply translation first before rotation, we need to translate by
+    # -t in the original frame, which is -R-1*t in the new frame, and then rotate back by
+    # R-1 to align the axis again.
+
+    pose_inv = np.zeros((4, 4))
     pose_inv[:3, :3] = pose[:3, :3].T
     pose_inv[:3, 3] = -pose_inv[:3, :3].dot(pose[:3, 3])
     pose_inv[3, 3] = 1.0
     return pose_inv
+
 
 def _skew_symmetric_translation(pos_A_in_B):
     """
     Helper function to get a skew symmetric translation matrix for converting quantities
     between frames.
     """
-    return np.array([0., -pos_A_in_B[2], pos_A_in_B[1],
-                     pos_A_in_B[2], 0., -pos_A_in_B[0],
-                     -pos_A_in_B[1], pos_A_in_B[0], 0.]).reshape((3, 3))
+    return np.array(
+        [
+            0.,
+            -pos_A_in_B[2],
+            pos_A_in_B[1],
+            pos_A_in_B[2],
+            0.,
+            -pos_A_in_B[0],
+            -pos_A_in_B[1],
+            pos_A_in_B[0],
+            0.,
+        ]
+    ).reshape((3, 3))
+
 
 def vel_in_A_to_vel_in_B(vel_A, ang_vel_A, pose_A_in_B):
     """
@@ -273,6 +319,7 @@ def vel_in_A_to_vel_in_B(vel_A, ang_vel_A, pose_A_in_B):
     ang_vel_B = rot_A_in_B.dot(ang_vel_A)
     return vel_B, ang_vel_B
 
+
 def force_in_A_to_force_in_B(force_A, torque_A, pose_A_in_B):
     """
     Converts linear and rotational force at a point in frame A to the equivalent in frame B.
@@ -290,6 +337,7 @@ def force_in_A_to_force_in_B(force_A, torque_A, pose_A_in_B):
     force_B = rot_A_in_B.T.dot(force_A)
     torque_B = -rot_A_in_B.T.dot(skew_symm.dot(force_A)) + rot_A_in_B.T.dot(torque_A)
     return force_B, torque_B
+
 
 def rotation_matrix(angle, direction, point=None):
     """Return matrix to rotate about axis defined by point and direction.
@@ -315,15 +363,19 @@ def rotation_matrix(angle, direction, point=None):
     cosa = math.cos(angle)
     direction = unit_vector(direction[:3])
     # rotation matrix around unit vector
-    R = np.array(((cosa, 0.0,  0.0),
-                     (0.0,  cosa, 0.0),
-                     (0.0,  0.0,  cosa)), dtype=np.float64)
+    R = np.array(
+        ((cosa, 0.0, 0.0), (0.0, cosa, 0.0), (0.0, 0.0, cosa)), dtype=np.float64
+    )
     R += np.outer(direction, direction) * (1.0 - cosa)
     direction *= sina
-    R += np.array((( 0.0,         -direction[2],  direction[1]),
-                      ( direction[2], 0.0,          -direction[0]),
-                      (-direction[1], direction[0],  0.0)),
-                     dtype=np.float64)
+    R += np.array(
+        (
+            (0.0, -direction[2], direction[1]),
+            (direction[2], 0.0, -direction[0]),
+            (-direction[1], direction[0], 0.0),
+        ),
+        dtype=np.float64,
+    )
     M = np.identity(4)
     M[:3, :3] = R
     if point is not None:
@@ -331,6 +383,7 @@ def rotation_matrix(angle, direction, point=None):
         point = np.array(point[:3], dtype=np.float64, copy=False)
         M[:3, 3] = point - np.dot(R, point)
     return M
+
 
 def make_pose(translation, rotation):
     """
@@ -341,11 +394,12 @@ def make_pose(translation, rotation):
 
     :return pose: a 4x4 homogenous matrix
     """
-    pose = np.zeros((4,4))
+    pose = np.zeros((4, 4))
     pose[:3, :3] = rotation
     pose[:3, 3] = translation
     pose[3, 3] = 1.0
     return pose
+
 
 def unit_vector(data, axis=None, out=None):
     """Return ndarray normalized by length, i.e. eucledian norm, along axis.
@@ -380,13 +434,14 @@ def unit_vector(data, axis=None, out=None):
         if out is not data:
             out[:] = np.array(data, copy=False)
         data = out
-    length = np.atleast_1d(np.sum(data*data, axis))
+    length = np.atleast_1d(np.sum(data * data, axis))
     np.sqrt(length, length)
     if axis is not None:
         length = np.expand_dims(length, axis)
     data /= length
     if out is None:
         return data
+
 
 def get_orientation_error(target_orn, current_orn):
     """
@@ -399,7 +454,9 @@ def get_orientation_error(target_orn, current_orn):
     :return orn_error: 3-dim numpy array for current orientation error, corresponds to (target_orn - current_orn)
     """
 
-    current_orn = np.array([current_orn[3], current_orn[0], current_orn[1], current_orn[2]])
+    current_orn = np.array(
+        [current_orn[3], current_orn[0], current_orn[1], current_orn[2]]
+    )
     target_orn = np.array([target_orn[3], target_orn[0], target_orn[1], target_orn[2]])
 
     pinv = np.zeros((3, 4))
@@ -408,6 +465,7 @@ def get_orientation_error(target_orn, current_orn):
     pinv[2, :] = [-current_orn[3], -current_orn[2], current_orn[1], current_orn[0]]
     orn_error = 2.0 * pinv.dot(np.array(target_orn))
     return orn_error
+
 
 def get_pose_error(target_pose, current_pose):
     """
@@ -423,7 +481,7 @@ def get_pose_error(target_pose, current_pose):
 
     error = np.zeros(6)
 
-    # compute translational error 
+    # compute translational error
     target_pos = target_pose[:3, 3]
     current_pos = current_pose[:3, 3]
     pos_err = target_pos - current_pos
@@ -440,6 +498,7 @@ def get_pose_error(target_pose, current_pose):
     error[:3] = pos_err
     error[3:] = rot_err
     return error
+
 
 ### support for mocap ###
 
@@ -506,7 +565,7 @@ def get_pose_error(target_pose, current_pose):
 #     for eq_type, obj1_id, obj2_id in zip(physics.model.eq_type,
 #                                          physics.model.eq_obj1id,
 #                                          physics.model.eq_obj2id):
-#         if eq_type != enums.mjtEq.mjEQ_WELD: 
+#         if eq_type != enums.mjtEq.mjEQ_WELD:
 #             continue
 
 #         mocap_id = physics.model.body_mocapid[obj1_id]
@@ -522,13 +581,14 @@ def get_pose_error(target_pose, current_pose):
 #         physics.data.mocap_pos[mocap_id][:] = physics.data.xpos[body_idx]
 #         physics.data.mocap_quat[mocap_id][:] = physics.data.xquat[body_idx]
 
+
 def mjpy_ctrl_set_action(sim, action):
     """For torque actuators it copies the action into mujoco ctrl field.
     For position actuators it sets the target relative to the current qpos.
     """
     if sim.model.nmocap > 0:
         ### note: this grabs gripper ctrl only... ###
-        _, action = np.split(action, (sim.model.nmocap * 7, ))
+        _, action = np.split(action, (sim.model.nmocap * 7,))
     if sim.data.ctrl is not None:
         for i in range(action.shape[0]):
             if sim.model.actuator_biastype[i] == 0:
@@ -548,7 +608,7 @@ def mjpy_mocap_set_action(sim, action):
     constraint optimizer tries to center the welded body on the mocap.
     """
     if sim.model.nmocap > 0:
-        action, _ = np.split(action, (sim.model.nmocap * 7, ))
+        action, _ = np.split(action, (sim.model.nmocap * 7,))
         action = action.reshape(sim.model.nmocap, 7)
 
         pos_delta = action[:, :3]
@@ -556,7 +616,7 @@ def mjpy_mocap_set_action(sim, action):
 
         mjpy_reset_mocap2body_xpos(sim)
         sim.data.mocap_pos[:] = sim.data.mocap_pos + pos_delta
-        sim.data.mocap_quat[:] = quat_delta #sim.data.mocap_quat + quat_delta
+        sim.data.mocap_quat[:] = quat_delta  # sim.data.mocap_quat + quat_delta
 
 
 def mjpy_reset_mocap_welds(sim):
@@ -565,8 +625,7 @@ def mjpy_reset_mocap_welds(sim):
     if sim.model.nmocap > 0 and sim.model.eq_data is not None:
         for i in range(sim.model.eq_data.shape[0]):
             if sim.model.eq_type[i] == mujoco_py.const.EQ_WELD:
-                sim.model.eq_data[i, :] = np.array(
-                    [0., 0., 0., 1., 0., 0., 0.])
+                sim.model.eq_data[i, :] = np.array([0., 0., 0., 1., 0., 0., 0.])
     sim.forward()
 
 
@@ -575,13 +634,15 @@ def mjpy_reset_mocap2body_xpos(sim):
     values as the bodies they're welded to.
     """
 
-    if (sim.model.eq_type is None or
-        sim.model.eq_obj1id is None or
-        sim.model.eq_obj2id is None):
+    if (
+        sim.model.eq_type is None
+        or sim.model.eq_obj1id is None
+        or sim.model.eq_obj2id is None
+    ):
         return
-    for eq_type, obj1_id, obj2_id in zip(sim.model.eq_type,
-                                         sim.model.eq_obj1id,
-                                         sim.model.eq_obj2id):
+    for eq_type, obj1_id, obj2_id in zip(
+        sim.model.eq_type, sim.model.eq_obj1id, sim.model.eq_obj2id
+    ):
         if eq_type != mujoco_py.const.EQ_WELD:
             continue
 
@@ -594,9 +655,10 @@ def mjpy_reset_mocap2body_xpos(sim):
             mocap_id = sim.model.body_mocapid[obj2_id]
             body_idx = obj1_id
 
-        assert (mocap_id != -1)
+        assert mocap_id != -1
         sim.data.mocap_pos[mocap_id][:] = sim.data.body_xpos[body_idx]
         sim.data.mocap_quat[mocap_id][:] = sim.data.body_xquat[body_idx]
+
 
 def postprocess_model_xml(xml_str):
     """
@@ -604,27 +666,29 @@ def postprocess_model_xml(xml_str):
     in order to make sure that the STL files can be found.
     """
     import MujocoManip as MM
+
     path = os.path.split(MM.__file__)[0]
-    path_split = path.split('/')
+    path_split = path.split("/")
 
     # replace mesh and texture file paths
     tree = ET.fromstring(xml_str)
     root = tree
-    e = root.find('asset')
-    meshes = e.findall('mesh')
-    textures = e.findall('texture')
+    e = root.find("asset")
+    meshes = e.findall("mesh")
+    textures = e.findall("texture")
     all_elements = meshes + textures
 
     for elem in all_elements:
-        old_path = elem.get('file')
+        old_path = elem.get("file")
         if old_path is None:
             continue
-        old_path_split = old_path.split('/')
-        ind = old_path_split.index('MujocoManip')
-        new_path_split = path_split + old_path_split[ind + 1:]
-        new_path = '/'.join(new_path_split)
-        elem.set('file', new_path)
-    return ET.tostring(root, encoding='utf8').decode('utf8')
+        old_path_split = old_path.split("/")
+        ind = old_path_split.index("MujocoManip")
+        new_path_split = path_split + old_path_split[ind + 1 :]
+        new_path = "/".join(new_path_split)
+        elem.set("file", new_path)
+    return ET.tostring(root, encoding="utf8").decode("utf8")
+
 
 def range_to_reward(x, r1, r2, y):
     """
@@ -639,5 +703,3 @@ def range_to_reward(x, r1, r2, y):
         return 0
     else:
         return 1 - (abs(y - x) - r1) / (r2 - r1)
-
-

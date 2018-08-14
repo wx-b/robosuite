@@ -4,11 +4,13 @@ from os.path import join as pjoin
 
 import MujocoManip.miscellaneous.utils as U
 
+
 class IKController(object):
     """
     This controller is used to control a robot using Inverse Kinematics
     to map end effector motions to joint motions. 
     """
+
     def __init__(self, bullet_data_path, robot_jpos_getter):
 
         # path to data folder of bullet repository
@@ -35,7 +37,7 @@ class IKController(object):
         :return velocities: The joint velocity commands to apply.
         """
 
-        # Sync joint positions for IK. 
+        # Sync joint positions for IK.
         self.sync_ik_robot(self.robot_jpos_getter())
 
         # ### TODO: scale down dpos appropriately based on current distance to IK target ###
@@ -46,13 +48,17 @@ class IKController(object):
         # if norm > 0.1:
         #     user_info["dpos"] = 0.1 * (user_info["dpos"] / norm)
 
-        self.commanded_joint_positions = self.joint_positions_for_user_displacement(dpos, rotation)
+        self.commanded_joint_positions = self.joint_positions_for_user_displacement(
+            dpos, rotation
+        )
 
         # P controller from joint positions (from IK) to velocities
         velocities = np.zeros(7)
-        deltas = self._get_current_error(self.robot_jpos_getter(), self.commanded_joint_positions)
+        deltas = self._get_current_error(
+            self.robot_jpos_getter(), self.commanded_joint_positions
+        )
         for i, delta in enumerate(deltas):
-            velocities[i] = -2. * delta # -2. * delta
+            velocities[i] = -2. * delta  # -2. * delta
         velocities = self.clip_joint_velocities(velocities)
         return velocities
 
@@ -71,7 +77,9 @@ class IKController(object):
         ### TODO: Why is the bullet eef z-position so wrong??? ###
 
         # make sure target pose is up to date
-        self.ik_robot_target_pos, self.ik_robot_target_orn = self.ik_robot_eef_joint_cartesian_pose()
+        self.ik_robot_target_pos, self.ik_robot_target_orn = (
+            self.ik_robot_eef_joint_cartesian_pose()
+        )
 
     def setup_inverse_kinematics(self):
         """
@@ -88,12 +96,14 @@ class IKController(object):
         p.resetSimulation()
 
         # get paths to urdfs
-        self.robot_urdf = pjoin(self.bullet_data_path, "sawyer_description/urdf/sawyer_arm.urdf")
+        self.robot_urdf = pjoin(
+            self.bullet_data_path, "sawyer_description/urdf/sawyer_arm.urdf"
+        )
 
         # load the urdfs
         self.ik_robot = p.loadURDF(self.robot_urdf, (0, 0, 0.9), useFixedBase=1)
 
-        # Simulation will update as fast as it can in real time, instead of waiting for 
+        # Simulation will update as fast as it can in real time, instead of waiting for
         # step commands like in the non-realtime case.
         p.setRealTimeSimulation(1)
 
@@ -112,21 +122,24 @@ class IKController(object):
             num_joints -= 1
         for i in range(num_joints):
             if simulate:
-                p.setJointMotorControl2(self.ik_robot, i,
+                p.setJointMotorControl2(
+                    self.ik_robot,
+                    i,
                     p.POSITION_CONTROL,
-                    targetVelocity = 0,
+                    targetVelocity=0,
                     targetPosition=joint_positions[i],
-                    force=500, 
+                    force=500,
                     positionGain=0.5,
-                    velocityGain = 1.)
+                    velocityGain=1.,
+                )
             else:
-                p.resetJointState(self.ik_robot, i, joint_positions[i], 0) 
+                p.resetJointState(self.ik_robot, i, joint_positions[i], 0)
 
     def ik_robot_eef_joint_cartesian_pose(self):
         """
         Returns the current cartesian pose of the last joint of the ik robot with respect to the base frame as
         a (pos, orn) tuple where orn is a x-y-z-w quaternion
-        """        
+        """
         eef_pos_in_world = np.array(p.getLinkState(self.ik_robot, 6)[0])
         eef_orn_in_world = np.array(p.getLinkState(self.ik_robot, 6)[1])
         eef_pose_in_world = U.pose2mat((eef_pos_in_world, eef_orn_in_world))
@@ -136,7 +149,9 @@ class IKController(object):
         base_pose_in_world = U.pose2mat((base_pos_in_world, base_orn_in_world))
         world_pose_in_base = U.pose_inv(base_pose_in_world)
 
-        eef_pose_in_base = U.pose_in_A_to_pose_in_B(pose_A=eef_pose_in_world, pose_A_in_B=world_pose_in_base)
+        eef_pose_in_base = U.pose_in_A_to_pose_in_B(
+            pose_A=eef_pose_in_world, pose_A_in_B=world_pose_in_base
+        )
 
         return U.mat2pose(eef_pose_in_base)
 
@@ -157,12 +172,19 @@ class IKController(object):
         ### TODO: should rest poses final value be the initial roll or commanded roll? ###
 
         if rest_poses is None:
-            ik_solution = list(p.calculateInverseKinematics(self.ik_robot, 6, 
-                               target_position, targetOrientation=target_orientation, 
-                               restPoses=[0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161], jointDamping=[0.1] * 7))
+            ik_solution = list(
+                p.calculateInverseKinematics(
+                    self.ik_robot,
+                    6,
+                    target_position,
+                    targetOrientation=target_orientation,
+                    restPoses=[0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161],
+                    jointDamping=[0.1] * 7,
+                )
+            )
         else:
-            # ik_solution = list(p.calculateInverseKinematics(self.ik_robot, 6, 
-            #                    target_position, targetOrientation=target_orientation, 
+            # ik_solution = list(p.calculateInverseKinematics(self.ik_robot, 6,
+            #                    target_position, targetOrientation=target_orientation,
             #                    restPoses=rest_poses, jointDamping=[0.1] * 7))
 
             ### TODO: experiment with joint damping in simulation... ###
@@ -170,12 +192,19 @@ class IKController(object):
             ### TODO: test mujoco eef orientation vs. link 6 orientation in bullet vs. link 6 orn in mujoco... ###
 
             # trying nullspace IK here
-            ik_solution = list(p.calculateInverseKinematics(self.ik_robot, 6, 
-                               target_position, targetOrientation=target_orientation, 
-                               lowerLimits=[-3.05, -3.82, -3.05, -3.05, -2.98, -2.98, -4.71],
-                               upperLimits=[3.05, 2.28, 3.05, 3.05, 2.98, 2.98, 4.71],
-                               jointRanges=[6.1, 6.1, 6.1, 6.1, 5.96, 5.96, 9.4]  ,
-                               restPoses=rest_poses, jointDamping=[0.1] * 7))
+            ik_solution = list(
+                p.calculateInverseKinematics(
+                    self.ik_robot,
+                    6,
+                    target_position,
+                    targetOrientation=target_orientation,
+                    lowerLimits=[-3.05, -3.82, -3.05, -3.05, -2.98, -2.98, -4.71],
+                    upperLimits=[3.05, 2.28, 3.05, 3.05, 2.98, 2.98, 4.71],
+                    jointRanges=[6.1, 6.1, 6.1, 6.1, 5.96, 5.96, 9.4],
+                    restPoses=rest_poses,
+                    jointDamping=[0.1] * 7,
+                )
+            )
         return ik_solution
 
     def bullet_base_pose_to_world_pose(self, pose_in_base):
@@ -191,7 +220,9 @@ class IKController(object):
         base_orn_in_world = np.array(p.getBasePositionAndOrientation(self.ik_robot)[1])
         base_pose_in_world = U.pose2mat((base_pos_in_world, base_orn_in_world))
 
-        pose_in_world = U.pose_in_A_to_pose_in_B(pose_A=pose_in_base, pose_A_in_B=base_pose_in_world)
+        pose_in_world = U.pose_in_A_to_pose_in_B(
+            pose_A=pose_in_base, pose_A_in_B=base_pose_in_world
+        )
         return U.mat2pose(pose_in_world)
 
     def joint_positions_for_user_displacement(self, dpos, rotation):
@@ -206,21 +237,27 @@ class IKController(object):
 
         self.ik_robot_target_pos += dpos * self.user_sensitivity
 
-        # we are rotating the initial simulation configuration for easy stacking 
-        rotation = rotation.dot(U.rotation_matrix(angle=-np.pi/2, direction=[0., 0., 1.], point=None)[:3, :3])
+        # we are rotating the initial simulation configuration for easy stacking
+        rotation = rotation.dot(
+            U.rotation_matrix(angle=-np.pi / 2, direction=[0., 0., 1.], point=None)[
+                :3, :3
+            ]
+        )
 
         self.ik_robot_target_orn = U.mat2quat(rotation)
 
         # convert from target pose in base frame to target pose in bullet world frame
-        world_targets = self.bullet_base_pose_to_world_pose((self.ik_robot_target_pos, self.ik_robot_target_orn))
+        world_targets = self.bullet_base_pose_to_world_pose(
+            (self.ik_robot_target_pos, self.ik_robot_target_orn)
+        )
 
         rest_poses = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
 
         for bullet_i in range(100):
 
-            arm_joint_pos = self.inverse_kinematics(world_targets[0], 
-                                                    world_targets[1],
-                                                    rest_poses=rest_poses)
+            arm_joint_pos = self.inverse_kinematics(
+                world_targets[0], world_targets[1], rest_poses=rest_poses
+            )
 
             # arm_joint_pos = self.inverse_kinematics(world_targets[0], world_targets[1])
 
@@ -236,7 +273,7 @@ class IKController(object):
         # from IPython import embed
         # embed()
 
-        # print("Bullet IK took {} seconds".format(time.time() - t1))   
+        # print("Bullet IK took {} seconds".format(time.time() - t1))
         return arm_joint_pos
 
     def _get_current_error(self, current, set_point):
@@ -263,8 +300,3 @@ class IKController(object):
                 # print("CLIPPED joint {} at {}".format(i, velocities[i]))
                 velocities[i] = -1.0
         return velocities
-
-
-
-
-

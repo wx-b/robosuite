@@ -7,5 +7,4 @@ from MujocoManip.models.model_util import xml_path_completion
 ### Base class to inherit all mujoco worlds from
 class MujocoWorldBase(MujocoXML):
     def __init__(self):
-        super().__init__(xml_path_completion('base.xml'))
-
+        super().__init__(xml_path_completion("base.xml"))

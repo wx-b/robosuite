@@ -16,6 +16,7 @@ class MujocoXML(object):
         Wraps around ElementTree and provides additional functionality for merging different models.
         Specially, we keep track of <worldbody/>, <actuator/> and <asset/>
     """
+
     def __init__(self, fname):
         """
             Loads a mujoco xml from file specified by fname
@@ -24,25 +25,24 @@ class MujocoXML(object):
         self.folder = os.path.dirname(fname)
         self.tree = ET.parse(fname)
         self.root = self.tree.getroot()
-        self.name = self.root.get('model')
-        self.worldbody = self.create_default_element('worldbody')
-        self.actuator = self.create_default_element('actuator')
-        self.asset = self.create_default_element('asset')
-        self.equality = self.create_default_element('equality')
-        self.contact = self.create_default_element('contact')
-        self.default = self.create_default_element('default')
+        self.name = self.root.get("model")
+        self.worldbody = self.create_default_element("worldbody")
+        self.actuator = self.create_default_element("actuator")
+        self.asset = self.create_default_element("asset")
+        self.equality = self.create_default_element("equality")
+        self.contact = self.create_default_element("contact")
+        self.default = self.create_default_element("default")
         self.resolve_asset_dependency()
 
     def resolve_asset_dependency(self):
         """
             Convert every file dependency into absolute path so when we merge we don't break things.
         """
-        for node in self.asset.findall('./*[@file]'):
-            file = node.get('file')
+        for node in self.asset.findall("./*[@file]"):
+            file = node.get("file")
             abs_path = os.path.abspath(self.folder)
             abs_path = os.path.join(abs_path, file)
-            node.set('file', abs_path)
-
+            node.set("file", abs_path)
 
     def create_default_element(self, name):
         """
@@ -55,7 +55,6 @@ class MujocoXML(object):
         self.root.append(ele)
         return ele
 
-
     def merge(self, other, merge_body=True):
         """
             Default merge method
@@ -64,7 +63,7 @@ class MujocoXML(object):
             merges <worldbody/>, <actuator/> and <asset/> of @other into @self 
         """
         if not isinstance(other, MujocoXML):
-            raise XMLError('{} is not a MujocoXML instance.'.format(type(other)))
+            raise XMLError("{} is not a MujocoXML instance.".format(type(other)))
         if merge_body:
             for body in other.worldbody:
                 self.worldbody.append(body)
@@ -79,27 +78,33 @@ class MujocoXML(object):
             self.default.append(one_default)
         # self.config.append(other.config)
 
-    def get_model(self, mode='dm_control'):
+    def get_model(self, mode="dm_control"):
         """
             Returns a MJModel instance from the current xml tree
         """
-        
-        available_modes = ['dm_control', 'mujoco_py']
+
+        available_modes = ["dm_control", "mujoco_py"]
         with io.StringIO() as string:
-            string.write(ET.tostring(self.root, encoding='unicode'))
-            if mode == 'dm_control':
+            string.write(ET.tostring(self.root, encoding="unicode"))
+            if mode == "dm_control":
                 from MujocoManip.dm_control_ext import Physics
+
                 model = Physics.from_xml_string(string.getvalue())
                 return model
-            elif mode == 'mujoco_py':
+            elif mode == "mujoco_py":
                 from mujoco_py import load_model_from_path, load_model_from_xml
+
                 model = load_model_from_xml(string.getvalue())
                 return model
-            raise ValueError('Unkown model mode: {}. Available options are: {}'.format(mode, ','.join(available_modes)))
-        
+            raise ValueError(
+                "Unkown model mode: {}. Available options are: {}".format(
+                    mode, ",".join(available_modes)
+                )
+            )
+
     def get_xml(self):
         with io.StringIO() as string:
-            string.write(ET.tostring(self.root, encoding='unicode'))
+            string.write(ET.tostring(self.root, encoding="unicode"))
             return string.getvalue()
 
     def save_model(self, fname, pretty=False):
@@ -109,18 +114,18 @@ class MujocoXML(object):
             @fname output file location
             @pretty Attempts!! to pretty print the output
         """
-        with open(fname, 'w') as f:
-            xml_str = ET.tostring(self.root, encoding='unicode')
+        with open(fname, "w") as f:
+            xml_str = ET.tostring(self.root, encoding="unicode")
             if pretty:
                 # TODO: get a good pretty print library
                 parsed_xml = xml.dom.minidom.parseString(xml_str)
-                xml_str = parsed_xml.toprettyxml(newl='')
+                xml_str = parsed_xml.toprettyxml(newl="")
             f.write(xml_str)
 
     def merge_asset(self, other):
         """Useful for merging other files in a custom logic"""
         for asset in other.asset:
-            asset_name = asset.get('name')
+            asset_name = asset.get("name")
             asset_type = asset.tag
             # Avoids duplication
             pattern = "./{}[@name='{}']".format(asset_type, asset_name)

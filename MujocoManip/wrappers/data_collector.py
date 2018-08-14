@@ -8,8 +8,8 @@ import os
 import time
 import numpy as np
 
-class DataCollector(Wrapper):
 
+class DataCollector(Wrapper):
     def __init__(self, env, directory, collect_freq=1, flush_freq=1000):
         """
         :param env: The environment to monitor.
@@ -23,7 +23,7 @@ class DataCollector(Wrapper):
         self.directory = directory
 
         # in-memory cache for simulation states
-        self.states = [] 
+        self.states = []
 
         # how often to save simulation state, in terms of environment steps
         self.collect_freq = collect_freq
@@ -38,7 +38,7 @@ class DataCollector(Wrapper):
         # store logging directory for current episode
         self.ep_directory = None
 
-        # remember whether any environment interaction has occurred 
+        # remember whether any environment interaction has occurred
         self.has_interaction = False
 
     def _start_new_episode(self):
@@ -65,21 +65,21 @@ class DataCollector(Wrapper):
         self.has_interaction = True
 
         # create a directory with a timestamp
-        t1, t2 = str(time.time()).split('.')
+        t1, t2 = str(time.time()).split(".")
         self.ep_directory = os.path.join(self.directory, "ep_{}_{}".format(t1, t2))
-        assert(not os.path.exists(self.ep_directory))
+        assert not os.path.exists(self.ep_directory)
         print("DataCollector: making new directory at {}".format(self.ep_directory))
         os.makedirs(self.ep_directory)
 
         # save the model xml
-        xml_path = os.path.join(self.ep_directory, 'model.xml')
+        xml_path = os.path.join(self.ep_directory, "model.xml")
         self.env.model.save_model(xml_path)
 
     def _flush(self):
         """
         Method to flush internal state to disk. 
         """
-        t1, t2 = str(time.time()).split('.')
+        t1, t2 = str(time.time()).split(".")
         state_path = os.path.join(self.ep_directory, "state_{}_{}.npz".format(t1, t2))
         np.savez(state_path, states=np.array(self.states))
         self.states = []
@@ -116,8 +116,3 @@ class DataCollector(Wrapper):
               Need to find out why.
         """
         return self.env.reset_from_xml_string(xml_string)
-
-
-
-
-

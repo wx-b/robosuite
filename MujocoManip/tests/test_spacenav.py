@@ -10,14 +10,16 @@ from MujocoManip.wrappers import DataCollector
 from MujocoManip.miscellaneous.spacenavigator import SpaceNavigator
 from MujocoManip.miscellaneous.ik_controller import IKController
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    env = make("SawyerBinsCanEnv",
-               ignore_done=True,
-               use_camera_obs=False,
-               gripper_visualization=True,
-               reward_shaping=True,
-               single_object_mode=True)
+    env = make(
+        "SawyerBinsCanEnv",
+        ignore_done=True,
+        use_camera_obs=False,
+        gripper_visualization=True,
+        reward_shaping=True,
+        single_object_mode=True,
+    )
 
     # function to return robot joint angles
     def robot_jpos_getter():
@@ -28,23 +30,25 @@ if __name__ == '__main__':
     env.viewer.viewer._hide_overlay = True
 
     dof = env.dof
-    print('Action space', env.action_space)
-    print('Obs: {}'.format(len(obs)))
-    print('DOF: {}'.format(dof))
+    print("Action space", env.action_space)
+    print("Obs: {}".format(len(obs)))
+    print("DOF: {}".format(dof))
     env.render()
 
     spacenav = SpaceNavigator()
-    ik_controller = IKController(bullet_data_path="../models/assets/bullet_data",
-                                 robot_jpos_getter=robot_jpos_getter)
+    ik_controller = IKController(
+        bullet_data_path="../models/assets/bullet_data",
+        robot_jpos_getter=robot_jpos_getter,
+    )
 
-    gripper_controls = [[1.,], [-1.,]]
+    gripper_controls = [[1.], [-1.]]
 
     while True:
         obs = env.reset()
         env.viewer.set_camera(2)
         env.viewer.viewer._hide_overlay = True
 
-        # rotate the gripper so we can see it easily 
+        # rotate the gripper so we can see it easily
         # env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
         # env.env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
@@ -56,8 +60,8 @@ if __name__ == '__main__':
 
             obs, reward, done, info = env.step(action)
             env.render()
-            print('reward:', reward)
+            print("reward:", reward)
 
             if done:
-                print('done: {}'.format(reward))
+                print("done: {}".format(reward))
                 break

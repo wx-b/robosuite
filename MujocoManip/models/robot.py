@@ -11,6 +11,7 @@ class MujocoRobot(MujocoXML):
     """
         Base class for all robots
     """
+
     def __init__(self, fname):
         """
             Initialize from file @fname
@@ -24,13 +25,20 @@ class MujocoRobot(MujocoXML):
             throws error if robot already has a gripper or gripper type is incorrect
         """
         if arm_name in self.grippers:
-            raise ValueError('Attempts to add multiple grippers to one body')
+            raise ValueError("Attempts to add multiple grippers to one body")
 
         arm_subtree = self.worldbody.find(".//body[@name='{}']".format(arm_name))
 
         for actuator in gripper.actuator:
-            if not (actuator.get('name') is not None and actuator.get('name').startswith('gripper')):
-                raise XMLError('Actuator name {} does not have prefix "gripper"'.format(actuator.get('name')))
+            if not (
+                actuator.get("name") is not None
+                and actuator.get("name").startswith("gripper")
+            ):
+                raise XMLError(
+                    'Actuator name {} does not have prefix "gripper"'.format(
+                        actuator.get("name")
+                    )
+                )
 
         for body in gripper.worldbody:
             arm_subtree.append(body)
@@ -61,12 +69,11 @@ class MujocoRobot(MujocoXML):
 
 
 class SawyerRobot(MujocoRobot):
-
     def __init__(self, use_eef_ctrl=False):
         if use_eef_ctrl:
-            super().__init__(xml_path_completion('robot/sawyer/robot_mocap.xml'))
+            super().__init__(xml_path_completion("robot/sawyer/robot_mocap.xml"))
         else:
-            super().__init__(xml_path_completion('robot/sawyer/robot.xml'))
+            super().__init__(xml_path_completion("robot/sawyer/robot.xml"))
 
         # TODO: fix me to the correct value
         self.bottom_offset = np.array([0, 0, -0.913])
@@ -74,7 +81,7 @@ class SawyerRobot(MujocoRobot):
     def set_base_xpos(self, pos):
         """place the robot on position @pos"""
         node = self.worldbody.find("./body[@name='base']")
-        node.set('pos', array_to_string(pos - self.bottom_offset))
+        node.set("pos", array_to_string(pos - self.bottom_offset))
 
     @property
     def dof(self):
@@ -82,7 +89,7 @@ class SawyerRobot(MujocoRobot):
 
     @property
     def joints(self):
-        return ['right_j{}'.format(x) for x in range(7)]
+        return ["right_j{}".format(x) for x in range(7)]
 
     @property
     def init_qpos(self):
@@ -90,9 +97,8 @@ class SawyerRobot(MujocoRobot):
 
 
 class BaxterRobot(MujocoRobot):
-
     def __init__(self):
-        super().__init__(xml_path_completion('robot/baxter/robot.xml'))
+        super().__init__(xml_path_completion("robot/baxter/robot.xml"))
 
         # TODO: fix me to the correct value
         self.bottom_offset = np.array([0, 0, -0.913])
@@ -101,7 +107,7 @@ class BaxterRobot(MujocoRobot):
     def set_base_xpos(self, pos):
         """place the robot on position @pos"""
         node = self.worldbody.find("./body[@name='base']")
-        node.set('pos', array_to_string(pos - self.bottom_offset))
+        node.set("pos", array_to_string(pos - self.bottom_offset))
 
     @property
     def dof(self):
@@ -110,23 +116,51 @@ class BaxterRobot(MujocoRobot):
     @property
     def joints(self):
         out = []
-        for s in ['right_', 'left_']:
-            out.extend(s+a for a in ['s0', 's1', 'e0', 'e1', 'w0', 'w1', 'w2'])
+        for s in ["right_", "left_"]:
+            out.extend(s + a for a in ["s0", "s1", "e0", "e1", "w0", "w1", "w2"])
         return out
 
     @property
     def init_qpos(self):
         # Arms ready to work on the table
-        return np.array([0.5345519804154484, -0.09304970892037841, 0.03846904167098771,
-                         0.16630128482283482, 0.6432089753419815, 1.9595760820824744,
-                         -1.297010528040148, -0.5177209505174132, -0.025671285598989225,
-                         -0.0764039726049278, 0.17466058823908354, -0.7475668205536514,
-                         1.6408873046359498, -0.15750487460079515])
+        return np.array(
+            [
+                0.5345519804154484,
+                -0.09304970892037841,
+                0.03846904167098771,
+                0.16630128482283482,
+                0.6432089753419815,
+                1.9595760820824744,
+                -1.297010528040148,
+                -0.5177209505174132,
+                -0.025671285598989225,
+                -0.0764039726049278,
+                0.17466058823908354,
+                -0.7475668205536514,
+                1.6408873046359498,
+                -0.15750487460079515,
+            ]
+        )
 
         # Arms half extended
-        return np.array([ 0.75192989,-0.03836027,-0.02080136, 0.16089599, 0.34811643, 2.09545544,
-             -0.53135648, -0.58547775, -0.11657964, -0.03672875, 0.16377322, -0.53622305,
-               1.54251348,  0.20374393])
+        return np.array(
+            [
+                0.75192989,
+                -0.03836027,
+                -0.02080136,
+                0.16089599,
+                0.34811643,
+                2.09545544,
+                -0.53135648,
+                -0.58547775,
+                -0.11657964,
+                -0.03672875,
+                0.16377322,
+                -0.53622305,
+                1.54251348,
+                0.20374393,
+            ]
+        )
 
         # Arms fully extended
         return np.zeros(14)

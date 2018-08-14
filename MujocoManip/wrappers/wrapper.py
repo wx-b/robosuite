@@ -5,6 +5,7 @@ Wrappers are useful for data collection and logging. Highly recommended.
 
 from MujocoManip.environments.base import MujocoEnv
 
+
 class Wrapper(MujocoEnv):
     env = None
 
@@ -20,7 +21,11 @@ class Wrapper(MujocoEnv):
         while True:
             if isinstance(env, Wrapper):
                 if env.class_name() == self.class_name():
-                    raise Exception("Attempted to double wrap with Wrapper: {}".format(self.__class__.__name__))
+                    raise Exception(
+                        "Attempted to double wrap with Wrapper: {}".format(
+                            self.__class__.__name__
+                        )
+                    )
                 env = env.env
             else:
                 break
@@ -55,17 +60,14 @@ class Wrapper(MujocoEnv):
     def __getattr__(self, attr):
         orig_attr = self.env.__getattribute__(attr)
         if callable(orig_attr):
+
             def hooked(*args, **kwargs):
                 result = orig_attr(*args, **kwargs)
                 # prevent wrapped_class from becoming unwrapped
                 if result == self.env:
                     return self
                 return result
+
             return hooked
         else:
             return orig_attr
-        
-
-
-
-

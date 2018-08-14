@@ -13,11 +13,12 @@ from IPython import embed
 from MujocoManip.models import *
 from MujocoManip import DataCollector
 
+
 def collect_random_data(env, timesteps=1000):
     obs = env.reset()
     dof = env.dof()
 
-    # rotate the gripper so we can see it easily 
+    # rotate the gripper so we can see it easily
     env.env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
     for t in range(timesteps):
@@ -36,8 +37,8 @@ def playback_data(env, ep_dir):
     """
 
     # first reload the model from the xml
-    xml_path = os.path.join(ep_dir, 'model.xml')
-    with open(xml_path, 'r') as f:
+    xml_path = os.path.join(ep_dir, "model.xml")
+    with open(xml_path, "r") as f:
         env.reset_from_xml_string(f.read())
 
     state_paths = os.path.join(ep_dir, "state_*.npz")
@@ -47,7 +48,7 @@ def playback_data(env, ep_dir):
     for state_file in sorted(glob(state_paths)):
         print(state_file)
         dic = np.load(state_file)
-        states = dic['states']
+        states = dic["states"]
         for state in states:
             env.sim.set_state_from_flattened(state)
             env.sim.forward()
@@ -56,7 +57,8 @@ def playback_data(env, ep_dir):
             if t % 100 == 0:
                 print(t)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
 
     ### TODO: Handle flushing of remaining data when script terminates (i.e. freq is 1000, but we had 500 timesteps) ###
 
@@ -70,8 +72,8 @@ if __name__ == '__main__':
     env.reset()
 
     dof = env.dof
-    print('action space', env.action_space)
-    print('DOF: {}'.format(dof))
+    print("action space", env.action_space)
+    print("DOF: {}".format(dof))
     env.render()
 
     print("Collecting some random data...")
@@ -79,11 +81,8 @@ if __name__ == '__main__':
     collect_random_data(env, timesteps=2000)
 
     # playback some data
-    _ = input('Press any key to begin the playback...')
+    _ = input("Press any key to begin the playback...")
     print("Playing back the data...")
 
     direct = env.ep_directory
     playback_data(env, direct)
-
-
-
