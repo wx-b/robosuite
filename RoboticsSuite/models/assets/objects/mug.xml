@@ -1,10 +1,8 @@
-<!-- sample of a general object defined in mujoco -->
 <mujoco model="mug">
   <asset>
     <mesh file="meshes/mug.stl" name="mug_mesh" scale="0.8 0.8 0.8"/>
     <texture file="../textures/ceramic.png" name="tex-ceramic"/>
     <material name="ceramic" reflectance="0.5" texrepeat="1 1" texture="tex-ceramic" texuniform="true"/>
-
   </asset>
   <worldbody>
     <body>

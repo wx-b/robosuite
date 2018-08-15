@@ -1,4 +1,3 @@
-<!-- sample of a general object defined in mujoco -->
 <mujoco model="can">
   <asset>
     <mesh file="meshes/can.stl" name="can_mesh"/>

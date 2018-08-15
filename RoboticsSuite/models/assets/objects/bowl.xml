@@ -1,10 +1,8 @@
-<!-- sample of a general object defined in mujoco -->
 <mujoco model="bowl">
   <asset>
     <mesh file="meshes/bowl.stl" name="bowl_mesh" scale="0.002 0.002 0.002"/>
     <texture file="../textures/metal.png" name="tex-metal"/>
     <material name="metal" reflectance="0.5" texrepeat="1 1" texture="tex-metal" texuniform="true"/>
-
   </asset>
   <worldbody>
     <body>

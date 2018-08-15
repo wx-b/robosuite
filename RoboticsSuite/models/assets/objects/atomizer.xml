@@ -1,4 +1,3 @@
-<!-- sample of a general object defined in mujoco -->
 <mujoco model="atomizer">
   <asset>
     <mesh file="meshes/atomizer.stl" name="atomizer_mesh" scale="1.5 1 1"/>

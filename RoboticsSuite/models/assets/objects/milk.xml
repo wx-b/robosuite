@@ -1,4 +1,3 @@
-<!-- sample of a general object defined in mujoco -->
 <mujoco model="milk">
   <asset>
     <mesh file="meshes/milk.stl" name="milk_mesh" scale="0.9 0.9 0.9"/>

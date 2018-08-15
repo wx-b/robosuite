@@ -1,4 +1,3 @@
-<!-- sample of a general object defined in mujoco -->
 <mujoco model="bottle">
   <asset>
     <mesh file="meshes/bottle-new.stl" name="bottle_mesh"/>
