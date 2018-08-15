@@ -1,5 +1,5 @@
 """
-Some utility functions.
+Utility functions of matrix and vector transformations.
 
 NOTE: convention for quaternions is (x, y, z, w)
 """
