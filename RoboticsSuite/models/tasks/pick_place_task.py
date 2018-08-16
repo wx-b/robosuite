@@ -1,6 +1,6 @@
 import numpy as np
-from collections import OrderedDict
 import xml.etree.ElementTree as ET
+from collections import OrderedDict
 
 from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.utils import XMLError
@@ -9,17 +9,25 @@ from RoboticsSuite.models.model_util import *
 from RoboticsSuite.utils import *
 
 
-class BinsTask(MujocoWorldBase):
+class PickPlaceTask(MujocoWorldBase):
+    """Create MJCF model of a pick-and-place task.
 
-    """
-        APC manipulation task can be specified 
-        by three elements of the environment.
-        @mujoco_arena, MJCF robot workspace (e.g., shelves)
-        @mujoco_robot, MJCF robot model
-        @mujoco_objects, a list of MJCF objects of interest
+    A pick-and-place task consists of one robot pick objects from a container
+    and place them into another container. This class combines the robot, the arena,
+    and the objects into a single MJCF model of the task.
+
     """
 
     def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects, visual_objects):
+        """
+        Args:
+            mujoco_arena: MJCF model of robot workspace
+            mujoco_robot: MJCF model of robot model
+            mujoco_objects: a list of MJCF models of physical objects
+            visual_objects: a list of MJCF models of visual objects. Visual
+                objects are excluded from physical computation, we use them to
+                indicate the target destinations of the objects.
+        """
         super().__init__()
 
         # temp: z-rotation
@@ -33,17 +41,20 @@ class BinsTask(MujocoWorldBase):
         self.visual_objects = visual_objects
 
     def merge_robot(self, mujoco_robot):
+        """Add robot model to the MJCF model."""
         self.robot = mujoco_robot
         self.merge(mujoco_robot)
 
     def merge_arena(self, mujoco_arena):
+        """Add arena model to the MJCF model."""
         self.arena = mujoco_arena
-        self.shelf_offset = mujoco_arena.bin_abs
-        self.shelf_size = mujoco_arena.full_size
+        self.bin_offset = mujoco_arena.bin_abs
+        self.bin_size = mujoco_arena.full_size
         self.bin2_body = mujoco_arena.bin2_body
         self.merge(mujoco_arena)
 
     def merge_objects(self, mujoco_objects):
+        """Add physical objects to the MJCF model."""
         self.n_objects = len(mujoco_objects)
         self.mujoco_objects = mujoco_objects
         self.objects = []  # xml manifestation
@@ -61,6 +72,7 @@ class BinsTask(MujocoWorldBase):
             )
 
     def merge_visual(self, mujoco_objects):
+        """Add visual objects to the MJCF model."""
         self.visual_obj_mjcf = []
         for obj_name, obj_mjcf in mujoco_objects.items():
             self.merge_asset(obj_mjcf)
@@ -70,6 +82,7 @@ class BinsTask(MujocoWorldBase):
             self.worldbody.append(obj)
 
     def sample_quat(self):
+        """Sample quaternions of random rotations along the z-axis."""
         if self.z_rotation:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
             return [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
@@ -77,63 +90,53 @@ class BinsTask(MujocoWorldBase):
             return [1, 0, 0, 0]
 
     def place_objects(self):
-        """
-        Place objects randomly until no more collisions or max iterations hit.
-        """
-        # Objects
-        # print(self.shelf_offset)
+        """Place objects randomly until no collisions or max iterations hit."""
         placed_objects = []
         index = 0
+
+        # place objects by rejection sampling
         for _, obj_mjcf in self.mujoco_objects.items():
             horizontal_radius = obj_mjcf.get_horizontal_radius()
             bottom_offset = obj_mjcf.get_bottom_offset()
             success = False
             for _ in range(5000):  # 5000 retries
-                shelf_x_half = self.shelf_size[0] / 2 - horizontal_radius - 0.05
-                shelf_y_half = self.shelf_size[1] / 2 - horizontal_radius - 0.05
-                object_x = np.random.uniform(high=shelf_x_half, low=-shelf_x_half)
-                object_y = np.random.uniform(high=shelf_y_half, low=-shelf_y_half)
-                # objects cannot overlap
-                pos = (
-                    self.shelf_offset
-                    - bottom_offset
-                    + np.array([object_x, object_y, 0])
-                )
+                bin_x_half = self.bin_size[0] / 2 - horizontal_radius - 0.05
+                bin_y_half = self.bin_size[1] / 2 - horizontal_radius - 0.05
+                object_x = np.random.uniform(high=bin_x_half, low=-bin_x_half)
+                object_y = np.random.uniform(high=bin_y_half, low=-bin_y_half)
+
+                # make sure objects do not overlap
+                object_xy = np.array([object_x, object_y, 0])
+                pos = (self.bin_offset - bottom_offset + object_xy)
                 location_valid = True
                 for pos2, r in placed_objects:
-                    if (
-                        np.linalg.norm(pos[:2] - pos2[:2], np.inf)
-                        <= r + horizontal_radius
-                    ):
+                    dist = np.linalg.norm(pos[:2] - pos2[:2], np.inf)
+                    if (dist <= r + horizontal_radius):
                         location_valid = False
                         break
-                if location_valid:  # bad luck, reroll
+
+                # place the object
+                if location_valid:
+                    # add object to the position
                     placed_objects.append((pos, horizontal_radius))
                     self.objects[index].set("pos", array_to_string(pos))
-
                     # random z-rotation
                     quat = self.sample_quat()
                     self.objects[index].set("quat", array_to_string(quat))
-
                     success = True
                     break
-                    # location is valid, put the object down
-                    # quarternions, later we can add random rotation
+
+            # raise error if all objects cannot be placed after maximum retries
             if not success:
-                raise RandomizationError("Cannot place all objects on the shelves")
-            # print(placed_objects)
+                raise RandomizationError("Cannot place all objects in the containers")
             index += 1
 
     def place_visual(self):
-        """
-        Place objects randomly until no more collisions or max iterations hit.
-        """
-        # Objects
-        # print(self.shelf_offset)
+        """Place objects randomly until no collisions or max iterations hit."""
         placed_objects = []
         index = 0
         bin_pos = string_to_array(self.bin2_body.get("pos"))
-        bin_size = self.shelf_size
+        bin_size = self.bin_size
 
         for _, obj_mjcf in self.visual_objects:
 
@@ -148,12 +151,10 @@ class BinsTask(MujocoWorldBase):
             bin_y_high = bin_y_low + bin_size[1] / 2
             bottom_offset = obj_mjcf.get_bottom_offset()
 
-            pos = (
-                np.array(
-                    [bin_x_low + bin_x_high, bin_y_low + bin_y_high, 2 * bin_pos[2]]
-                )
-                / 2
-                - bottom_offset
-            )
+            bin_center = np.array([
+                bin_x_low + bin_x_high,
+                bin_y_low + bin_y_high,
+                2 * bin_pos[2]]) / 2.0
+            pos = bin_center - bottom_offset
             self.visual_obj_mjcf[index].set("pos", array_to_string(pos))
             index += 1

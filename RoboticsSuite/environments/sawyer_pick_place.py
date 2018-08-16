@@ -136,7 +136,7 @@ class SawyerPickPlace(SawyerEnv):
         self.n_objects = len(self.mujoco_objects)
 
         # task includes arena, robot, and objects of interest
-        self.model = BinsTask(
+        self.model = PickPlaceTask(
             self.mujoco_arena,
             self.mujoco_robot,
             self.mujoco_objects,
@@ -145,7 +145,7 @@ class SawyerPickPlace(SawyerEnv):
         self.model.place_objects()
         self.model.place_visual()
         self.bin_pos = string_to_array(self.model.bin2_body.get("pos"))
-        self.bin_size = self.model.shelf_size
+        self.bin_size = self.model.bin_size
 
     def clear_objects(self, obj):
         for obj_name, obj_mjcf in self.mujoco_objects.items():

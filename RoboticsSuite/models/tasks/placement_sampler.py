@@ -143,7 +143,7 @@ class UniformRandomSampler(ObjectPositionSampler):
 
 class UniformRandomPegsSampler(ObjectPositionSampler):
     """
-        Places all objects within the table uniformly random
+        Places all objects on top of the table uniformly random
     """
 
     def __init__(

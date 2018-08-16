@@ -118,7 +118,7 @@ class SawyerNutAssembly(SawyerEnv):
         self.n_objects = len(self.mujoco_objects)
 
         # task includes arena, robot, and objects of interest
-        self.model = PegsTask(
+        self.model = NutAssemblyTask(
             self.mujoco_arena,
             self.mujoco_robot,
             self.mujoco_objects,
@@ -128,7 +128,7 @@ class SawyerNutAssembly(SawyerEnv):
         self.bin_pos = string_to_array(self.model.bin1_body.get("pos"))
         self.peg1_pos = string_to_array(self.model.peg1_body.get("pos"))  # square
         self.peg2_pos = string_to_array(self.model.peg2_body.get("pos"))  # round
-        self.bin_size = self.model.shelf_size
+        self.bin_size = self.model.bin_size
 
     def clear_objects(self, obj):
         for obj_name, obj_mjcf in self.mujoco_objects.items():
@@ -330,7 +330,7 @@ class SawyerNutAssembly(SawyerEnv):
         if (
             abs(obj_pos[0] - peg_pos[0]) < 0.03
             and abs(obj_pos[1] - peg_pos[1]) < 0.03
-            and obj_pos[2] < self.model.shelf_offset[2] + 0.05
+            and obj_pos[2] < self.model.bin_offset[2] + 0.05
         ):
             res = True
         return res
