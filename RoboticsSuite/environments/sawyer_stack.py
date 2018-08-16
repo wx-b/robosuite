@@ -9,7 +9,7 @@ import pickle
 import random
 
 
-class SawyerStackEnv(SawyerEnv):
+class SawyerStack(SawyerEnv):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",

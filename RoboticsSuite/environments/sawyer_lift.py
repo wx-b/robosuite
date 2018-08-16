@@ -9,7 +9,7 @@ from RoboticsSuite.models.model_util import xml_path_completion
 import RoboticsSuite.utils as U
 
 
-class SawyerLiftEnv(SawyerEnv):
+class SawyerLift(SawyerEnv):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",

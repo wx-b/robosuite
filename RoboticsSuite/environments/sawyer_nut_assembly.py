@@ -10,7 +10,7 @@ from RoboticsSuite.models.tasks.placement_sampler import UniformRandomPegsSample
 import RoboticsSuite.utils as U
 
 
-class SawyerPegsEnv(SawyerEnv):
+class SawyerNutAssembly(SawyerEnv):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",
@@ -467,7 +467,7 @@ class SawyerPegsEnv(SawyerEnv):
             self.sim.model.site_rgba[self.eef_site_id] = rgba
 
 
-class SawyerPegsSingleEnv(SawyerPegsEnv):
+class SawyerNutAssemblySingle(SawyerNutAssembly):
     """
     Easier version of task - place one round nut into its peg.
     """
@@ -477,7 +477,7 @@ class SawyerPegsSingleEnv(SawyerPegsEnv):
         super().__init__(single_object_mode=1, **kwargs)
 
 
-class SawyerPegsSquareEnv(SawyerPegsEnv):
+class SawyerNutAssemblySquare(SawyerNutAssembly):
     """
     Easier version of task - place one square nut into its peg.
     """
@@ -489,7 +489,7 @@ class SawyerPegsSquareEnv(SawyerPegsEnv):
         super().__init__(single_object_mode=2, selected_peg=0, **kwargs)
 
 
-class SawyerPegsRoundEnv(SawyerPegsEnv):
+class SawyerNutAssemblyRound(SawyerNutAssembly):
     """
     Easier version of task - place one round nut into its peg.
     """

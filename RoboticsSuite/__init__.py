@@ -1,9 +1,9 @@
 from RoboticsSuite.environments.base import make
-from RoboticsSuite.environments.sawyer_stack import SawyerStackEnv
-from RoboticsSuite.environments.sawyer_bins import SawyerBinsEnv
-from RoboticsSuite.environments.sawyer_pegs import SawyerPegsEnv
-from RoboticsSuite.environments.sawyer_lift import SawyerLiftEnv
+from RoboticsSuite.environments.sawyer_lift import SawyerLift
+from RoboticsSuite.environments.sawyer_stack import SawyerStack
+from RoboticsSuite.environments.sawyer_pick_place import SawyerPickPlace
+from RoboticsSuite.environments.sawyer_nut_assembly import SawyerNutAssembly
 
-from RoboticsSuite.environments.baxter_lift import BaxterLiftEnv
-from RoboticsSuite.environments.baxter_hole import BaxterHoleEnv
+from RoboticsSuite.environments.baxter_lift import BaxterLift
+from RoboticsSuite.environments.baxter_peg_in_hole import BaxterPegInHole
 from RoboticsSuite.wrappers import DataCollector

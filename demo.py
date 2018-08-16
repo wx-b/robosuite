@@ -4,7 +4,7 @@ from RoboticsSuite import make
 if __name__ == '__main__':
 
     # env for training
-    # env = make("SawyerLiftEnv",
+    # env = make("SawyerLift",
     #             has_renderer=False,
     #             ignore_done=True,
     #             use_camera_obs=True,
@@ -14,7 +14,7 @@ if __name__ == '__main__':
     #             use_object_obs=False,
     #             reward_shaping=True)
 
-    env = make("SawyerPegsEnv", ignore_done=True, use_camera_obs=False)
+    env = make("SawyerNutAssembly", ignore_done=True, use_camera_obs=False)
 
     while True:
         env.reset()

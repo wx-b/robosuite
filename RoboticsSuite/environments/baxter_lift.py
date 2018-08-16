@@ -10,7 +10,7 @@ import pickle
 import random
 
 
-class BaxterLiftEnv(BaxterEnv):
+class BaxterLift(BaxterEnv):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",

@@ -8,7 +8,7 @@ from RoboticsSuite.models import *
 import RoboticsSuite.utils as U
 
 
-class SawyerBinsEnv(SawyerEnv):
+class SawyerPickPlace(SawyerEnv):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",
@@ -505,7 +505,7 @@ class SawyerBinsEnv(SawyerEnv):
             self.sim.model.site_rgba[self.eef_site_id] = rgba
 
 
-class SawyerBinsSingleEnv(SawyerBinsEnv):
+class SawyerPickPlaceSingle(SawyerPickPlace):
     """
     Easier version of task - place one object into its bin. 
     A new object is sampled on every reset.
@@ -516,7 +516,7 @@ class SawyerBinsSingleEnv(SawyerBinsEnv):
         super().__init__(single_object_mode=1, **kwargs)
 
 
-class SawyerBinsMilkEnv(SawyerBinsEnv):
+class SawyerPickPlaceMilk(SawyerPickPlace):
     """
     Easier version of task - place one milk into its bin.
     """
@@ -528,7 +528,7 @@ class SawyerBinsMilkEnv(SawyerBinsEnv):
         super().__init__(single_object_mode=2, selected_bin=0, **kwargs)
 
 
-class SawyerBinsBreadEnv(SawyerBinsEnv):
+class SawyerPickPlaceBread(SawyerPickPlace):
     """
     Easier version of task - place one bread into its bin.
     """
@@ -540,7 +540,7 @@ class SawyerBinsBreadEnv(SawyerBinsEnv):
         super().__init__(single_object_mode=2, selected_bin=1, **kwargs)
 
 
-class SawyerBinsCerealEnv(SawyerBinsEnv):
+class SawyerPickPlaceCereal(SawyerPickPlace):
     """
     Easier version of task - place one cereal into its bin.
     """
@@ -552,7 +552,7 @@ class SawyerBinsCerealEnv(SawyerBinsEnv):
         super().__init__(single_object_mode=2, selected_bin=2, **kwargs)
 
 
-class SawyerBinsCanEnv(SawyerBinsEnv):
+class SawyerPickPlaceCan(SawyerPickPlace):
     """
     Easier version of task - place one can into its bin.
     """

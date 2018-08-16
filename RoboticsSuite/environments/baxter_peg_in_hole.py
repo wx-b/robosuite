@@ -7,7 +7,7 @@ from RoboticsSuite.models.model_util import xml_path_completion, array_to_string
 import RoboticsSuite.utils as U
 
 
-class BaxterHoleEnv(BaxterEnv):
+class BaxterPegInHole(BaxterEnv):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",
