@@ -125,10 +125,10 @@ class SawyerNutAssembly(SawyerEnv):
             self.placement_initializer,
         )
         self.model.place_objects()
-        self.bin_pos = string_to_array(self.model.bin1_body.get("pos"))
+        self.table_pos = string_to_array(self.model.table_body.get("pos"))
         self.peg1_pos = string_to_array(self.model.peg1_body.get("pos"))  # square
         self.peg2_pos = string_to_array(self.model.peg2_body.get("pos"))  # round
-        self.bin_size = self.model.bin_size
+        self.table_size = self.model.table_size
 
     def clear_objects(self, obj):
         for obj_name, obj_mjcf in self.mujoco_objects.items():
@@ -290,7 +290,7 @@ class SawyerNutAssembly(SawyerEnv):
         ### lifting reward for picking up an object ###
         r_lift = 0.
         if len(objs_to_reach) and r_grasp > 0.:
-            z_target = self.bin_pos[2] + 0.2
+            z_target = self.table_pos[2] + 0.2
             object_z_locs = self.sim.data.body_xpos[objs_to_reach][:, 2]
             z_dists = np.maximum(z_target - object_z_locs, 0.)
             r_lift = grasp_mult + (1 - np.tanh(15.0 * min(z_dists))) * (
@@ -330,7 +330,7 @@ class SawyerNutAssembly(SawyerEnv):
         if (
             abs(obj_pos[0] - peg_pos[0]) < 0.03
             and abs(obj_pos[1] - peg_pos[1]) < 0.03
-            and obj_pos[2] < self.model.bin_offset[2] + 0.05
+            and obj_pos[2] < self.model.table_offset[2] + 0.05
         ):
             res = True
         return res

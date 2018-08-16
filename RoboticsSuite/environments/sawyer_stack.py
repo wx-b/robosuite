@@ -102,7 +102,7 @@ class SawyerStack(SawyerEnv):
 
         # load model for table top workspace
         self.mujoco_arena = TableArena(
-            full_size=self.table_size, friction=self.table_friction
+            table_full_size=self.table_size, friction=self.table_friction
         )
 
         # The sawyer robot has a pedestal, we want to align it with the table

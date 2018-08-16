@@ -7,7 +7,7 @@ import gc
 world = MujocoWorldBase()
 
 # Add a table
-arena = TableArena(full_size=(0.4, 0.4, 0.1))
+arena = TableArena(table_full_size=(0.4, 0.4, 0.1))
 world.merge(arena)
 
 # Add a gripper

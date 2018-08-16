@@ -18,9 +18,7 @@ class MujocoXML(object):
     """
 
     def __init__(self, fname):
-        """
-            Loads a mujoco xml from file specified by fname
-        """
+        """Loads a mujoco xml from file specified by fname."""
         self.file = fname
         self.folder = os.path.dirname(fname)
         self.tree = ET.parse(fname)
@@ -35,9 +33,7 @@ class MujocoXML(object):
         self.resolve_asset_dependency()
 
     def resolve_asset_dependency(self):
-        """
-            Convert every file dependency into absolute path so when we merge we don't break things.
-        """
+        """Convert every file dependency into absolute path so when we merge we don't break things."""
         for node in self.asset.findall("./*[@file]"):
             file = node.get("file")
             abs_path = os.path.abspath(self.folder)
@@ -45,9 +41,7 @@ class MujocoXML(object):
             node.set("file", abs_path)
 
     def create_default_element(self, name):
-        """
-            Create a <@name/> tag under root if there is none
-        """
+        """Create a <@name/> tag under root if there is none."""
         found = self.root.find(name)
         if found is not None:
             return found
@@ -79,9 +73,7 @@ class MujocoXML(object):
         # self.config.append(other.config)
 
     def get_model(self, mode="dm_control"):
-        """
-            Returns a MJModel instance from the current xml tree
-        """
+        """Returns a MJModel instance from the current xml tree."""
 
         available_modes = ["dm_control", "mujoco_py"]
         with io.StringIO() as string:
@@ -103,6 +95,7 @@ class MujocoXML(object):
             )
 
     def get_xml(self):
+        """Returns a string of the MJCF XML file."""
         with io.StringIO() as string:
             string.write(ET.tostring(self.root, encoding="unicode"))
             return string.getvalue()
@@ -110,9 +103,10 @@ class MujocoXML(object):
     def save_model(self, fname, pretty=False):
         """
             Saves the xml to file
-            params:
-            @fname output file location
-            @pretty Attempts!! to pretty print the output
+
+            Args:
+                fname: output file location
+                pretty: attempts!! to pretty print the output
         """
         with open(fname, "w") as f:
             xml_str = ET.tostring(self.root, encoding="unicode")
@@ -123,7 +117,7 @@ class MujocoXML(object):
             f.write(xml_str)
 
     def merge_asset(self, other):
-        """Useful for merging other files in a custom logic"""
+        """Useful for merging other files in a custom logic."""
         for asset in other.asset:
             asset_name = asset.get("name")
             asset_type = asset.tag
@@ -135,15 +129,11 @@ class MujocoXML(object):
     # Subclass should also define it as a property
     @property
     def joints(self):
-        """
-            Returns the names of Joints
-        """
+        """Returns the names of Joints"""
         raise NotImplementedError
 
     # Subclass should also define it as a property
     @property
     def init_qpos(self):
-        """
-            Returns the rest position of joints, in raw actuation units
-        """
+        """Returns the rest position of joints, in raw actuation units"""
         raise NotImplementedError

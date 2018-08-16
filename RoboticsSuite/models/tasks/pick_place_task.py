@@ -12,10 +12,9 @@ from RoboticsSuite.utils import *
 class PickPlaceTask(MujocoWorldBase):
     """Create MJCF model of a pick-and-place task.
 
-    A pick-and-place task consists of one robot pick objects from a container
-    and place them into another container. This class combines the robot, the arena,
-    and the objects into a single MJCF model of the task.
-
+    A pick-and-place task consists of one robot picking objects from a bin
+    and placing them into another bin. This class combines the robot, the
+    arena, and the objects into a single MJCF model of the task.
     """
 
     def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects, visual_objects):
@@ -49,7 +48,7 @@ class PickPlaceTask(MujocoWorldBase):
         """Add arena model to the MJCF model."""
         self.arena = mujoco_arena
         self.bin_offset = mujoco_arena.bin_abs
-        self.bin_size = mujoco_arena.full_size
+        self.bin_size = mujoco_arena.table_full_size
         self.bin2_body = mujoco_arena.bin2_body
         self.merge(mujoco_arena)
 
@@ -128,7 +127,7 @@ class PickPlaceTask(MujocoWorldBase):
 
             # raise error if all objects cannot be placed after maximum retries
             if not success:
-                raise RandomizationError("Cannot place all objects in the containers")
+                raise RandomizationError("Cannot place all objects in the bins")
             index += 1
 
     def place_visual(self):

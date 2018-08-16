@@ -10,38 +10,47 @@ from RoboticsSuite.utils import *
 
 
 class TableTopTask(MujocoWorldBase):
+    """Create MJCF model of a tabletop task.
 
-    """
-        Table top manipulation task can be specified 
-        by three elements of the environment.
-        @mujoco_arena, MJCF robot workspace (e.g., table top)
-        @mujoco_robot, MJCF robot model
-        @mujoco_objects, a list of MJCF objects of interest
+    A tabletop task consists of one robot interacting with a variable number of
+    objects placed on the tabletop. This class combines the robot, the table
+    arena, and the objetcts into a single MJCF model.
     """
 
     def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects, initializer=None):
+        """
+        Args:
+            mujoco_arena: MJCF model of robot workspace
+            mujoco_robot: MJCF model of robot model
+            mujoco_objects: a list of MJCF models of physical objects
+            initializer: placement sampler to initialize object positions.
+        """
         super().__init__()
+
         self.merge_arena(mujoco_arena)
         self.merge_robot(mujoco_robot)
         self.merge_objects(mujoco_objects)
         if initializer is None:
             initializer = UniformRandomSampler()
         mjcfs = [x for _, x in self.mujoco_objects.items()]
+
         self.initializer = initializer
         self.initializer.setup(mjcfs, self.table_top_offset, self.table_size)
 
     def merge_robot(self, mujoco_robot):
+        """Add robot model to the MJCF model."""
         self.robot = mujoco_robot
         self.merge(mujoco_robot)
 
     def merge_arena(self, mujoco_arena):
+        """Add arena model to the MJCF model."""
         self.arena = mujoco_arena
         self.table_top_offset = mujoco_arena.table_top_abs
-        self.table_size = mujoco_arena.full_size
+        self.table_size = mujoco_arena.table_full_size
         self.merge(mujoco_arena)
 
     def merge_objects(self, mujoco_objects):
-        self.n_objects = len(mujoco_objects)
+        """Add physical objects to the MJCF model."""
         self.mujoco_objects = mujoco_objects
         self.objects = []  # xml manifestation
         self.targets = []  # xml manifestation
@@ -60,12 +69,8 @@ class TableTopTask(MujocoWorldBase):
             )
 
     def place_objects(self):
-        """
-        Place objects randomly until no more collisions or max iterations hit.
-        Args:
-            position_sampler: generate random positions to put objects
-        """
+        """Place objects randomly until no collisions or max iterations hit."""
         pos_arr, quat_arr = self.initializer.sample()
-        for i in range(len(self.objects)):
-            self.objects[i].set("pos", array_to_string(pos_arr[i]))
-            self.objects[i].set("quat", array_to_string(quat_arr[i]))
+        for k, obj_name in enumerate(self.objects):
+            self.objects[obj_name].set("pos", array_to_string(pos_arr[k]))
+            self.objects[obj_name].set("quat", array_to_string(quat_arr[k]))

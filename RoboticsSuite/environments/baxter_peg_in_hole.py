@@ -63,7 +63,7 @@ class BaxterPegInHole(BaxterEnv):
         super()._load_model()
         self.mujoco_robot.set_base_xpos([0, 0, 0])
 
-        """self.mujoco_arena = TableArena(full_size=self.table_size,
+        """self.mujoco_arena = TableArena(table_full_size=self.table_size,
                                        friction=self.table_friction)
 
         self.mujoco_arena.set_origin([0.45 + self.table_size[0] / 2,0,0])

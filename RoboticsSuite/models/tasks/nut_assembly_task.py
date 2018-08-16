@@ -13,13 +13,19 @@ from RoboticsSuite.utils import *
 class NutAssemblyTask(MujocoWorldBase):
     """Create MJCF model of a nut assembly task.
 
-    A nut assembly task consists of one robot pick up nuts from a table and
-    and assembly them into pegs positioned on the tabletop. This class combines
+    A nut assembly task consists of one robot picking up nuts from a table and
+    and assembling them into pegs positioned on the tabletop. This class combines
     the robot, the arena with pegs, and the nut objetcts into a single MJCF model.
-
     """
 
     def __init__(self, mujoco_arena, mujoco_robot, mujoco_objects, initializer=None):
+        """
+        Args:
+            mujoco_arena: MJCF model of robot workspace
+            mujoco_robot: MJCF model of robot model
+            mujoco_objects: a list of MJCF models of physical objects
+            initializer: placement sampler to initialize object positions.
+        """
         super().__init__()
 
         self.object_metadata = []
@@ -30,7 +36,7 @@ class NutAssemblyTask(MujocoWorldBase):
         if initializer is None:
             initializer = UniformRandomPegsSampler()
         self.initializer = initializer
-        self.initializer.setup(self.mujoco_objects, self.bin_offset, self.bin_size)
+        self.initializer.setup(self.mujoco_objects, self.table_offset, self.table_size)
 
     def merge_robot(self, mujoco_robot):
         """Add robot model to the MJCF model."""
@@ -40,9 +46,9 @@ class NutAssemblyTask(MujocoWorldBase):
     def merge_arena(self, mujoco_arena):
         """Add arena model to the MJCF model."""
         self.arena = mujoco_arena
-        self.bin_offset = mujoco_arena.table_top_abs
-        self.bin_size = mujoco_arena.full_size
-        self.bin1_body = mujoco_arena.bin1_body
+        self.table_offset = mujoco_arena.table_top_abs
+        self.table_size = mujoco_arena.table_full_size
+        self.table_body = mujoco_arena.table_body
         self.peg1_body = mujoco_arena.peg1_body
         self.peg2_body = mujoco_arena.peg2_body
         self.merge(mujoco_arena)
@@ -67,8 +73,6 @@ class NutAssemblyTask(MujocoWorldBase):
     def place_objects(self):
         """Place objects randomly until no collisions or max iterations hit."""
         pos_arr, quat_arr = self.initializer.sample()
-        index = 0
-        for obj_name in self.objects:
-            self.objects[obj_name].set("pos", array_to_string(pos_arr[index]))
-            self.objects[obj_name].set("quat", array_to_string(quat_arr[index]))
-            index += 1
+        for k, obj_name in enumerate(self.objects):
+            self.objects[obj_name].set("pos", array_to_string(pos_arr[k]))
+            self.objects[obj_name].set("quat", array_to_string(quat_arr[k]))
