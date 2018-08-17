@@ -31,6 +31,8 @@ class EnvMeta(type):
 
 
 class MujocoEnv(metaclass=EnvMeta):
+    """Initialize a Mujoco Environment."""
+
     def __init__(
             self,
             has_renderer=True,
@@ -47,8 +49,7 @@ class MujocoEnv(metaclass=EnvMeta):
             has_offscreen_renderer=True,
             **kwargs,
     ):
-        """Initialize a Mujoco Environment.
-
+        """
         Args:
             has_renderer: If true, render the simulation state in a viewer instead of headless mode.
             render_collision_mesh: True if rendering collision meshes in camera. False otherwise.
@@ -102,7 +103,11 @@ class MujocoEnv(metaclass=EnvMeta):
         pass
 
     def _get_reference(self):
-        """Set up necessary reference for objects."""
+        """
+        Set up references to important components. A reference is typically an
+        index or a list of indices that point to the corresponding elements
+        in a flatten array, which is how MuJoCo stores physical simulation data.
+        """
         pass
 
     def reset(self):

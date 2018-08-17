@@ -7,6 +7,8 @@ import RoboticsSuite.utils as U
 
 
 class BaxterEnv(MujocoEnv):
+    """Initialize a Baxter robot environment."""
+
     def __init__(
         self,
         gripper_right=None,
@@ -184,6 +186,7 @@ class BaxterEnv(MujocoEnv):
         self.sim.data.qfrc_applied[
             self._ref_joint_vel_indexes
         ] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+
         if self.use_indicator_object:
             self.sim.data.qfrc_applied[
                 self._ref_indicator_vel_low : self._ref_indicator_vel_high
@@ -193,8 +196,6 @@ class BaxterEnv(MujocoEnv):
 
     def _post_action(self, action):
         ret = super()._post_action(action)
-        # for contact in self.sim.data.contact[0:self.sim.data.ncon]:
-        #     print('contact {} - {}'.format(contact.geom1, contact.geom2))
         self._gripper_visualization()
         return ret
 
