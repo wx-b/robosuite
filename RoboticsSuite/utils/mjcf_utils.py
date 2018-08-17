@@ -71,7 +71,7 @@ def new_actuator(joint, act_type="actuator", **kwargs):
     return element
 
 
-def new_site(name, rgba=RED, pos=[0, 0, 0], size=[0.005], **kwargs):
+def new_site(name, rgba=RED, pos=(0, 0, 0), size=(0.005,), **kwargs):
     """Create a site element with attributes specified by @**kwargs.
 
     Args:
@@ -88,7 +88,7 @@ def new_site(name, rgba=RED, pos=[0, 0, 0], size=[0.005], **kwargs):
     return element
 
 
-def new_geom(geom_type, size, pos=[0, 0, 0], rgba=RED, group=0, **kwargs):
+def new_geom(geom_type, size, pos=(0, 0, 0), rgba=RED, group=0, **kwargs):
     """Create a geom element with attributes specified by @**kwargs.
 
     Args:
@@ -122,3 +122,33 @@ def new_body(name=None, pos=None, **kwargs):
         kwargs["pos"] = array_to_string(pos)
     element = ET.Element("body", attrib=kwargs)
     return element
+
+
+def postprocess_model_xml(xml_str):
+    """
+    This function postprocesses the model.xml collected from a MuJoCo demonstration
+    in order to make sure that the STL files can be found.
+    """
+
+    path = os.path.split(RoboticsSuite.__file__)[0]
+    path_split = path.split("/")
+
+    # replace mesh and texture file paths
+    tree = ET.fromstring(xml_str)
+    root = tree
+    asset = root.find("asset")
+    meshes = asset.findall("mesh")
+    textures = asset.findall("texture")
+    all_elements = meshes + textures
+
+    for elem in all_elements:
+        old_path = elem.get("file")
+        if old_path is None:
+            continue
+        old_path_split = old_path.split("/")
+        ind = old_path_split.index("RoboticsSuite")
+        new_path_split = path_split + old_path_split[ind + 1 :]
+        new_path = "/".join(new_path_split)
+        elem.set("file", new_path)
+
+    return ET.tostring(root, encoding="utf8").decode("utf8")
