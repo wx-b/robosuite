@@ -1,8 +1,4 @@
-import xml.etree.ElementTree as ET
-import numpy as np
-
 from RoboticsSuite.models.base import MujocoXML
-# from RoboticsSuite.utils import XMLError
 from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 
 
