@@ -39,7 +39,7 @@ def convert(b1, b2):
     return scale_to_control(to_int16(b1, b2))
 
 
-class SpaceNavigator(object):
+class SpaceNavigator:
     def __init__(self, vendor_id=9583, product_id=50735):
 
         print("Opening SpaceNavigator device")

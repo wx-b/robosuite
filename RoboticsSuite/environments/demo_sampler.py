@@ -9,7 +9,7 @@ from RoboticsSuite.utils import postprocess_model_xml
 from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 
 
-class DemoSampler(object):
+class DemoSampler:
     def __init__(
         self, file_path, demo_config, need_xml=False, preload=False, number=-1
     ):

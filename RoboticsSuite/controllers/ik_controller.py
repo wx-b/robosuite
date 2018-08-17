@@ -5,7 +5,7 @@ from os.path import join as pjoin
 import RoboticsSuite.utils as U
 
 
-class IKController(object):
+class IKController:
     """
     This controller is used to control a robot using Inverse Kinematics
     to map end effector motions to joint motions. 

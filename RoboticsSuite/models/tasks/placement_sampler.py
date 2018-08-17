@@ -2,7 +2,7 @@ import collections
 import numpy as np
 
 
-class ObjectPositionSampler(object):
+class ObjectPositionSampler:
     """Base class of object placement sampler."""
     def __init__(self):
         pass
