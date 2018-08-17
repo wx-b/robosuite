@@ -433,27 +433,27 @@ def five_sided_box(size, rgba, group, thickness):
     x, y, z = size
     r = thickness / 2
     geoms.append(
-        gen_geom(
+        new_geom(
             geom_type="box", size=[x, y, r], pos=[0, 0, -z + r], rgba=rgba, group=group
         )
     )
     geoms.append(
-        gen_geom(
+        new_geom(
             geom_type="box", size=[x, r, z], pos=[0, -y + r, 0], rgba=rgba, group=group
         )
     )
     geoms.append(
-        gen_geom(
+        new_geom(
             geom_type="box", size=[x, r, z], pos=[0, y - r, 0], rgba=rgba, group=group
         )
     )
     geoms.append(
-        gen_geom(
+        new_geom(
             geom_type="box", size=[r, y, z], pos=[x - r, 0, 0], rgba=rgba, group=group
         )
     )
     geoms.append(
-        gen_geom(
+        new_geom(
             geom_type="box", size=[r, y, z], pos=[-x + r, 0, 0], rgba=rgba, group=group
         )
     )
@@ -534,10 +534,10 @@ class GeneratedPotObject(MujocoGeneratedObject):
         return self.body_half_size[1] * 2 + self.handle_length * 2
 
     def get_collision(self, name=None, site=None):
-        main_body = gen_body()
+        main_body = new_body()
         if name is not None:
             main_body.set("name", name)
-        # main_body.append(gen_geom(geom_type='box',
+        # main_body.append(new_geom(geom_type='box',
         #                  size=self.body_half_size,
         #                  rgba=self.rgba_body,
         #                  group=1))
@@ -559,10 +559,10 @@ class GeneratedPotObject(MujocoGeneratedObject):
             self.handle_radius,
         ]
         side_bar_size = [self.handle_radius, self.handle_length / 2, self.handle_radius]
-        handle_1 = gen_body(name="handle_1")
+        handle_1 = new_body(name="handle_1")
         if self.solid_handle:
             handle_1.append(
-                gen_geom(
+                new_geom(
                     geom_type="box",
                     name="handle_1",
                     pos=[0, self.body_half_size[1] + self.handle_length / 2, handle_z],
@@ -577,7 +577,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
             )
         else:
             handle_1.append(
-                gen_geom(
+                new_geom(
                     geom_type="box",
                     name="handle_1_c",
                     pos=handle_1_center,
@@ -587,7 +587,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
                 )
             )
             handle_1.append(
-                gen_geom(
+                new_geom(
                     geom_type="box",
                     name="handle_1_+",  # + for positive x
                     pos=[
@@ -601,7 +601,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
                 )
             )
             handle_1.append(
-                gen_geom(
+                new_geom(
                     geom_type="box",
                     name="handle_1_-",
                     pos=[
@@ -615,10 +615,10 @@ class GeneratedPotObject(MujocoGeneratedObject):
                 )
             )
 
-        handle_2 = gen_body(name="handle_2")
+        handle_2 = new_body(name="handle_2")
         if self.solid_handle:
             handle_2.append(
-                gen_geom(
+                new_geom(
                     geom_type="box",
                     name="handle_2",
                     pos=[0, -self.body_half_size[1] - self.handle_length / 2, handle_z],
@@ -633,7 +633,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
             )
         else:
             handle_2.append(
-                gen_geom(
+                new_geom(
                     geom_type="box",
                     name="handle_2_c",
                     pos=handle_2_center,
@@ -643,7 +643,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
                 )
             )
             handle_2.append(
-                gen_geom(
+                new_geom(
                     geom_type="box",
                     name="handle_2_+",  # + for positive x
                     pos=[
@@ -657,7 +657,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
                 )
             )
             handle_2.append(
-                gen_geom(
+                new_geom(
                     geom_type="box",
                     name="handle_2_-",
                     pos=[
@@ -674,7 +674,7 @@ class GeneratedPotObject(MujocoGeneratedObject):
         main_body.append(handle_1)
         main_body.append(handle_2)
         main_body.append(
-            gen_site(
+            new_site(
                 name="pot_handle_1",
                 rgba=self.rgba_handle_1,
                 pos=handle_1_center - np.array([0, 0.005, 0]),
@@ -682,14 +682,14 @@ class GeneratedPotObject(MujocoGeneratedObject):
             )
         )
         main_body.append(
-            gen_site(
+            new_site(
                 name="pot_handle_2",
                 rgba=self.rgba_handle_2,
                 pos=handle_2_center + np.array([0, 0.005, 0]),
                 size=[0.005],
             )
         )
-        main_body.append(gen_site(name="pot_center", pos=[0, 0, 0], rgba=[1, 0, 0, 0]))
+        main_body.append(new_site(name="pot_center", pos=[0, 0, 0], rgba=[1, 0, 0, 0]))
         # if site:
         #     # add a site as well
         #     template = self.get_site_attrib_template()

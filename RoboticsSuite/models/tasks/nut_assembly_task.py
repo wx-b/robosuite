@@ -62,7 +62,7 @@ class NutAssemblyTask(Task):
             self.merge_asset(obj_mjcf)
             # Load object
             obj = obj_mjcf.get_collision(name=obj_name, site=True)
-            obj.append(joint(name=obj_name, type="free", damping="0.0005"))
+            obj.append(new_joint(name=obj_name, type="free", damping="0.0005"))
             self.objects[obj_name] = obj
             self.worldbody.append(obj)
 

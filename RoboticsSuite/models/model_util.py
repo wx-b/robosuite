@@ -3,8 +3,6 @@ import os
 import numpy as np
 import RoboticsSuite.models
 
-visual_size_shrink_ratio = 0.99
-
 RED = [1, 0, 0, 1]
 GREEN = [0, 1, 0, 1]
 BLUE = [0, 0, 1, 1]
@@ -12,7 +10,7 @@ BLUE = [0, 0, 1, 1]
 
 def xml_path_completion(xml_path):
     """
-        Takes in a local xml path and returns a full path. 
+        Takes in a local xml path and returns a full path.
         if @xml_path is absolute, do nothing
         if @xml_path is not absolute, load xml that is shipped by the package
     """
@@ -50,30 +48,35 @@ def set_alpha(node, alpha=0.1):
         child_node.set("rgba", array_to_string(list(rgba_orig[0:3]) + [alpha]))
 
 
-def joint(**kwargs):
-    """
-        Create a joint tag with attributes specified by @**kwargs
-    """
+def new_joint(**kwargs):
+    """Create a joint tag with attributes specified by @**kwargs."""
     element = ET.Element("joint", attrib=kwargs)
     return element
 
 
-def actuator(joint, act_type, **kwargs):
-    """
-        Create a joint tag with attributes specified by @**kwargs
+def new_actuator(joint, act_type="actuator", **kwargs):
+    """Create an actuator tag with attributes specified by @**kwargs.
+
+    Args:
+        joint: type of actuator transmission.
+            see all types here: http://mujoco.org/book/modeling.html#actuator
+        act_type (str): actuator type. Defaults to "actuator"
+
     """
     element = ET.Element(act_type, attrib=kwargs)
     element.set("joint", joint)
     return element
 
 
-def gen_site(name, rgba=None, pos=None, size=None, **kwargs):
-    if rgba is None:
-        rgba = RED
-    if pos is None:
-        pos = [0, 0, 0]
-    if size is None:
-        size = [0.005]
+def new_site(name, rgba=RED, pos=[0, 0, 0], size=[0.005], **kwargs):
+    """Create a site element with attributes specified by @**kwargs.
+
+    Args:
+        name (str): site name.
+        rgba: color and transparency. Defaults to solid red.
+        pos: 3d position of the site.
+        size ([float]): site size (sites are spherical by default).
+    """
     kwargs["rgba"] = array_to_string(rgba)
     kwargs["pos"] = array_to_string(pos)
     kwargs["size"] = array_to_string(size)
@@ -82,11 +85,18 @@ def gen_site(name, rgba=None, pos=None, size=None, **kwargs):
     return element
 
 
-def gen_geom(geom_type, size, pos=None, rgba=None, group=0, **kwargs):
-    if rgba is None:
-        rgba = RED
-    if pos is None:
-        pos = [0, 0, 0]
+def new_geom(geom_type, size, pos=[0, 0, 0], rgba=RED, group=0, **kwargs):
+    """Create a geom element with attributes specified by @**kwargs.
+
+    Args:
+        geom_type (str): type of the geom.
+            see all types here: http://mujoco.org/book/modeling.html#geom
+        size: geom size parameters.
+        pos: 3d position of the geom frame.
+        rgba: color and transparency. Defaults to solid red.
+        group: the integrer group that the geom belongs to. useful for
+            separating visual and physical elements.
+    """
     kwargs["type"] = str(geom_type)
     kwargs["size"] = array_to_string(size)
     kwargs["rgba"] = array_to_string(rgba)
@@ -96,7 +106,13 @@ def gen_geom(geom_type, size, pos=None, rgba=None, group=0, **kwargs):
     return element
 
 
-def gen_body(name=None, pos=None, **kwargs):
+def new_body(name=None, pos=None, **kwargs):
+    """Create a body element with attributes specified by @**kwargs.
+
+    Args:
+        name (str): body name.
+        pos: 3d position of the body frame.
+    """
     if name is not None:
         kwargs["name"] = name
     if pos is not None:

@@ -5,6 +5,7 @@ from RoboticsSuite.environments.baxter import BaxterEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
 from RoboticsSuite.models.model_util import xml_path_completion
+from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
 import RoboticsSuite.utils as U
 import pickle
 import random
@@ -15,8 +16,8 @@ class BaxterLift(BaxterEnv):
         self,
         gripper_type="TwoFingerGripper",
         use_eef_ctrl=False,
-        table_size=(0.8, 0.8, 0.8),
-        table_friction=None,
+        table_full_size=(0.8, 0.8, 0.8),
+        table_friction=(1., 5e-3, 1e-4),
         use_camera_obs=True,
         use_object_obs=True,
         camera_name="frontview",
@@ -28,7 +29,7 @@ class BaxterLift(BaxterEnv):
         """
             @gripper_type, string that specifies the gripper type
             @use_eef_ctrl, position controller or default joint controllder
-            @table_size, full dimension of the table
+            @table_full_size, full dimension of the table
             @table_friction, friction parameters of the table
             @use_camera_obs, using camera observations
             @use_object_obs, using object physics states
@@ -43,7 +44,7 @@ class BaxterLift(BaxterEnv):
         self.mujoco_objects = OrderedDict([("pot", self.pot)])
 
         # settings for table top
-        self.table_size = table_size
+        self.table_full_size = table_full_size
         self.table_friction = table_friction
 
         # whether to use ground-truth object states
@@ -85,13 +86,14 @@ class BaxterLift(BaxterEnv):
 
         # load model for table top workspace
         self.mujoco_arena = TableArena(
-            table_full_size=self.table_size, friction=self.table_friction
+            table_full_size=self.table_full_size,
+            table_friction=self.table_friction
         )
         if self.use_indicator_object:
             self.mujoco_arena.add_pos_indicator()
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([0.45 + self.table_size[0] / 2, 0, 0])
+        self.mujoco_arena.set_origin([0.45 + self.table_full_size[0] / 2, 0, 0])
 
         # task includes arena, robot, and objects of interest
         self.model = TableTopTask(
@@ -302,5 +304,5 @@ class BaxterLift(BaxterEnv):
         """
         # cube is higher than the table top above a margin
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
-        table_height = self.table_size[2]
+        table_height = self.table_full_size[2]
         return cube_height > table_height + 0.10

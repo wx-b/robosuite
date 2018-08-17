@@ -17,9 +17,9 @@ class Arena(MujocoXML):
             node.set("pos", array_to_string(new_pos))
 
     def add_pos_indicator(self):
-        body = gen_body(name="pos_indicator")
+        body = new_body(name="pos_indicator")
         body.append(
-            gen_geom(
+            new_geom(
                 "sphere",
                 [0.03],
                 rgba=[1, 0, 0, 0.5],
