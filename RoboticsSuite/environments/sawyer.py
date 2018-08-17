@@ -129,9 +129,8 @@ class SawyerEnv(MujocoEnv):
         if self.use_eef_ctrl:
             # TODO (Ajay): are we assuming EEF only works with sawyer + parallel jaws?
             assert len(action) == 9
-            action = (
-                action.copy()
-            )  # ensure that we don't change the action outside of this scope
+            # ensure that we don't change the action outside of this scope
+            action = action.copy()
 
             pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:]
 
@@ -144,7 +143,9 @@ class SawyerEnv(MujocoEnv):
             U.mjpy_mocap_set_action(self.sim, action)
 
         else:
+            # TODO (Ajay): use action_spec for the action limits instead of constants?
             action = np.clip(action, -1, 1)
+
             if self.has_gripper:
                 arm_action = action[: self.mujoco_robot.dof]
                 gripper_action_in = action[
