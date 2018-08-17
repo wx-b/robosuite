@@ -4,7 +4,7 @@ import numpy as np
 
 from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.utils import XMLError
-from RoboticsSuite.models.model_util import *
+from RoboticsSuite.utils.mjcf_utils import *
 from RoboticsSuite.models.tasks import Task
 from RoboticsSuite.models.tasks.placement_sampler import UniformRandomPegsSampler
 from RoboticsSuite.utils import *

@@ -1,10 +1,11 @@
 import numpy as np
 from collections import OrderedDict
+
+import RoboticsSuite.utils as U
 from RoboticsSuite.utils import RandomizationError
+from RoboticsSuite.utils.mjcf_utils import xml_path_completion, array_to_string
 from RoboticsSuite.environments.baxter import BaxterEnv
 from RoboticsSuite.models import *
-from RoboticsSuite.models.model_util import xml_path_completion, array_to_string
-import RoboticsSuite.utils as U
 
 
 class BaxterPegInHole(BaxterEnv):

@@ -1,7 +1,10 @@
+# utility functions for manipulating MJCF XML models
+
 import xml.etree.ElementTree as ET
 import os
 import numpy as np
-import RoboticsSuite.models
+
+import RoboticsSuite
 
 RED = [1, 0, 0, 1]
 GREEN = [0, 1, 0, 1]

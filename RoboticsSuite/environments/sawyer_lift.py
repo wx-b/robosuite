@@ -1,13 +1,14 @@
 import numpy as np
 from collections import OrderedDict
+
+import RoboticsSuite.utils as U
 from RoboticsSuite.utils import RandomizationError
 from RoboticsSuite.utils import postprocess_model_xml
+from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 from RoboticsSuite.environments.sawyer import SawyerEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
-from RoboticsSuite.models.model_util import xml_path_completion
 from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
-import RoboticsSuite.utils as U
 
 
 class SawyerLift(SawyerEnv):

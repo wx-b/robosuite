@@ -1,7 +1,8 @@
 import numpy as np
 import xml.etree.ElementTree as ET
+
 from RoboticsSuite.models.base import MujocoXML
-from RoboticsSuite.models.model_util import *
+from RoboticsSuite.utils.mjcf_utils import *
 from RoboticsSuite.utils import XMLError
 
 

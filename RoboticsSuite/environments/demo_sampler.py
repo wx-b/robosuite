@@ -1,12 +1,12 @@
-from RoboticsSuite.utils import postprocess_model_xml
-from RoboticsSuite.models.model_util import xml_path_completion
-import numpy as np
 import random
 import os
 import pickle
 import time
-
 from collections import deque
+import numpy as np
+
+from RoboticsSuite.utils import postprocess_model_xml
+from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 
 
 class DemoSampler(object):

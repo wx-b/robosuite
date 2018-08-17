@@ -5,8 +5,8 @@ import collections
 from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.utils import XMLError, RandomizationError
 from RoboticsSuite.models.tasks import Task
-from RoboticsSuite.models.model_util import *
 from RoboticsSuite.utils import *
+from RoboticsSuite.utils.mjcf_utils import *
 
 
 class TableTopTask(Task):

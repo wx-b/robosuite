@@ -1,8 +1,9 @@
 from RoboticsSuite.models import *
 from mujoco_py import load_model_from_path, MjSim, MjViewer
 import xml.etree.ElementTree as ET
-from RoboticsSuite.models.model_util import *
 import gc
+
+from RoboticsSuite.utils.mjcf_utils import *
 
 world = MujocoWorldBase()
 

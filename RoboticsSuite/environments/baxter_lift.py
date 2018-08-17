@@ -1,14 +1,16 @@
-import numpy as np
+import pickle
+import random
 from collections import OrderedDict
+import numpy as np
+
+import RoboticsSuite.utils as U
 from RoboticsSuite.utils import RandomizationError
+from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 from RoboticsSuite.environments.baxter import BaxterEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
-from RoboticsSuite.models.model_util import xml_path_completion
 from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
-import RoboticsSuite.utils as U
-import pickle
-import random
+
 
 
 class BaxterLift(BaxterEnv):
