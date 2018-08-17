@@ -1,6 +1,6 @@
 import os.path
 
-from RoboticsSuite.models.arena import *
+from RoboticsSuite.models.arenas import *
 from RoboticsSuite.models.gripper import *
 from RoboticsSuite.models.mujoco_object import *
 from RoboticsSuite.models.robot import *

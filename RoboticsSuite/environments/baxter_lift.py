@@ -9,6 +9,7 @@ from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 from RoboticsSuite.environments.baxter import BaxterEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
+from RoboticsSuite.models.arenas.table_arena import TableArena
 from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
 
 
