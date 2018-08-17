@@ -1,7 +1,8 @@
 import numpy as np
 from collections import OrderedDict
 from RoboticsSuite.environments.base import MujocoEnv
-from RoboticsSuite.models import BaxterRobot, gripper_factory
+from RoboticsSuite.models import gripper_factory
+from RoboticsSuite.models.robots.baxter_robot import Baxter
 import RoboticsSuite.utils as U
 
 
@@ -40,7 +41,7 @@ class BaxterEnv(MujocoEnv):
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_robot = BaxterRobot()
+        self.mujoco_robot = Baxter()
         if self.has_gripper_right:
             self.gripper_right = gripper_factory(self.gripper_right_name)
             if not self.gripper_visualization:

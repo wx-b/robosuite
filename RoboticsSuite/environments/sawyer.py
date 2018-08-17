@@ -1,7 +1,8 @@
 import numpy as np
 from collections import OrderedDict
 from RoboticsSuite.environments.base import MujocoEnv
-from RoboticsSuite.models import SawyerRobot, gripper_factory
+from RoboticsSuite.models import gripper_factory
+from RoboticsSuite.models.robots.sawyer_robot import Sawyer
 import RoboticsSuite.utils as U
 
 
@@ -42,7 +43,7 @@ class SawyerEnv(MujocoEnv):
 
     def _load_model(self):
         super()._load_model()
-        self.mujoco_robot = SawyerRobot(use_eef_ctrl=self.use_eef_ctrl)
+        self.mujoco_robot = Sawyer(use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
             self.gripper = gripper_factory(self.gripper_type)
             if not self.gripper_visualization:
