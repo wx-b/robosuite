@@ -4,13 +4,13 @@ import numpy as np
 
 from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.utils import XMLError
-from RoboticsSuite.models.world import MujocoWorldBase
 from RoboticsSuite.models.model_util import *
+from RoboticsSuite.models.tasks import Task
 from RoboticsSuite.models.tasks.placement_sampler import UniformRandomPegsSampler
 from RoboticsSuite.utils import *
 
 
-class NutAssemblyTask(MujocoWorldBase):
+class NutAssemblyTask(Task):
     """Create MJCF model of a nut assembly task.
 
     A nut assembly task consists of one robot picking up nuts from a table and

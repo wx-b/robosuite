@@ -14,7 +14,7 @@ if __name__ == '__main__':
     #             use_object_obs=False,
     #             reward_shaping=True)
 
-    env = make("SawyerNutAssembly", ignore_done=True, use_camera_obs=False)
+    env = make("SawyerLift", ignore_done=True, use_camera_obs=False)
 
     while True:
         env.reset()

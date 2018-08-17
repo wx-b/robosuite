@@ -1,12 +1,14 @@
+import pickle
+import random
 import numpy as np
 from collections import OrderedDict
+
+import RoboticsSuite.utils as U
 from RoboticsSuite.utils import RandomizationError
 from RoboticsSuite.environments.sawyer import SawyerEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
-import RoboticsSuite.utils as U
-import pickle
-import random
+from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
 
 
 class SawyerStack(SawyerEnv):
@@ -14,8 +16,8 @@ class SawyerStack(SawyerEnv):
         self,
         gripper_type="TwoFingerGripper",
         use_eef_ctrl=False,
-        table_size=(0.8, 0.8, 0.8),
-        table_friction=None,
+        table_full_size=(0.8, 0.8, 0.8),
+        table_friction=(1., 5e-3, 1e-4),
         use_camera_obs=True,
         use_object_obs=True,
         camera_name="frontview",
@@ -28,7 +30,7 @@ class SawyerStack(SawyerEnv):
         """
             @gripper_type, string that specifies the gripper type
             @use_eef_ctrl, position controller or default joint controllder
-            @table_size, full dimension of the table
+            @table_full_size, full dimension of the table
             @table_friction, friction parameters of the table
             @use_camera_obs, using camera observations
             @use_object_obs, using object physics states
@@ -41,7 +43,7 @@ class SawyerStack(SawyerEnv):
         """
 
         # settings for table top
-        self.table_size = table_size
+        self.table_full_size = table_full_size
         self.table_friction = table_friction
 
         # whether to show visual aid about where is the gripper
@@ -102,11 +104,12 @@ class SawyerStack(SawyerEnv):
 
         # load model for table top workspace
         self.mujoco_arena = TableArena(
-            table_full_size=self.table_size, friction=self.table_friction
+            table_full_size=self.table_full_size,
+            table_friction=self.table_friction,
         )
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2, 0, 0])
+        self.mujoco_arena.set_origin([0.16 + self.table_full_size[0] / 2, 0, 0])
 
         # initialize objects of interest
         cubeA = RandomBoxObject(
@@ -208,7 +211,7 @@ class SawyerStack(SawyerEnv):
         # lifting is successful when the cube is above the table top
         # by a margin
         cubeA_height = cubeA_pos[2]
-        table_height = self.table_size[2]
+        table_height = self.table_full_size[2]
         cubeA_lifted = cubeA_height > table_height + 0.04
         r_lift = 1.0 if cubeA_lifted else 0.0
 

@@ -6,6 +6,7 @@ from RoboticsSuite.environments.sawyer import SawyerEnv
 from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
 from RoboticsSuite.models.model_util import xml_path_completion
+from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
 import RoboticsSuite.utils as U
 
 
@@ -14,8 +15,8 @@ class SawyerLift(SawyerEnv):
         self,
         gripper_type="TwoFingerGripper",
         use_eef_ctrl=False,
-        table_size=(0.8, 0.8, 0.8),
-        table_friction=None,
+        table_full_size=(0.8, 0.8, 0.8),
+        table_friction=(1., 5e-3, 1e-4),
         use_camera_obs=True,
         use_object_obs=True,
         camera_name="frontview",
@@ -28,7 +29,7 @@ class SawyerLift(SawyerEnv):
         """
             @gripper_type, string that specifies the gripper type
             @use_eef_ctrl, position controller or default joint controllder
-            @table_size, full dimension of the table
+            @table_full_size, full dimension of the table
             @table_friction, friction parameters of the table
             @use_camera_obs, using camera observations
             @use_object_obs, using object physics states
@@ -40,7 +41,7 @@ class SawyerLift(SawyerEnv):
         """
 
         # settings for table top
-        self.table_size = table_size
+        self.table_full_size = table_full_size
         self.table_friction = table_friction
 
         # whether to use ground-truth object states
@@ -85,11 +86,12 @@ class SawyerLift(SawyerEnv):
 
         # load model for table top workspace
         self.mujoco_arena = TableArena(
-            table_full_size=self.table_size, friction=self.table_friction
+            table_full_size=self.table_full_size,
+            table_friction=self.table_friction,
         )
 
         # The sawyer robot has a pedestal, we want to align it with the table
-        self.mujoco_arena.set_origin([0.16 + self.table_size[0] / 2, 0, 0])
+        self.mujoco_arena.set_origin([0.16 + self.table_full_size[0] / 2, 0, 0])
 
         # initialize objects of interest
         cube = RandomBoxObject(
@@ -142,7 +144,7 @@ class SawyerLift(SawyerEnv):
     def reward(self, action=None):
         reward = 0
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
-        table_height = self.table_size[2]
+        table_height = self.table_full_size[2]
 
         # cube is higher than the table top above a margin
         if cube_height > table_height + 0.04:
@@ -244,7 +246,7 @@ class SawyerLift(SawyerEnv):
         """
         # cube is higher than the table top above a margin
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
-        table_height = self.table_size[2]
+        table_height = self.table_full_size[2]
         return cube_height > table_height + 0.10
 
     def _gripper_visualization(self):

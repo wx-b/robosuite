@@ -827,9 +827,7 @@ DEFAULT_FRICTION_RANGE = [0.25, 0.5, 1, 1.5, 2]
 
 
 class RandomBoxObject(BoxObject):
-    """
-        A random box
-    """
+    """A random box."""
 
     def __init__(
         self,
@@ -857,9 +855,7 @@ class RandomBoxObject(BoxObject):
 
 
 class RandomCylinderObject(CylinderObject):
-    """
-        A random cylinder
-    """
+    """A random cylinder."""
 
     def __init__(
         self,
@@ -887,9 +883,7 @@ class RandomCylinderObject(CylinderObject):
 
 
 class RandomBallObject(BallObject):
-    """
-        A random ball (sphere)
-    """
+    """A random ball (sphere)."""
 
     def __init__(
         self,
@@ -917,9 +911,7 @@ class RandomBallObject(BallObject):
 
 
 class RandomCapsuleObject(CapsuleObject):
-    """
-        A random ball (sphere)
-    """
+    """A random capsule."""
 
     def __init__(self, size_max=None, size_min=None, rgba="random"):
         if size_max is None:

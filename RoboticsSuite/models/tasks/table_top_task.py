@@ -4,12 +4,12 @@ import collections
 
 from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.utils import XMLError, RandomizationError
-from RoboticsSuite.models.world import MujocoWorldBase
+from RoboticsSuite.models.tasks import Task
 from RoboticsSuite.models.model_util import *
 from RoboticsSuite.utils import *
 
 
-class TableTopTask(MujocoWorldBase):
+class TableTopTask(Task):
     """Create MJCF model of a tabletop task.
 
     A tabletop task consists of one robot interacting with a variable number of
@@ -71,6 +71,6 @@ class TableTopTask(MujocoWorldBase):
     def place_objects(self):
         """Place objects randomly until no collisions or max iterations hit."""
         pos_arr, quat_arr = self.initializer.sample()
-        for k, obj_name in enumerate(self.objects):
-            self.objects[obj_name].set("pos", array_to_string(pos_arr[k]))
-            self.objects[obj_name].set("quat", array_to_string(quat_arr[k]))
+        for i in range(len(self.objects)):
+            self.objects[i].set("pos", array_to_string(pos_arr[i]))
+            self.objects[i].set("quat", array_to_string(quat_arr[i]))

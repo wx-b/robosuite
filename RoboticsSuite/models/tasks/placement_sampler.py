@@ -1,7 +1,9 @@
+import collections
 import numpy as np
 
 
 class ObjectPositionSampler(object):
+    """Base class of object placement sampler."""
     def __init__(self):
         pass
 
@@ -29,9 +31,7 @@ class ObjectPositionSampler(object):
 
 
 class UniformRandomSampler(ObjectPositionSampler):
-    """
-        Places all objects within the table uniformly random
-    """
+    """Places all objects within the table uniformly random."""
 
     def __init__(
         self,
@@ -142,9 +142,7 @@ class UniformRandomSampler(ObjectPositionSampler):
 
 
 class UniformRandomPegsSampler(ObjectPositionSampler):
-    """
-        Places all objects on top of the table uniformly random
-    """
+    """Places all objects on top of the table uniformly random."""
 
     def __init__(
         self,

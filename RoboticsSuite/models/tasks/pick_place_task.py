@@ -1,15 +1,15 @@
-import numpy as np
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
+import numpy as np
 
 from RoboticsSuite.models.base import MujocoXML
-from RoboticsSuite.utils import XMLError
-from RoboticsSuite.models.world import MujocoWorldBase
 from RoboticsSuite.models.model_util import *
+from RoboticsSuite.models.tasks import Task
+from RoboticsSuite.utils import XMLError
 from RoboticsSuite.utils import *
 
 
-class PickPlaceTask(MujocoWorldBase):
+class PickPlaceTask(Task):
     """Create MJCF model of a pick-and-place task.
 
     A pick-and-place task consists of one robot picking objects from a bin
@@ -85,8 +85,7 @@ class PickPlaceTask(MujocoWorldBase):
         if self.z_rotation:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
             return [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
-        else:
-            return [1, 0, 0, 0]
+        return [1, 0, 0, 0]
 
     def place_objects(self):
         """Place objects randomly until no collisions or max iterations hit."""
@@ -110,7 +109,7 @@ class PickPlaceTask(MujocoWorldBase):
                 location_valid = True
                 for pos2, r in placed_objects:
                     dist = np.linalg.norm(pos[:2] - pos2[:2], np.inf)
-                    if (dist <= r + horizontal_radius):
+                    if dist <= r + horizontal_radius:
                         location_valid = False
                         break
 
@@ -131,8 +130,7 @@ class PickPlaceTask(MujocoWorldBase):
             index += 1
 
     def place_visual(self):
-        """Place objects randomly until no collisions or max iterations hit."""
-        placed_objects = []
+        """Place visual objects randomly until no collisions or max iterations hit."""
         index = 0
         bin_pos = string_to_array(self.bin2_body.get("pos"))
         bin_size = self.bin_size

@@ -1,13 +1,10 @@
-# Imported as needed in get_model()
-# from mujoco_py import load_model_from_path, load_model_from_xml
-# from dm_control.mujoco import Physics
-
 import os
-import xml.etree.ElementTree as ET
-import numpy as np
-from RoboticsSuite.utils import XMLError
 import xml.dom.minidom
+import xml.etree.ElementTree as ET
 import io
+import numpy as np
+
+from RoboticsSuite.utils import XMLError
 
 
 class MujocoXML(object):
@@ -18,7 +15,11 @@ class MujocoXML(object):
     """
 
     def __init__(self, fname):
-        """Loads a mujoco xml from file specified by fname."""
+        """Loads a mujoco xml from file.
+
+        Args:
+            fname (str): path to the MJCF xml file.
+        """
         self.file = fname
         self.folder = os.path.dirname(fname)
         self.tree = ET.parse(fname)
@@ -50,11 +51,13 @@ class MujocoXML(object):
         return ele
 
     def merge(self, other, merge_body=True):
-        """
-            Default merge method
-            @other is another MujocoXML instance
-            raises XML error if @other is not a MujocoXML instance
-            merges <worldbody/>, <actuator/> and <asset/> of @other into @self 
+        """Default merge method.
+
+        Args:
+            other: another MujocoXML instance
+                raises XML error if @other is not a MujocoXML instance.
+                merges <worldbody/>, <actuator/> and <asset/> of @other into @self
+            merge_body: True if merging child bodies of @other. Defaults to True.
         """
         if not isinstance(other, MujocoXML):
             raise XMLError("{} is not a MujocoXML instance.".format(type(other)))
@@ -78,13 +81,14 @@ class MujocoXML(object):
         available_modes = ["dm_control", "mujoco_py"]
         with io.StringIO() as string:
             string.write(ET.tostring(self.root, encoding="unicode"))
+            # TODO(yukez): is dm_control still supported?
             if mode == "dm_control":
                 from RoboticsSuite.dm_control_ext import Physics
 
                 model = Physics.from_xml_string(string.getvalue())
                 return model
             elif mode == "mujoco_py":
-                from mujoco_py import load_model_from_path, load_model_from_xml
+                from mujoco_py import load_model_from_xml
 
                 model = load_model_from_xml(string.getvalue())
                 return model
@@ -101,8 +105,7 @@ class MujocoXML(object):
             return string.getvalue()
 
     def save_model(self, fname, pretty=False):
-        """
-            Saves the xml to file
+        """Saves the xml to file.
 
             Args:
                 fname: output file location
@@ -111,7 +114,7 @@ class MujocoXML(object):
         with open(fname, "w") as f:
             xml_str = ET.tostring(self.root, encoding="unicode")
             if pretty:
-                # TODO: get a good pretty print library
+                # TODO: get a better pretty print library
                 parsed_xml = xml.dom.minidom.parseString(xml_str)
                 xml_str = parsed_xml.toprettyxml(newl="")
             f.write(xml_str)
@@ -125,15 +128,3 @@ class MujocoXML(object):
             pattern = "./{}[@name='{}']".format(asset_type, asset_name)
             if self.asset.find(pattern) is None:
                 self.asset.append(asset)
-
-    # Subclass should also define it as a property
-    @property
-    def joints(self):
-        """Returns the names of Joints"""
-        raise NotImplementedError
-
-    # Subclass should also define it as a property
-    @property
-    def init_qpos(self):
-        """Returns the rest position of joints, in raw actuation units"""
-        raise NotImplementedError

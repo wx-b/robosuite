@@ -45,7 +45,7 @@ class TableArena(Arena):
 
     def __init__(self,
                  table_full_size=(0.8, 0.8, 0.8),
-                 friction=(1, 0.005, 0.0001)):
+                 table_friction=(1, 0.005, 0.0001)):
         """
         Args:
             table_full_size: full dimensions of the table
@@ -55,7 +55,7 @@ class TableArena(Arena):
 
         self.table_full_size = np.array(table_full_size)
         self.table_half_size = self.table_full_size / 2
-        self.friction = friction
+        self.table_friction = table_friction
 
         self.floor = self.worldbody.find("./geom[@name='floor']")
         self.table_body = self.worldbody.find("./body[@name='table']")
@@ -69,13 +69,13 @@ class TableArena(Arena):
         self.bottom_pos = np.array([0, 0, 0])
         self.floor.set("pos", array_to_string(self.bottom_pos))
 
-        self.center_pos = self.bottom_pos + np.array([0, 0, self.half_size[2]])
+        self.center_pos = self.bottom_pos + np.array([0, 0, self.table_half_size[2]])
         self.table_body.set("pos", array_to_string(self.center_pos))
-        self.table_collision.set("size", array_to_string(self.half_size))
-        self.table_collision.set("friction", array_to_string(self.friction))
-        self.table_visual.set("size", array_to_string(self.half_size))
+        self.table_collision.set("size", array_to_string(self.table_half_size))
+        self.table_collision.set("friction", array_to_string(self.table_friction))
+        self.table_visual.set("size", array_to_string(self.table_half_size))
 
-        self.table_top.set("pos", array_to_string(np.array([0, 0, self.half_size[2]])))
+        self.table_top.set("pos", array_to_string(np.array([0, 0, self.table_half_size[2]])))
 
     @property
     def table_top_abs(self):
@@ -89,7 +89,7 @@ class BinsArena(Arena):
 
     def __init__(self,
                  table_full_size=(0.39, 0.49, 0.82),
-                 friction=(1, 0.005, 0.0001)):
+                 table_friction=(1, 0.005, 0.0001)):
         """
         Args:
             table_full_size: full dimensions of the table
@@ -98,8 +98,8 @@ class BinsArena(Arena):
         super().__init__(xml_path_completion("arenas/bins_arena.xml"))
 
         self.table_full_size = np.array(table_full_size)
-        self.half_size = self.table_full_size / 2
-        self.friction = friction
+        self.table_half_size = self.table_full_size / 2
+        self.table_friction = table_friction
 
         self.floor = self.worldbody.find("./geom[@name='floor']")
         self.bin1_body = self.worldbody.find("./body[@name='bin1']")
@@ -122,17 +122,17 @@ class PegsArena(Arena):
 
     def __init__(self,
                  table_full_size=(0.45, 0.69, 0.82),
-                 friction=(1, 0.005, 0.0001)):
+                 table_friction=(1, 0.005, 0.0001)):
         """
         Args:
             table_full_size: full dimensions of the table
-            friction: friction parameters of the table
+            table_friction: friction parameters of the table
         """
         super().__init__(xml_path_completion("arenas/pegs_arena.xml"))
 
         self.table_full_size = np.array(table_full_size)
         self.table_half_size = self.table_full_size / 2
-        self.friction = friction
+        self.table_friction = table_friction
 
         self.floor = self.worldbody.find("./geom[@name='floor']")
         self.table_body = self.worldbody.find("./body[@name='table']")
