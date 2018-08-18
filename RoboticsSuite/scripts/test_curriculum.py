@@ -24,7 +24,7 @@ class demo_config:
 
 
 env = make(
-    "SawyerBinsEnv",
+    "SawyerPickPlace",
     ignore_done=True,
     use_camera_obs=False,
     reward_shaping=True,
