@@ -46,11 +46,8 @@ class Wrapper(MujocoEnv):
         return self.env.action_spec()
 
     @property
-    def action_space(self):
-        return self.env.action_space
-
     def dof(self):
-        return self.env.dof()
+        return self.env.dof
 
     @property
     def unwrapped(self):

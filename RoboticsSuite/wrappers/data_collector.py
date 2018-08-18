@@ -1,6 +1,6 @@
 """
-This file contains a wrapper for saving simulation states.
-This is useful for collecting demonstrations.
+This file implements a wrapper for saving simulation states to disk.
+This data collection wrapper is useful for collecting demonstrations.
 """
 
 from RoboticsSuite.wrappers import Wrapper
@@ -10,12 +10,15 @@ import numpy as np
 
 
 class DataCollector(Wrapper):
+
     def __init__(self, env, directory, collect_freq=1, flush_freq=1000):
-        """
-        :param env: The environment to monitor.
-        :param directory: Where to store collected data.
-        :param collect_freq: How often to save simulation state, in terms of environment steps.
-        :param flush_freq: How frequently to dump data to disk, in terms of environment steps.
+        """Initialize the DataCollection wrapper.
+
+        Args:
+            env: The environment to monitor.
+            directory: Where to store collected data.
+            collect_freq: How often to save simulation state, in terms of environment steps.
+            flush_freq: How frequently to dump data to disk, in terms of environment steps.
         """
         super().__init__(env)
 
