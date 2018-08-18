@@ -69,7 +69,7 @@ if __name__ == "__main__":
         ]
     )
 
-    # spacenav = SpaceNavigator()
+    # space_mouse = SpaceMouse()
 
     dof = 9
     print("action space", env.action_space)
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     def right_robot_jpos_getter():
         return np.array(env._joint_positions[:7])
 
-    # spacenav = SpaceNavigator()
+    # space_mouse = SpaceMouse()
     rest = [
         -2.80245441e-04,
         -5.50127483e-01,

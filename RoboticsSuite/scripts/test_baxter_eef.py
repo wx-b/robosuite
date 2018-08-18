@@ -59,7 +59,7 @@ if __name__ == "__main__":
         else:
             return np.array(env._joint_positions[:7])
 
-    # spacenav = SpaceNavigator()
+    # space_mouse = SpaceMouse()
     ik_controller = IKController(
         bullet_data_path="../models/assets/bullet_data/baxter_common/%s.urdf" % side,
         robot_jpos_getter=robot_jpos_getter,
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         # while True:env.render()
 
         for i in range(100000):
-            # state = spacenav.get_controller_state()
+            # state = space_mouse.get_controller_state()
             state = {"dpos": np.array([0, 0, 1e-4]), "rotation": np.eye(3), "grasp": 0}
             dpos, rotation, grasp = state["dpos"], state["rotation"], state["grasp"]
             velocities = ik_controller.get_control(dpos=dpos, rotation=rotation)

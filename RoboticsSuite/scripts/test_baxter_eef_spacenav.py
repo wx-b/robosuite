@@ -10,7 +10,7 @@ from RoboticsSuite.wrappers import DataCollector
 from RoboticsSuite.utils.baxter_ik import BaxterIKController as IKController
 import RoboticsSuite.utils as U
 
-import spacenav
+import space_mouse
 import threading
 
 control = [0 for _ in range(6)]
@@ -21,11 +21,11 @@ def run():
     print("thread running")
     # global control, button
     while True:
-        event = spacenav.poll()
+        event = space_mouse.poll()
         if event is None:
             continue
         print(event)
-        if type(event) == spacenav.ButtonEvent:
+        if type(event) == space_mouse.ButtonEvent:
             if event.pressed:
                 button = 1
         else:
@@ -34,7 +34,7 @@ def run():
 
 
 try:
-    spacenav.open()
+    space_mouse.open()
     # run()
     # exit()
     # thread = threading.Thread(target=run)
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         ]
     )
 
-    # spacenav = SpaceNavigator()
+    # space_mouse = SpaceMouse()
 
     dof = 9
     print("action space", env.action_space)
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     def right_robot_jpos_getter():
         return np.array(env._joint_positions[:7])
 
-    # spacenav = SpaceNavigator()
+    # space_mouse = SpaceMouse()
     rest = [
         -2.80245441e-04,
         -5.50127483e-01,
@@ -148,11 +148,11 @@ if __name__ == "__main__":
         }
 
         for i in range(100000):
-            # state = spacenav.get_controller_state()
-            event = spacenav.poll()
+            # state = space_mouse.get_controller_state()
+            event = space_mouse.poll()
             if event is not None:
                 print(event)
-                if type(event) == spacenav.ButtonEvent:
+                if type(event) == space_mouse.ButtonEvent:
                     if event.pressed:
                         button = 1
                 else:

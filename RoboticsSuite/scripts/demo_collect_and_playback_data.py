@@ -1,5 +1,8 @@
 """
 Record trajectory data with the DataCollector wrapper and play them back.
+
+Example:
+    $ python demo_collect_and_playback_data.py --environment BaxterLift
 """
 
 import os

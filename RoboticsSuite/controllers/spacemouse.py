@@ -39,13 +39,14 @@ def convert(b1, b2):
     return scale_to_control(to_int16(b1, b2))
 
 
-class SpaceNavigator:
+class SpaceMouse:
+
     def __init__(self, vendor_id=9583, product_id=50735):
 
-        print("Opening SpaceNavigator device")
+        print("Opening SpaceMouse device")
         print(hid.enumerate())
         self.device = hid.device()
-        self.device.open(vendor_id, product_id)  # SpaceNavigator
+        self.device.open(vendor_id, product_id)  # SpaceMouse
 
         print("Manufacturer: %s" % self.device.get_manufacturer_string())
         print("Product: %s" % self.device.get_product_string())
@@ -150,7 +151,7 @@ class SpaceNavigator:
 
 if __name__ == "__main__":
 
-    spacenav = SpaceNavigator()
+    space_mouse = SpaceMouse()
     for i in range(100):
-        print(spacenav.control, spacenav.control_gripper())
+        print(space_mouse.control, space_mouse.control_gripper())
         time.sleep(0.02)
