@@ -2,6 +2,9 @@
 
 This avoids mujoco-py from complaining about .urdf extension.
 Also allows assets to be compiled properly.
+
+Example:
+    $ python compile_mjcf_model.py source_mjcf.xml target_mjcf.xml
 """
 
 import os

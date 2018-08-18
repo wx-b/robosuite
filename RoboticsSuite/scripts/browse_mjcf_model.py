@@ -1,4 +1,4 @@
-"""Visualize arena models.
+"""Visualize MJCF models.
 
 Loads MJCF XML models from file and renders it on screen.
 
