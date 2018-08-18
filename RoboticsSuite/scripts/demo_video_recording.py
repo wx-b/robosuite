@@ -24,7 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("--skip_frame", type=int, default=1)
     args = parser.parse_args()
 
-    # Initialize an environment with offscreen renderer
+    # initialize an environment with offscreen renderer
     env = make(
         args.environment,
         has_renderer=False,
@@ -46,10 +46,11 @@ if __name__ == "__main__":
     frames = []
     for i in range(args.timesteps):
 
+        # run a uniformly random agent
         action = 0.5 * np.random.randn(dof)
         obs, reward, done, info = env.step(action)
 
-        # dumps a frame from every K frames
+        # dump a frame from every K frames
         if i % args.skip_frame == 0:
             frame = obs["image"][::-1]
             writer.append_data(frame)

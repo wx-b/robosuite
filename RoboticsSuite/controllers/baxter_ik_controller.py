@@ -13,7 +13,7 @@ class BaxterIKController:
     to map end effector motions to joint motions. 
     """
 
-    def __init__(self, bullet_data_path, robot_jpos_getter, rest_poses):
+    def __init__(self, bullet_data_path, robot_jpos_getter, rest_poses=None):
 
         # path to data folder of bullet repository
         self.bullet_data_path = bullet_data_path
@@ -110,7 +110,6 @@ class BaxterIKController:
         p.resetSimulation()
 
         # get paths to urdfs
-        # self.robot_urdf = pjoin(self.bullet_data_path, "sawyer_description/urdf/sawyer_arm.urdf")
         # self.robot_urdf = pjoin(self.bullet_data_path, "baxter_custom_ikfast/baxter_arm.accurate.left.urdf")
         self.robot_urdf = self.bullet_data_path
 
