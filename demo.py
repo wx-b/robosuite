@@ -1,24 +1,39 @@
 import numpy as np
-from RoboticsSuite import make
+import RoboticsSuite as suite
+
 
 if __name__ == '__main__':
 
-    # env for training
-    # env = make("SawyerLift",
-    #             has_renderer=False,
-    #             ignore_done=True,
-    #             use_camera_obs=True,
-    #             camera_height=84,
-    #             camera_width=84,
-    #             camera_name='tabletop',
-    #             use_object_obs=False,
-    #             reward_shaping=True)
+    # get the list of all environments
+    envs = sorted(suite.environments.ALL_ENVS)
 
-    env = make("SawyerLift", ignore_done=True, use_camera_obs=False)
+    # print info and select an environment
+    print("Welcome to Stanford Robotics Suite v{}!".format(suite.__version__))
+    print(suite.__logo__)
+    print("Here is a list of environments in the suite:\n")
 
-    while True:
-        env.reset()
+    for k, env in enumerate(envs):
+        print("[{}] {}".format(k, env))
+    print()
+    try:
+        s = input("Choose an environment to run "
+                + "(enter a number from 0 to {}): ".format(len(envs)-1))
+        # parse input into a number within range
+        k = min(max(int(s), 0), len(envs))
+    except:
+        print("Input is not valid. Use 0 by default.")
+        k = 0
+
+    # initialize the task
+    env = suite.make(envs[k])
+    env.reset()
+
+    # some viewer setting to make rendering prettier
+    env.viewer.viewer._hide_overlay = True
+    env.viewer.set_camera(0)
+
+    # do visualization
+    for i in range(1000):
+        action = np.random.randn(env.dof)
+        obs, reward, done, _ = env.step(action)
         env.render()
-        for i in range(1000):
-            obs, reward, done, _ = env.step(np.random.randn(env.dof))
-            env.render()
