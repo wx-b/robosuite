@@ -1,7 +1,8 @@
 ### support for mocap ###
 
 def mjpy_ctrl_set_action(sim, action):
-    """For torque actuators it copies the action into mujoco ctrl field.
+    """
+    For torque actuators it copies the action into mujoco ctrl field.
     For position actuators it sets the target relative to the current qpos.
     """
     if sim.model.nmocap > 0:
@@ -17,7 +18,8 @@ def mjpy_ctrl_set_action(sim, action):
 
 
 def mjpy_mocap_set_action(sim, action):
-    """The action controls the robot using mocaps. Specifically, bodies
+    """
+    The action controls the robot using mocaps. Specifically, bodies
     on the robot (for example the gripper wrist) is controlled with
     mocap bodies. In this case the action is the desired difference
     in position and orientation (quaternion), in world coordinates,
@@ -38,8 +40,7 @@ def mjpy_mocap_set_action(sim, action):
 
 
 def mjpy_reset_mocap_welds(sim):
-    """Resets the mocap welds that we use for actuation.
-    """
+    """Resets the mocap welds that we use for actuation."""
     if sim.model.nmocap > 0 and sim.model.eq_data is not None:
         for i in range(sim.model.eq_data.shape[0]):
             if sim.model.eq_type[i] == mujoco_py.const.EQ_WELD:
@@ -48,8 +49,9 @@ def mjpy_reset_mocap_welds(sim):
 
 
 def mjpy_reset_mocap2body_xpos(sim):
-    """Resets the position and orientation of the mocap bodies to the same
-    values as the bodies they're welded to.
+    """
+    Resets the position and orientation of the mocap bodies to the same values
+    as the bodies they're welded to.
     """
 
     if (

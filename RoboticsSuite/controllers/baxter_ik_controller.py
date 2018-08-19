@@ -36,9 +36,11 @@ class BaxterIKController:
         This function is repeatedly called in the control loop. 
         It takes the current user information and uses it to return joint velocities.
 
-        :param user_info: a dictionary containing information on user controls
+        Args:
+            user_info: a dictionary containing information on user controls
 
-        :return velocities: The joint velocity commands to apply.
+        Returns
+            velocities: The joint velocity commands to apply.
         """
 
         # Sync joint positions for IK.
@@ -76,8 +78,6 @@ class BaxterIKController:
         This function is called when the user is not controlling the robot.
         It takes a TeleopEnv instance (which is a robot to control) and 
         does internal bookkeeping to maintain consistent state. 
-
-        :param robot: An instance of TeleopEnv. 
         """
 
         # sync IK robot state to the current robot joint positions

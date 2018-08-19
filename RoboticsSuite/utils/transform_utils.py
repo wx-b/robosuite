@@ -51,9 +51,10 @@ def convert_quat(q, to="xyzw"):
     The convention to convert TO is specified as an optional argument.
     If to == 'xyzw', then the input is in 'wxyz' format, and vice-versa.
 
-    :param q: a 4-dim numpy array corresponding to a quaternion
-    :param to: a string, either 'xyzw' or 'wxyz', determining
-               which convention to convert to.
+    Args:
+        q: a 4-dim numpy array corresponding to a quaternion
+        to: a string, either 'xyzw' or 'wxyz', determining
+            which convention to convert to.
     """
     if to == "xyzw":
         return q[[1, 2, 3, 0]]
@@ -63,29 +64,38 @@ def convert_quat(q, to="xyzw"):
 
 
 def vec(values):
-    """
-    Convert value tuple into a vector
-    :param values: a tuple of numbers
-    :return: vector of given values
+    """Convert value tuple into a numpy vector.
+
+    Args:
+        values: a tuple of numbers
+
+    Returns:
+        a numpy vector of given values
     """
     return np.array(values, dtype=np.float32)
 
 
 def mat4(array):
-    """
-    Convert an array to 4x4 matrix
-    :param array: the array in form of vec, list, or tuple
-    :return: 4x4 numpy matrix
+    """Convert an array to 4x4 matrix.
+
+    Args:
+        array: the array in form of vec, list, or tuple
+
+    Returns:
+        a 4x4 numpy matrix
     """
     return np.array(array, dtype=np.float32).reshape((4, 4))
 
 
 def mat2pose(hmat):
-    """
-    Convert a homogeneous 4x4 matrix into pose
-    :param hmat: a 4x4 homogeneous matrix
-    :return: (pos, orn) tuple where pos is
-    vec3 float in cartesian, orn is vec4 float quaternion
+    """Convert a homogeneous 4x4 matrix into pose.
+
+    Args:
+        hmat: a 4x4 homogeneous matrix
+
+    Returns:
+        (pos, orn) tuple where pos is vec3 float in cartesian,
+            orn is vec4 float quaternion
     """
     pos = hmat[:3, 3]
     orn = mat2quat(hmat[:3, :3])
@@ -93,13 +103,15 @@ def mat2pose(hmat):
 
 
 def mat2quat(rmat, precise=False):
-    """
-    Convert given rotation matrix to quaternion
-    :param rmat: 3x3 rotation matrix
-    :param precise: If isprecise is True,
-    the input matrix is assumed to be a precise rotation
-    matrix and a faster algorithm is used.
-    :return: vec4 float quaternion angles
+    """Convert given rotation matrix to quaternion.
+
+    Args:
+        rmat: 3x3 rotation matrix
+        precise: If isprecise is True, the input matrix is assumed to be a precise
+             rotation matrix and a faster algorithm is used.
+
+    Returns:
+        vec4 float quaternion angles
     """
     M = np.array(rmat, dtype=np.float32, copy=False)[:3, :3]
     if precise:
@@ -152,11 +164,14 @@ def mat2quat(rmat, precise=False):
 
 
 def mat2euler(rmat, axes="sxyz"):
-    """
-    Convert given rotation matrix to euler angles in radian.
-    :param rmat: 3x3 rotation matrix
-    :param axes: One of 24 axis sequences as string or encoded tuple
-    :return: converted euler angles in radian vec3 float
+    """Convert given rotation matrix to euler angles in radian.
+
+    Args:
+        rmat: 3x3 rotation matrix
+        axes: One of 24 axis sequences as string or encoded tuple
+
+    Returns:
+        converted euler angles in radian vec3 float
     """
     try:
         firstaxis, parity, repetition, frame = _AXES2TUPLE[axes.lower()]
@@ -197,12 +212,14 @@ def mat2euler(rmat, axes="sxyz"):
 
 
 def pose2mat(pose):
-    """
-    Convert pose to homogeneous matrix
-    :param pose: a (pos, orn) tuple where
-    pos is vec3 float cartesian, and
-    orn is vec4 float quaternion.
-    :return:
+    """Convert pose to homogeneous matrix.
+
+    Args:
+        pose: a (pos, orn) tuple where pos is vec3 float cartesian, and
+            orn is vec4 float quaternion.
+
+    Returns:
+        4x4 homogeneous matrix
     """
     homo_pose_mat = np.zeros((4, 4), dtype=np.float32)
     homo_pose_mat[:3, :3] = quat2mat(pose[1])
@@ -212,10 +229,13 @@ def pose2mat(pose):
 
 
 def quat2mat(quaternion):
-    """
-    Convert given quaternion (x, y, z, w) to matrix
-    :param quaternion: vec4 float angles
-    :return: 3x3 rotation matrix
+    """Convert given quaternion (x, y, z, w) to matrix.
+
+    Args:
+        quaternion: vec4 float angles
+
+    Returns:
+        3x3 rotation matrix
     """
     q = np.array(quaternion, dtype=np.float32, copy=True)[[3, 0, 1, 2]]
     n = np.dot(q, q)
@@ -237,10 +257,12 @@ def pose_in_A_to_pose_in_B(pose_A, pose_A_in_B):
     Converts a homogenous matrix corresponding to a point C in frame A
     to a homogenous matrix corresponding to the same point C in frame B.
 
-    :param pose_A: numpy array of shape (4,4) corresponding to the pose of C in frame A
-    :param pose_A_in_B: numpy array of shape (4,4) corresponding to the pose of A in frame B
+    Args:
+        pose_A: numpy array of shape (4,4) corresponding to the pose of C in frame A
+        pose_A_in_B: numpy array of shape (4,4) corresponding to the pose of A in frame B
 
-    :return: numpy array of shape (4,4) corresponding to the pose of C in frame B
+    Returns:
+        numpy array of shape (4,4) corresponding to the pose of C in frame B
     """
 
     # pose of A in B takes a point in A and transforms it to a point in C.
@@ -256,9 +278,11 @@ def pose_inv(pose):
     Computes the inverse of a homogenous matrix corresponding to the pose of some
     frame B in frame A. The inverse is the pose of frame A in frame B.
 
-    :param pose: numpy array of shape (4,4) for the pose to inverse
+    Args:
+        pose: numpy array of shape (4,4) for the pose to inverse
 
-    :return: numpy array of shape (4,4) for the inverse pose
+    Returns:
+        numpy array of shape (4,4) for the inverse pose
     """
 
     # Note, the inverse of a pose matrix is the following
@@ -299,15 +323,15 @@ def _skew_symmetric_translation(pos_A_in_B):
 
 
 def vel_in_A_to_vel_in_B(vel_A, ang_vel_A, pose_A_in_B):
-    """
-    Converts linear and angular velocity of a point in frame A to the equivalent in frame B.
+    """Converts linear and angular velocity of a point in frame A to the equivalent in frame B.
 
-    :param vel_A: 3-dim iterable for linear velocity in A
-    :param ang_vel_A: 3-dim iterable for angular velocity in A
-    :param pose_A_in_B: numpy array of shape (4,4) corresponding to the pose of A in frame B
+    Args:
+        vel_A: 3-dim iterable for linear velocity in A
+        ang_vel_A: 3-dim iterable for angular velocity in A
+        pose_A_in_B: numpy array of shape (4,4) corresponding to the pose of A in frame B
 
-    :return vel_B, ang_vel_B: two numpy arrays of shape (3,) for the velocities in B
-
+    Returns:
+        vel_B, ang_vel_B: two numpy arrays of shape (3,) for the velocities in B
     """
     pos_A_in_B = pose_A_in_B[:3, 3]
     rot_A_in_B = pose_A_in_B[:3, :3]
@@ -318,16 +342,16 @@ def vel_in_A_to_vel_in_B(vel_A, ang_vel_A, pose_A_in_B):
 
 
 def force_in_A_to_force_in_B(force_A, torque_A, pose_A_in_B):
+    """Converts linear and rotational force at a point in frame A to the equivalent in frame B.
+
+    Args:
+        force_A: 3-dim iterable for linear force in A
+        torque_A: 3-dim iterable for rotational force (moment) in A
+        pose_A_in_B: numpy array of shape (4,4) corresponding to the pose of A in frame B
+
+    Returns:
+        force_B, torque_B: two numpy arrays of shape (3,) for the forces in B
     """
-    Converts linear and rotational force at a point in frame A to the equivalent in frame B.
-
-    :param force_A: 3-dim iterable for linear force in A
-    :param torque_A: 3-dim iterable for rotational force (moment) in A
-    :param pose_A_in_B: numpy array of shape (4,4) corresponding to the pose of A in frame B
-
-    :return force_B, torque_B: two numpy arrays of shape (3,) for the forces in B
-    """
-
     pos_A_in_B = pose_A_in_B[:3, 3]
     rot_A_in_B = pose_A_in_B[:3, :3]
     skew_symm = _skew_symmetric_translation(pos_A_in_B)
@@ -338,23 +362,27 @@ def force_in_A_to_force_in_B(force_A, torque_A, pose_A_in_B):
 
 def rotation_matrix(angle, direction, point=None):
     """Return matrix to rotate about axis defined by point and direction.
-    >>> angle = (random.random() - 0.5) * (2*math.pi)
-    >>> direc = numpy.random.random(3) - 0.5
-    >>> point = numpy.random.random(3) - 0.5
-    >>> R0 = rotation_matrix(angle, direc, point)
-    >>> R1 = rotation_matrix(angle-2*math.pi, direc, point)
-    >>> is_same_transform(R0, R1)
-    True
-    >>> R0 = rotation_matrix(angle, direc, point)
-    >>> R1 = rotation_matrix(-angle, -direc, point)
-    >>> is_same_transform(R0, R1)
-    True
-    >>> I = numpy.identity(4, numpy.float64)
-    >>> numpy.allclose(I, rotation_matrix(math.pi*2, direc))
-    True
-    >>> numpy.allclose(2., numpy.trace(rotation_matrix(math.pi/2,
-    ...                                                direc, point)))
-    True
+
+    Examples:
+
+        >>> angle = (random.random() - 0.5) * (2*math.pi)
+        >>> direc = numpy.random.random(3) - 0.5
+        >>> point = numpy.random.random(3) - 0.5
+        >>> R0 = rotation_matrix(angle, direc, point)
+        >>> R1 = rotation_matrix(angle-2*math.pi, direc, point)
+        >>> is_same_transform(R0, R1)
+        True
+        >>> R0 = rotation_matrix(angle, direc, point)
+        >>> R1 = rotation_matrix(-angle, -direc, point)
+        >>> is_same_transform(R0, R1)
+        True
+        >>> I = numpy.identity(4, numpy.float64)
+        >>> numpy.allclose(I, rotation_matrix(math.pi*2, direc))
+        True
+        >>> numpy.allclose(2., numpy.trace(rotation_matrix(math.pi/2,
+        ...                                                direc, point)))
+        True
+
     """
     sina = math.sin(angle)
     cosa = math.cos(angle)
@@ -383,13 +411,14 @@ def rotation_matrix(angle, direction, point=None):
 
 
 def make_pose(translation, rotation):
-    """
-    Make a homogenous pose matrix from a translation vector and a rotation matrix.
+    """Make a homogenous pose matrix from a translation vector and a rotation matrix.
 
-    :param translation: a 3-dim iterable
-    :param rotation: a 3x3 matrix
+    Args:
+        translation: a 3-dim iterable
+        rotation: a 3x3 matrix
 
-    :return pose: a 4x4 homogenous matrix
+    Returns:
+        pose: a 4x4 homogenous matrix
     """
     pose = np.zeros((4, 4))
     pose[:3, :3] = rotation
@@ -400,27 +429,31 @@ def make_pose(translation, rotation):
 
 def unit_vector(data, axis=None, out=None):
     """Return ndarray normalized by length, i.e. eucledian norm, along axis.
-    >>> v0 = numpy.random.random(3)
-    >>> v1 = unit_vector(v0)
-    >>> numpy.allclose(v1, v0 / numpy.linalg.norm(v0))
-    True
-    >>> v0 = numpy.random.rand(5, 4, 3)
-    >>> v1 = unit_vector(v0, axis=-1)
-    >>> v2 = v0 / numpy.expand_dims(numpy.sqrt(numpy.sum(v0*v0, axis=2)), 2)
-    >>> numpy.allclose(v1, v2)
-    True
-    >>> v1 = unit_vector(v0, axis=1)
-    >>> v2 = v0 / numpy.expand_dims(numpy.sqrt(numpy.sum(v0*v0, axis=1)), 1)
-    >>> numpy.allclose(v1, v2)
-    True
-    >>> v1 = numpy.empty((5, 4, 3), dtype=numpy.float64)
-    >>> unit_vector(v0, axis=1, out=v1)
-    >>> numpy.allclose(v1, v2)
-    True
-    >>> list(unit_vector([]))
-    []
-    >>> list(unit_vector([1.0]))
-    [1.0]
+
+    Examples:
+
+        >>> v0 = numpy.random.random(3)
+        >>> v1 = unit_vector(v0)
+        >>> numpy.allclose(v1, v0 / numpy.linalg.norm(v0))
+        True
+        >>> v0 = numpy.random.rand(5, 4, 3)
+        >>> v1 = unit_vector(v0, axis=-1)
+        >>> v2 = v0 / numpy.expand_dims(numpy.sqrt(numpy.sum(v0*v0, axis=2)), 2)
+        >>> numpy.allclose(v1, v2)
+        True
+        >>> v1 = unit_vector(v0, axis=1)
+        >>> v2 = v0 / numpy.expand_dims(numpy.sqrt(numpy.sum(v0*v0, axis=1)), 1)
+        >>> numpy.allclose(v1, v2)
+        True
+        >>> v1 = numpy.empty((5, 4, 3), dtype=numpy.float64)
+        >>> unit_vector(v0, axis=1, out=v1)
+        >>> numpy.allclose(v1, v2)
+        True
+        >>> list(unit_vector([]))
+        []
+        >>> list(unit_vector([1.0]))
+        [1.0]
+
     """
     if out is None:
         data = np.array(data, dtype=np.float64, copy=True)
@@ -445,13 +478,14 @@ def get_orientation_error(target_orn, current_orn):
     Returns the difference between two quaternion orientations as a 3 DOF numpy array.
     For use in an impedance controller / task-space PD controller.
 
-    :param target_orn: 4-dim iterable, desired orientation as a (x, y, z, w) quaternion
-    :param current_orn: 4-dim iterable, current orientation as a (x, y, z, w) quaternion
+    Args:
+        target_orn: 4-dim iterable, desired orientation as a (x, y, z, w) quaternion
+        current_orn: 4-dim iterable, current orientation as a (x, y, z, w) quaternion
 
-    :return orn_error: 3-dim numpy array for current orientation error,
-                       corresponds to (target_orn - current_orn)
+    Returns:
+        orn_error: 3-dim numpy array for current orientation error, corresponds to
+            (target_orn - current_orn)
     """
-
     current_orn = np.array(
         [current_orn[3], current_orn[0], current_orn[1], current_orn[2]]
     )
@@ -471,12 +505,13 @@ def get_pose_error(target_pose, current_pose):
     The first 3 components correspond to translational error while the last 3 components
     correspond to the rotational error.
 
-    :param target_pose: a 4x4 homogenous matrix for the target pose
-    :param current_pose: a 4x4 homogenous matrix for the current pose
+    Args:
+        target_pose: a 4x4 homogenous matrix for the target pose
+        current_pose: a 4x4 homogenous matrix for the current pose
 
-    :return: A 6-dim numpy array for the pose error.
+    Returns:
+        A 6-dim numpy array for the pose error.
     """
-
     error = np.zeros(6)
 
     # compute translational error
