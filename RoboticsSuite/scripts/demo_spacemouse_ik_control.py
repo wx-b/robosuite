@@ -6,7 +6,7 @@ velocities through an inverse kinematics solver from Bullet physics.
 
 The two side buttons of SpaceMouse are used for controlling the grippers.
 
-SpaceMouse Compact from 3Dconnexion: https://www.3dconnexion.com/spacemouse_compact/en/
+SpaceMouse Wireless from 3Dconnexion: https://www.3dconnexion.com/spacemouse_wireless/en/
 We used the SpaceMouse Wireless in our experiments. The paper below used the same device
 to collect human demonstrations for imitation learning.
 
@@ -17,6 +17,12 @@ RSS 2018
 
 Example:
     $ python demo_spacemouse_ik_control.py --environment SawyerPickPlaceCan
+
+Note:
+    This current script only supports Mac OS X (Linux support can be added) and
+    Download and install the driver before running the script:
+        https://www.3dconnexion.com/service/drivers.html
+
 """
 
 import argparse

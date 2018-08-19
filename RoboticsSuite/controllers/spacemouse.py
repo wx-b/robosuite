@@ -1,18 +1,31 @@
-# Mac driver for SpaceNav controller
-from __future__ import print_function
+"""Driver class for SpaceMouse controller.
 
-import hid
+This class provides a driver support to SpaceMouse on Mac OS X.
+In particular, we assume SpaceMouse Wireless by default.
+
+To set up a new SpaceMouse controller:
+    1. Download and install driver from https://www.3dconnexion.com/service/drivers.html
+    2. Install hidapi library through pip
+    3. Make sure SpaceMouse is connected before running the script
+    4. (Optional) Based on the model of SpaceMouse, you might need to change the
+       vendor id and product id that correspond to the device.
+
+For Linux support, you can find open-source Linux drivers and SDKs online.
+    See http://spacenav.sourceforge.net/
+
+"""
+
 import time
 import threading
-import numpy as np
-
 from collections import namedtuple
+import numpy as np
+import hid
 
 import RoboticsSuite.utils as U
 
 AxisSpec = namedtuple("AxisSpec", ["channel", "byte1", "byte2", "scale"])
 
-SpNavSpec = {
+SpaceMouseSpec = {
     "x": AxisSpec(channel=1, byte1=1, byte2=2, scale=1),
     "y": AxisSpec(channel=1, byte1=3, byte2=4, scale=-1),
     "z": AxisSpec(channel=1, byte1=5, byte2=6, scale=-1),
@@ -21,30 +34,44 @@ SpNavSpec = {
     "yaw": AxisSpec(channel=1, byte1=11, byte2=12, scale=1),
 }
 
-# convert two 8 bit bytes to a signed 16 bit integer
+
 def to_int16(y1, y2):
+    """Convert two 8 bit bytes to a signed 16 bit integer."""
     x = (y1) | (y2 << 8)
     if x >= 32768:
         x = -(65536 - x)
     return x
 
 
-def scale_to_control(x, axis_scale=350.):
+def scale_to_control(x, axis_scale=350., min_v=-1.0, max_v=1.0):
+    """Normalize raw HID readings to target range."""
     x = x / axis_scale
-    x = min(max(x, -1.0), 1.0)
+    x = min(max(x, min_v), max_v)
     return x
 
 
 def convert(b1, b2):
+    """Converts SpaceMouse message to commands."""
     return scale_to_control(to_int16(b1, b2))
 
 
 class SpaceMouse:
+    """A minimalistic driver class for SpaceMouse with HID library."""
 
     def __init__(self, vendor_id=9583, product_id=50735):
+        """Initialize a SpaceMouse handler.
+
+        Args:
+            vendor_id: HID device vendor id
+            product_id: HID device product id
+
+        Note:
+            Use hid.enumerate() to view all USB human interface devices (HID).
+            Make sure SpaceMouse is detected before running the script.
+            You can look up its vendor/product id from this method.
+        """
 
         print("Opening SpaceMouse device")
-        print(hid.enumerate())
         self.device = hid.device()
         self.device.open(vendor_id, product_id)  # SpaceMouse
 
@@ -54,7 +81,7 @@ class SpaceMouse:
         self.double_click_and_hold = False
         self.single_click_and_hold = False
 
-        # launch daemon thread to listen to SpaceNav
+        # launch a new listener thread to listen to SpaceMouse
         self.thread = threading.Thread(target=self.run)
         self.thread.daemon = True
         self.thread.start()
@@ -64,9 +91,7 @@ class SpaceMouse:
         self.rotation = np.array([[-1., 0., 0.], [0., 1., 0.], [0., 0., -1.]])
 
     def get_controller_state(self):
-        """
-        Returns the current state of the 3d mouse, a dictionary of pos, orn, and grasp.
-        """
+        """Returns the current state of the 3d mouse, a dictionary of pos, orn, and grasp."""
         dpos = self.control[:3] * 0.005
         roll, pitch, yaw = self.control[3:] * 0.005
         self.grasp = self.control_gripper
@@ -75,6 +100,7 @@ class SpaceMouse:
         drot1 = U.rotation_matrix(angle=-pitch, direction=[1., 0., 0.], point=None)[
             :3, :3
         ]
+
         drot2 = U.rotation_matrix(angle=roll, direction=[0., 1., 0.], point=None)[
             :3, :3
         ]
@@ -84,16 +110,15 @@ class SpaceMouse:
         return dict(dpos=dpos, rotation=self.rotation, grasp=self.grasp)
 
     def run(self):
+        """Lisenter method that keeps pulling new messages."""
 
         t_last_click = -1
-        t_last_release = -1
 
         while True:
             d = self.device.read(13)
             if d is not None:
-                # print('read: "{}"'.format(d))
 
-                if d[0] == 1:
+                if d[0] == 1:  ## readings from 6-DoF sensor
                     self.y = convert(d[1], d[2])
                     self.x = convert(d[3], d[4])
                     self.z = convert(d[5], d[6]) * -1.0
@@ -111,7 +136,7 @@ class SpaceMouse:
                         self.yaw,
                     ]
 
-                elif d[0] == 3:
+                elif d[0] == 3:  ## readings from the side buttons
 
                     # press left button
                     if d[1] == 1:
@@ -134,19 +159,17 @@ class SpaceMouse:
 
     @property
     def control(self):
-        """
-        Returns 6-DoF control
-        """
+        """Returns 6-DoF control."""
         return np.array(self._control)
 
     @property
     def control_gripper(self):
+        """Maps internal states into gripper commands."""
         if self.double_click_and_hold:
             return -1.0
         elif self.single_click_and_hold:
             return 1.0
-        else:
-            return 0
+        return 0
 
 
 if __name__ == "__main__":
