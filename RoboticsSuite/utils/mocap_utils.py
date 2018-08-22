@@ -1,5 +1,6 @@
 ### support for mocap ###
 
+
 def mjpy_ctrl_set_action(sim, action):
     """
     For torque actuators it copies the action into mujoco ctrl field.

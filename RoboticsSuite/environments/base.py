@@ -24,9 +24,15 @@ def make(env_name, *args, **kwargs):
 
 class EnvMeta(type):
     """Metaclass for registering environments"""
+
     def __new__(meta, name, bases, class_dict):
         cls = super().__new__(meta, name, bases, class_dict)
-        register_env(cls)
+
+        # List all environments that should not be registered here.
+        _unregistered_envs = ["MujocoEnv", "SawyerEnv", "BaxterEnv"]
+
+        if cls.__name__ not in _unregistered_envs:
+            register_env(cls)
         return cls
 
 
@@ -34,34 +40,53 @@ class MujocoEnv(metaclass=EnvMeta):
     """Initialize a Mujoco Environment."""
 
     def __init__(
-            self,
-            has_renderer=True,
-            render_collision_mesh=False,
-            render_visual_mesh=True,
-            control_freq=100,
-            horizon=1000,
-            ignore_done=False,
-            use_camera_obs=False,
-            camera_name="frontview",
-            camera_height=256,
-            camera_width=256,
-            camera_depth=False,
-            has_offscreen_renderer=True,
-            **kwargs,
+        self,
+        has_renderer=False,
+        has_offscreen_renderer=True,
+        render_collision_mesh=False,
+        render_visual_mesh=True,
+        control_freq=10,
+        horizon=1000,
+        ignore_done=False,
+        use_camera_obs=False,
+        camera_name="frontview",
+        camera_height=256,
+        camera_width=256,
+        camera_depth=False,
     ):
         """
         Args:
-            has_renderer: If true, render the simulation state in a viewer instead of headless mode.
-            render_collision_mesh: True if rendering collision meshes in camera. False otherwise.
-            render_visual_mesh: True if rendering visual meshes in camera. False otherwise.
-            control_freq (in Hz): how many control signals to receive in every second.
-            ignore_done: True if never terminating the environemnt.
-            use_camera_obs: True if rendering camera observations.
-            camera_name: name of camera to be rendered. Must be set if @use_camera_obs is True.
-            camera_height: height of camera frame.
-            camera_width: width of camera frame.
-            camera_depth: True if rendering RGB-D, and RGB otherwise.
-            has_offscreen_renderer: True if using off-screen rendering.
+
+            has_renderer (bool): If true, render the simulation state in 
+                a viewer instead of headless mode.
+
+            has_offscreen_renderer (bool): True if using off-screen rendering.
+
+            render_collision_mesh (bool): True if rendering collision meshes 
+                in camera. False otherwise.
+
+            render_visual_mesh (bool): True if rendering visual meshes 
+                in camera. False otherwise.
+
+            control_freq (float): how many control signals to receive 
+                in every simulated second. This sets the amount of simulation time 
+                that passes between every action input.
+
+            horizon (int): Every episode lasts for exactly @horizon timesteps.
+
+            ignore_done (bool): True if never terminating the environment (ignore @horizon).
+
+            use_camera_obs (bool): if True, every observation includes a 
+                rendered image.
+
+            camera_name (str): name of camera to be rendered. Must be 
+                set if @use_camera_obs is True.
+
+            camera_height (int): height of camera frame.
+
+            camera_width (int): width of camera frame.
+
+            camera_depth (bool): True if rendering RGB-D, and RGB otherwise.
         """
 
         self.has_renderer = has_renderer
@@ -76,6 +101,8 @@ class MujocoEnv(metaclass=EnvMeta):
 
         # settings for camera observations
         self.use_camera_obs = use_camera_obs
+        if self.use_camera_obs and not self.has_offscreen_renderer:
+            raise ValueError("Camera observations require an offscreen renderer.")
         self.camera_name = camera_name
         if self.use_camera_obs and self.camera_name is None:
             raise ValueError("Must specify camera name when using camera obs")
@@ -134,6 +161,10 @@ class MujocoEnv(metaclass=EnvMeta):
                 1 if self.render_collision_mesh else 0
             )
             self.viewer.viewer.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
+
+            # hiding the overlay speeds up rendering significantly
+            self.viewer.viewer._hide_overlay = True
+
         elif self.has_offscreen_renderer:
             if self.sim._render_context_offscreen is None:
                 render_context = MjRenderContextOffscreen(self.sim)
@@ -177,8 +208,9 @@ class MujocoEnv(metaclass=EnvMeta):
     def _post_action(self, action):
         """Do any housekeeping after taking an action."""
         reward = self.reward(action)
-        terminated = self._check_terminated() or self.timestep >= self.horizon
-        self.done = terminated and not self.ignore_done
+
+        # done if number of elapsed timesteps is greater than horizon
+        self.done = (self.timestep >= self.horizon) and not self.ignore_done
         return reward, self.done, {}
 
     def reward(self, action):
@@ -230,6 +262,10 @@ class MujocoEnv(metaclass=EnvMeta):
                 1 if self.render_collision_mesh else 0
             )
             self.viewer.viewer.vopt.geomgroup[1] = 1 if self.render_visual_mesh else 0
+
+            # hiding the overlay speeds up rendering significantly
+            self.viewer.viewer._hide_overlay = True
+
         elif self.has_offscreen_renderer:
             render_context = MjRenderContextOffscreen(self.sim)
             render_context.vopt.geomgroup[0] = 1 if self.render_collision_mesh else 0
@@ -266,8 +302,10 @@ class MujocoEnv(metaclass=EnvMeta):
         """Returns True if gripper is in contact with an object."""
         return False
 
-    def _check_terminated(self):
-        """Returns True if episode is terminated."""
+    def _check_success(self):
+        """
+        Returns True if task has been completed.
+        """
         return False
 
     def close(self):

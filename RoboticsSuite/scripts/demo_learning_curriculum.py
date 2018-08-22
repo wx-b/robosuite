@@ -27,44 +27,38 @@ ICML 2002
 """
 
 import time
-from RoboticsSuite import make
 import numpy as np
-from RoboticsSuite.environments.demo_sampler import DemoSampler
+from RoboticsSuite import make
+from RoboticsSuite.wrappers import DemoSamplerWrapper
 
 
-class demo_config:
-    use_demo = False
-    adaptive = False
-    num_traj = 1
-    # params for open loop reverse curriculum
-    increment_frequency = 100
-    sample_window_width = 25
-    increment = 25
-    use_demo_prob = 0.5
-    # params for adaptive curriculum
-    mixing = ["reverse"]
-    mixing_ratio = [1]
-    ratio_step = [0]
-    curriculum_episodes = 20
-    improve_threshold = 0.1
-    curriculum_length = 50
-    history_length = 10
+if __name__ == "__main__":
 
+    env = make(
+        "SawyerLift",
+        has_renderer=True,
+        has_offscreen_renderer=False,
+        ignore_done=True,
+        use_camera_obs=False,
+        reward_shaping=True,
+        gripper_visualization=True,
+    )
 
-env = make(
-    "SawyerPickPlace",
-    ignore_done=True,
-    use_camera_obs=False,
-    reward_shaping=True,
-    single_object_mode=1,
-    demo_config=demo_config,
-)
+    env = DemoSamplerWrapper(
+        env,
+        file_path="../models/assets/demonstrations/sawyer-lift.pkl",
+        need_xml=True,
+        preload=True,
+        num_traj=-1,
+        sampling_schemes=["uniform", "random"],
+        scheme_ratios=[0.9, 0.1],
+    )
 
-for _ in range(20):
-    env.reset()
-    env.render()
-    time.sleep(1)
-    for i in range(100000):
-        obs, reward, done, _ = env.step(np.zeros(env.dof))
-        print(reward)
+    for _ in range(100):
+        env.reset()
         env.render()
+        for i in range(100):
+            obs, reward, done, _ = env.step(np.zeros(env.dof))
+            if i == 0:
+                print("reward", reward)
+            env.render()

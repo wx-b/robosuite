@@ -41,7 +41,9 @@ if __name__ == "__main__":
     world.merge(gripper, merge_body=False)
     world.worldbody.append(gripper_body)
     world.actuator.append(
-        new_actuator(joint="gripper_z_joint", act_type="position", name="gripper_z", kp="500")
+        new_actuator(
+            joint="gripper_z_joint", act_type="position", name="gripper_z", kp="500"
+        )
     )
 
     # add an object for grasping
@@ -74,14 +76,18 @@ if __name__ == "__main__":
 
     # for gravity correction
     gravity_corrected = ["gripper_z_joint"]
-    _ref_joint_vel_indexes = [sim.model.get_joint_qvel_addr(x) for x in gravity_corrected]
+    _ref_joint_vel_indexes = [
+        sim.model.get_joint_qvel_addr(x) for x in gravity_corrected
+    ]
 
     gripper_z_id = sim.model.actuator_name2id("gripper_z")
     gripper_z_low = 0.07
     gripper_z_high = -0.02
     gripper_z_is_low = False
 
-    gripper_joint_ids = [sim.model.actuator_name2id("gripper_" + x) for x in gripper.joints]
+    gripper_joint_ids = [
+        sim.model.actuator_name2id("gripper_" + x) for x in gripper.joints
+    ]
     gripper_open = [0.0115, -0.0115]
     gripper_closed = [-0.020833, 0.020833]
     gripper_is_closed = True

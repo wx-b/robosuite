@@ -2,7 +2,7 @@ import numpy as np
 import RoboticsSuite as suite
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # get the list of all environments
     envs = sorted(suite.environments.ALL_ENVS)
@@ -16,8 +16,10 @@ if __name__ == '__main__':
         print("[{}] {}".format(k, env))
     print()
     try:
-        s = input("Choose an environment to run "
-                + "(enter a number from 0 to {}): ".format(len(envs)-1))
+        s = input(
+            "Choose an environment to run "
+            + "(enter a number from 0 to {}): ".format(len(envs) - 1)
+        )
         # parse input into a number within range
         k = min(max(int(s), 0), len(envs))
     except:
@@ -25,12 +27,14 @@ if __name__ == '__main__':
         k = 0
 
     # initialize the task
-    env = suite.make(envs[k])
+    env = suite.make(
+        envs[k],
+        has_renderer=True,
+        ignore_done=True,
+        use_camera_obs=False,
+        control_freq=100,
+    )
     env.reset()
-
-    # some viewer setting to make rendering prettier
-    env.viewer.viewer._hide_overlay = True
-    env.viewer.set_camera(0)
 
     # do visualization
     for i in range(1000):

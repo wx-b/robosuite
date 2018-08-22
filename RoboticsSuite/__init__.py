@@ -8,7 +8,7 @@ from RoboticsSuite.environments.baxter_lift import BaxterLift
 from RoboticsSuite.environments.baxter_peg_in_hole import BaxterPegInHole
 from RoboticsSuite.wrappers import DataCollector
 
-__version__ = '0.1.0'
+__version__ = "0.1.0"
 __logo__ = """
       ;     /        ,--.
      ["]   ["]  ,<  |__**|

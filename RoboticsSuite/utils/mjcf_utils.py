@@ -146,9 +146,21 @@ def postprocess_model_xml(xml_str):
         if old_path is None:
             continue
         old_path_split = old_path.split("/")
-        ind = old_path_split.index("RoboticsSuite")
+
+        ### TODO: fix this hack... ###
+        # ind = old_path_split.index("RoboticsSuite")
+        ind = old_path_split.index("MujocoManip")
+
         new_path_split = path_split + old_path_split[ind + 1 :]
         new_path = "/".join(new_path_split)
+
+        ### TODO: fix this hack... ###
+        new_path = new_path.replace("/robot/", "/robots/")
+        new_path = new_path.replace("/gripper/", "/grippers/")
+        new_path = new_path.replace("/object/", "/objects/")
+        new_path = new_path.replace("/texture/", "/textures/")
+        new_path = new_path.replace("/arena/", "/arenas/")
+
         elem.set("file", new_path)
 
     return ET.tostring(root, encoding="utf8").decode("utf8")

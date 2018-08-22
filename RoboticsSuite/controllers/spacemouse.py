@@ -1,11 +1,12 @@
 """Driver class for SpaceMouse controller.
 
 This class provides a driver support to SpaceMouse on Mac OS X.
-In particular, we assume SpaceMouse Wireless by default.
+In particular, we assume you are using a SpaceMouse Wireless by default.
 
 To set up a new SpaceMouse controller:
     1. Download and install driver from https://www.3dconnexion.com/service/drivers.html
-    2. Install hidapi library through pip
+    2. Install hidapi library through pip 
+       (make sure you run uninstall hid first if it is installed).
     3. Make sure SpaceMouse is connected before running the script
     4. (Optional) Based on the model of SpaceMouse, you might need to change the
        vendor id and product id that correspond to the device.

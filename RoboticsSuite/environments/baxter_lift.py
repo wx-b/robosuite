@@ -13,7 +13,6 @@ from RoboticsSuite.models.arenas.table_arena import TableArena
 from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
 
 
-
 class BaxterLift(BaxterEnv):
     def __init__(
         self,
@@ -89,8 +88,7 @@ class BaxterLift(BaxterEnv):
 
         # load model for table top workspace
         self.mujoco_arena = TableArena(
-            table_full_size=self.table_full_size,
-            table_friction=self.table_friction
+            table_full_size=self.table_full_size, table_friction=self.table_friction
         )
         if self.use_indicator_object:
             self.mujoco_arena.add_pos_indicator()

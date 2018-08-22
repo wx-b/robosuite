@@ -3,10 +3,8 @@ This file contains the base wrapper class for Mujoco environments.
 Wrappers are useful for data collection and logging. Highly recommended.
 """
 
-from RoboticsSuite.environments.base import MujocoEnv
 
-
-class Wrapper(MujocoEnv):
+class Wrapper:
     env = None
 
     def __init__(self, env):

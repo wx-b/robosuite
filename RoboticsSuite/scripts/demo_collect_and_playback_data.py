@@ -70,7 +70,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # create original environment
-    env = RoboticsSuite.make(args.environment, ignore_done=True, use_camera_obs=False)
+    env = RoboticsSuite.make(
+        args.environment,
+        ignore_done=True,
+        use_camera_obs=False,
+        has_renderer=True,
+        control_freq=100,
+    )
     data_directory = args.directory
 
     # wrap the environment with data collection wrapper

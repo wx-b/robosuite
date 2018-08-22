@@ -14,9 +14,9 @@ from mujoco_py import load_model_from_path
 from mujoco_py import MjSim, MjViewer
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    arena_file = '../models/assets/arenas/pegs_arena.xml'
+    arena_file = "../models/assets/arenas/pegs_arena.xml"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--filepath", type=str, default=arena_file)

@@ -44,10 +44,12 @@ if __name__ == "__main__":
 
     env = RoboticsSuite.make(
         args.environment,
+        has_renderer=True,
         ignore_done=True,
         use_camera_obs=False,
         gripper_visualization=True,
         reward_shaping=True,
+        control_freq=100,
     )
 
     # function to return robot joint angles
@@ -83,4 +85,5 @@ if __name__ == "__main__":
         env.render()
         print("reward: {0:.2f}".format(reward))
 
-        if done: break
+        if done:
+            break

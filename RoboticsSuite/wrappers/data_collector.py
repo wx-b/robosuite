@@ -10,7 +10,6 @@ import numpy as np
 
 
 class DataCollector(Wrapper):
-
     def __init__(self, env, directory, collect_freq=1, flush_freq=1000):
         """Initialize the DataCollection wrapper.
 

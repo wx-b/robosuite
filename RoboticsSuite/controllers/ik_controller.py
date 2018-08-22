@@ -1,3 +1,9 @@
+"""
+NOTE: requires pybullet module.
+
+Run `pip install pybullet==1.9.5`.
+"""
+
 import numpy as np
 import pybullet as p
 from os.path import join as pjoin

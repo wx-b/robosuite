@@ -1,16 +1,3 @@
-ALL_ENVS = [
-    "BaxterLift",
-    "BaxterPegInHole",
-    "SawyerLift",
-    "SawyerNutAssembly",
-    "SawyerNutAssemblySingle",
-    "SawyerNutAssemblySquare",
-    "SawyerNutAssemblyRound",
-    "SawyerPickPlace",
-    "SawyerPickPlaceSingle",
-    "SawyerPickPlaceMilk",
-    "SawyerPickPlaceBread",
-    "SawyerPickPlaceCereal",
-    "SawyerPickPlaceCan",
-    "SawyerStack"
-]
+from .base import REGISTERED_ENVS
+
+ALL_ENVS = REGISTERED_ENVS.keys()

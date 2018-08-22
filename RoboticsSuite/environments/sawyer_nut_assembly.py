@@ -4,13 +4,16 @@ import random
 
 from RoboticsSuite.utils import RandomizationError
 from RoboticsSuite.environments.sawyer import SawyerEnv
-from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
 from RoboticsSuite.models.tasks.placement_sampler import UniformRandomPegsSampler
 import RoboticsSuite.utils as U
 
 
 class SawyerNutAssembly(SawyerEnv):
+    """
+    This class corresponds to the nut assembly task for the Sawyer robot arm.
+    """
+
     def __init__(
         self,
         gripper_type="TwoFingerGripper",
@@ -19,41 +22,116 @@ class SawyerNutAssembly(SawyerEnv):
         table_friction=None,
         use_camera_obs=True,
         use_object_obs=True,
-        camera_name="frontview",
         reward_shaping=False,
-        gripper_visualization=False,
         placement_initializer=None,
-        n_each_object=1,
-        single_object_mode=0,  # 0 full, 1 single obj with full obs 2 single with single obs
-        selected_peg=None,
-        demo_config=None,
-        **kwargs
+        single_object_mode=0,
+        nut_type=None,
+        gripper_visualization=False,
+        use_indicator_object=False,
+        has_renderer=False,
+        has_offscreen_renderer=True,
+        render_collision_mesh=False,
+        render_visual_mesh=True,
+        control_freq=10,
+        horizon=1000,
+        ignore_done=False,
+        camera_name="frontview",
+        camera_height=256,
+        camera_width=256,
+        camera_depth=False,
     ):
         """
-            @gripper_type, string that specifies the gripper type
-            @use_eef_ctrl, position controller or default joint controllder
-            @table_size, full dimension of the table
-            @table_friction, friction parameters of the table
-            @use_camera_obs, using camera observations
-            @use_object_obs, using object physics states
-            @camera_name, name of camera to be rendered
-            @camera_height, height of camera observation
-            @camera_width, width of camera observation
-            @camera_depth, rendering depth
-            @reward_shaping, using a shaping reward
-            @gripper_visualization: visualizing gripper site
+        Args:
+
+            gripper_type (str): type of gripper, used to instantiate
+                gripper models from gripper factory.
+
+            use_eef_ctrl (bool): True if using end-effector control. Using joint
+                velocities otherwise.
+
+            table_size (3-tuple): x, y, and z dimensions of the table.
+
+            table_friction (3-tuple): the three mujoco friction parameters for 
+                the table.
+
+            use_camera_obs (bool): if True, every observation includes a 
+                rendered image.
+
+            use_object_obs (bool): if True, include object (cube) information in
+                the observation.
+
+            reward_shaping (bool): if True, use dense rewards.
+
+            placement_initializer (ObjectPositionSampler instance): if provided, will
+                be used to place objects on every reset, else a UniformRandomSampler
+                is used by default.
+
+            single_object_mode (int): specifies which version of the task to do. Note that
+                the observations change accordingly.
+
+                0: corresponds to the full task with both types of nuts.
+
+                1: corresponds to an easier task with only one type of nut initialized
+                   on the table with every reset. The type is randomized on every reset.
+
+                2: corresponds to an easier task with only one type of nut initialized
+                   on the table with every reset. The type is kept constant and will not
+                   change between resets.
+
+            nut_type (string): if provided, should be either "round" or "square". Determines
+                which type of nut (round or square) will be spawned on every environment
+                reset. Only used if @single_object_mode is 2. 
+
+            gripper_visualization (bool): True if using gripper visualization.
+                Useful for teleoperation.
+
+            use_indicator_object (bool): if True, sets up an indicator object that 
+                is useful for debugging.
+
+            has_renderer (bool): If true, render the simulation state in 
+                a viewer instead of headless mode.
+
+            has_offscreen_renderer (bool): True if using off-screen rendering.
+
+            render_collision_mesh (bool): True if rendering collision meshes 
+                in camera. False otherwise.
+
+            render_visual_mesh (bool): True if rendering visual meshes 
+                in camera. False otherwise.
+
+            control_freq (float): how many control signals to receive 
+                in every second. This sets the amount of simulation time 
+                that passes between every action input.
+
+            horizon (int): Every episode lasts for exactly @horizon timesteps.
+
+            ignore_done (bool): True if never terminating the environment (ignore @horizon).
+
+            camera_name (str): name of camera to be rendered. Must be 
+                set if @use_camera_obs is True.
+
+            camera_height (int): height of camera frame.
+
+            camera_width (int): width of camera frame.
+
+            camera_depth (bool): True if rendering RGB-D, and RGB otherwise.
         """
-        # number of objects per category
-        self.n_each_object = n_each_object
+
+        # task settings
         self.single_object_mode = single_object_mode
-        self.selected_peg = selected_peg
+        self.nut_to_id = {"square": 0, "round": 1}
+        if nut_type is not None:
+            assert (
+                nut_type in self.nut_to_id.keys()
+            ), "invalid @nut_type argument - choose one of {}".format(
+                list(self.nut_to_id.keys())
+            )
+            self.nut_id = self.nut_to_id[nut_type]  # use for convenient indexing
         self.obj_to_use = None
+
         # settings for table top
         self.table_size = table_size
         self.table_friction = table_friction
-
-        # whether to show visual aid about where is the gripper
-        self.gripper_visualization = gripper_visualization
 
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
@@ -61,15 +139,6 @@ class SawyerNutAssembly(SawyerEnv):
         # reward configuration
         self.reward_shaping = reward_shaping
 
-        self.demo_config = demo_config
-        if self.demo_config is not None:
-            self.demo_sampler = DemoSampler(
-                self.demo_config.demo_file,
-                self.demo_config,
-                preload=self.demo_config.preload,
-                number=self.demo_config.num_samples,
-            )
-        self.eps_reward = 0
         # placement initilizer
         if placement_initializer:
             self.placement_initializer = placement_initializer
@@ -85,10 +154,20 @@ class SawyerNutAssembly(SawyerEnv):
         super().__init__(
             gripper_type=gripper_type,
             use_eef_ctrl=use_eef_ctrl,
+            gripper_visualization=gripper_visualization,
+            use_indicator_object=use_indicator_object,
+            has_renderer=has_renderer,
+            has_offscreen_renderer=has_offscreen_renderer,
+            render_collision_mesh=render_collision_mesh,
+            render_visual_mesh=render_visual_mesh,
+            control_freq=control_freq,
+            horizon=horizon,
+            ignore_done=ignore_done,
             use_camera_obs=use_camera_obs,
             camera_name=camera_name,
-            gripper_visualization=gripper_visualization,
-            **kwargs
+            camera_height=camera_height,
+            camera_width=camera_width,
+            camera_depth=camera_depth,
         )
 
     def _load_model(self):
@@ -109,10 +188,9 @@ class SawyerNutAssembly(SawyerEnv):
         self.ngeoms = [5, 9]
 
         lst = []
-        for i in range(self.n_each_object):
-            for j in range(len(self.ob_inits)):
-                ob = self.ob_inits[j]()
-                lst.append((str(self.item_names[j]) + "{}".format(i), ob))
+        for i in range(len(self.ob_inits)):
+            ob = self.ob_inits[i]()
+            lst.append((str(self.item_names[i]) + "0", ob))
 
         self.mujoco_objects = OrderedDict(lst)
         self.n_objects = len(self.mujoco_objects)
@@ -131,6 +209,11 @@ class SawyerNutAssembly(SawyerEnv):
         self.table_size = self.model.table_size
 
     def clear_objects(self, obj):
+        """
+        Clears objects with name @obj out of the task space. This is useful
+        for supporting task modes with single types of objects, as in 
+        @self.single_object_mode without changing the model definition.
+        """
         for obj_name, obj_mjcf in self.mujoco_objects.items():
             if obj_name == obj:
                 continue
@@ -146,16 +229,14 @@ class SawyerNutAssembly(SawyerEnv):
         self.obj_body_id = {}
         self.obj_geom_id = {}
 
-        for i in range(self.n_each_object):
-            for j in range(len(self.ob_inits)):
-                obj_str = str(self.item_names[j]) + "{}".format(i)
-                self.obj_body_id[obj_str] = self.sim.model.body_name2id(obj_str)
-                geom_ids = []
-                for k in range(self.ngeoms[j]):
-                    geom_ids.append(
-                        self.sim.model.geom_name2id(obj_str + "-{}".format(k))
-                    )
-                self.obj_geom_id[obj_str] = geom_ids
+        for i in range(len(self.ob_inits)):
+            obj_str = str(self.item_names[i]) + "0"
+            self.obj_body_id[obj_str] = self.sim.model.body_name2id(obj_str)
+            geom_ids = []
+            for j in range(self.ngeoms[i]):
+                geom_ids.append(self.sim.model.geom_name2id(obj_str + "-{}".format(j)))
+            self.obj_geom_id[obj_str] = geom_ids
+
         # information of objects
         self.object_names = list(self.mujoco_objects.keys())
         self.object_site_ids = [
@@ -173,61 +254,29 @@ class SawyerNutAssembly(SawyerEnv):
         ]
 
         # keep track of which objects are on their corresponding pegs
-        self.objects_on_pegs = np.zeros((self.n_each_object, len(self.ob_inits)))
+        self.objects_on_pegs = np.zeros(len(self.ob_inits))
 
-    def _reset_from_random(self):
-        # inherited class should reset positions of objects
+    def _reset_internal(self):
+        super()._reset_internal()
+
+        # reset positions of objects, and move objects out of the scene depending on the mode
         self.model.place_objects()
         if self.single_object_mode == 1:
             self.obj_to_use = (random.choice(self.item_names) + "{}").format(0)
             self.clear_objects(self.obj_to_use)
         elif self.single_object_mode == 2:
-            self.obj_to_use = (self.item_names[self.selected_peg] + "{}").format(0)
+            self.obj_to_use = (self.item_names[self.nut_id] + "{}").format(0)
             self.clear_objects(self.obj_to_use)
 
-    def _reset_internal(self):
-        super()._reset_internal()
-        if self.demo_config is not None:
-            self.demo_sampler.log_score(self.eps_reward)
-            state = self.demo_sampler.sample()
-            if state is None:
-                self._reset_from_random()
-            else:
-                self.sim.set_state_from_flattened(state)
-                self.sim.forward()
-        else:
-            self._reset_from_random()
-
     def reward(self, action=None):
+        # compute sparse rewards
+        self._check_success()
+        reward = np.sum(self.objects_on_pegs)
+
+        # add in shaped rewards
         if self.reward_shaping:
-            r_goal = 0.
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            for i in range(self.n_each_object):
-                for j in range(len(self.ob_inits)):
-                    obj_str = str(self.item_names[j]) + "{}".format(i)
-                    obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
-                    dist = np.linalg.norm(gripper_site_pos - obj_pos)
-                    r_reach = 1 - np.tanh(10.0 * dist)
-                    r_obj_goal = int(self.on_peg(obj_pos, j) and r_reach < 0.6)
-                    self.objects_on_pegs[i, j] = r_obj_goal
-                    r_goal += r_obj_goal
             staged_rewards = self.staged_rewards()
-            return r_goal + max(staged_rewards)
-
-        else:
-            # +1 for every object on a peg
-            reward = 0
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            for i in range(self.n_each_object):
-                for j in range(len(self.ob_inits)):
-                    r_on_peg, r_lift = 0, 0
-                    obj_str = str(self.item_names[j]) + "{}".format(i)
-                    obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
-                    dist = np.linalg.norm(gripper_site_pos - obj_pos)
-                    r_reach = 1 - np.tanh(10.0 * dist)
-                    if r_reach < 0.6 and self.on_peg(obj_pos, j):
-                        reward += 1.
-
+            reward += max(staged_rewards)
         return reward
 
     def staged_rewards(self):
@@ -247,15 +296,14 @@ class SawyerNutAssembly(SawyerEnv):
         geoms_to_grasp = []
         geoms_by_array = []
 
-        for i in range(self.n_each_object):
-            for j in range(len(self.ob_inits)):
-                if self.objects_on_pegs[i, j]:
-                    continue
-                obj_str = str(self.item_names[j]) + "{}".format(i)
-                names_to_reach.append(obj_str)
-                objs_to_reach.append(self.obj_body_id[obj_str])
-                geoms_to_grasp.extend(self.obj_geom_id[obj_str])
-                geoms_by_array.append(self.obj_geom_id[obj_str])
+        for i in range(len(self.ob_inits)):
+            if self.objects_on_pegs[i]:
+                continue
+            obj_str = str(self.item_names[i]) + "0"
+            names_to_reach.append(obj_str)
+            objs_to_reach.append(self.obj_body_id[obj_str])
+            geoms_to_grasp.extend(self.obj_geom_id[obj_str])
+            geoms_by_array.append(self.obj_geom_id[obj_str])
 
         ### reaching reward governed by distance to closest object ###
         r_reach = 0.
@@ -337,8 +385,16 @@ class SawyerNutAssembly(SawyerEnv):
 
     def _get_observation(self):
         """
-            Adds hand_position, hand_velocity or 
-            (current_position, current_velocity, target_velocity) of all targets
+        Returns an OrderedDict containing observations [(name_string, np.array), ...].
+        
+        Important keys:
+            robot-state: contains robot-centric information.
+            object-state: requires @self.use_object_obs to be True.
+                contains object-centric information.
+            image: requires @self.use_camera_obs to be True.
+                contains a rendered frame from the simulation.
+            depth: requires @self.use_camera_obs and @self.camera_depth to be True.
+                contains a rendered depth map from the simulation
         """
         di = super()._get_observation()
         if self.use_camera_obs:
@@ -356,41 +412,37 @@ class SawyerNutAssembly(SawyerEnv):
         # low-level object information
         if self.use_object_obs:
 
-            ### TODO: everything is in world frame right now...
+            # remember the keys to collect into object info
+            object_state_keys = []
 
-            # gripper orientation
-            # di['gripper_pos'] = self.sim.data.get_body_xpos('right_hand')
-            di["eef_pos"] = self.sim.data.site_xpos[self.eef_site_id]
-            di["eef_quat"] = U.convert_quat(
-                self.sim.data.get_body_xquat("right_hand"), to="xyzw"
-            )
-
+            # for conversion to relative gripper frame
             gripper_pose = U.pose2mat((di["eef_pos"], di["eef_quat"]))
             world_pose_in_gripper = U.pose_inv(gripper_pose)
 
-            ### TODO: should we transform these poses to robot base frame?
-            for i in range(self.n_each_object):
-                for j in range(len(self.item_names_org)):
+            for i in range(len(self.item_names_org)):
 
-                    if self.single_object_mode == 2 and self.selected_peg != j:
-                        # skip observations
-                        continue
+                if self.single_object_mode == 2 and self.nut_id != i:
+                    # skip observations
+                    continue
 
-                    obj_str = str(self.item_names_org[j]) + "{}".format(i)
-                    obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
-                    obj_quat = U.convert_quat(
-                        self.sim.data.body_xquat[self.obj_body_id[obj_str]], to="xyzw"
-                    )
-                    di["{}_pos".format(obj_str)] = obj_pos
-                    di["{}_quat".format(obj_str)] = obj_quat
+                obj_str = str(self.item_names_org[i]) + "0"
+                obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
+                obj_quat = U.convert_quat(
+                    self.sim.data.body_xquat[self.obj_body_id[obj_str]], to="xyzw"
+                )
+                di["{}_pos".format(obj_str)] = obj_pos
+                di["{}_quat".format(obj_str)] = obj_quat
 
-                    object_pose = U.pose2mat((obj_pos, obj_quat))
-                    rel_pose = U.pose_in_A_to_pose_in_B(
-                        object_pose, world_pose_in_gripper
-                    )
-                    rel_pos, rel_quat = U.mat2pose(rel_pose)
-                    di["{}_to_eef_pos".format(obj_str)] = rel_pos
-                    di["{}_to_eef_quat".format(obj_str)] = rel_quat
+                object_pose = U.pose2mat((obj_pos, obj_quat))
+                rel_pose = U.pose_in_A_to_pose_in_B(object_pose, world_pose_in_gripper)
+                rel_pos, rel_quat = U.mat2pose(rel_pose)
+                di["{}_to_eef_pos".format(obj_str)] = rel_pos
+                di["{}_to_eef_quat".format(obj_str)] = rel_quat
+
+                object_state_keys.append("{}_pos".format(obj_str))
+                object_state_keys.append("{}_quat".format(obj_str))
+                object_state_keys.append("{}_to_eef_pos".format(obj_str))
+                object_state_keys.append("{}_to_eef_quat".format(obj_str))
 
             if self.single_object_mode == 1:
                 # zero out other objs
@@ -402,17 +454,8 @@ class SawyerNutAssembly(SawyerEnv):
                         di["{}_quat".format(obj_str)] *= 0.0
                         di["{}_to_eef_pos".format(obj_str)] *= 0.0
                         di["{}_to_eef_quat".format(obj_str)] *= 0.0
-        # proprioception
-        di["proprio"] = np.concatenate(
-            [
-                np.sin(di["joint_pos"]),
-                np.cos(di["joint_pos"]),
-                di["joint_vel"],
-                di["gripper_pos"],
-                di["eef_pos"],
-                di["eef_quat"],
-            ]
-        )
+
+            di["object-state"] = np.concatenate([di[k] for k in object_state_keys])
 
         return di
 
@@ -430,11 +473,22 @@ class SawyerNutAssembly(SawyerEnv):
                 break
         return collision
 
-    def _check_terminated(self):
+    def _check_success(self):
         """
-        Returns True if task is successfully completed
+        Returns True if task has been completed.
         """
-        return False
+
+        # remember objects that are on the correct pegs
+        gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
+        for i in range(len(self.ob_inits)):
+            obj_str = str(self.item_names[i]) + "0"
+            obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
+            dist = np.linalg.norm(gripper_site_pos - obj_pos)
+            r_reach = 1 - np.tanh(10.0 * dist)
+            self.objects_on_pegs[i] = int(self.on_peg(obj_pos, i) and r_reach < 0.6)
+
+        # returns True if all objects are on correct pegs
+        return np.sum(self.objects_on_pegs) == len(self.ob_inits)
 
     def _gripper_visualization(self):
         """
@@ -469,7 +523,7 @@ class SawyerNutAssembly(SawyerEnv):
 
 class SawyerNutAssemblySingle(SawyerNutAssembly):
     """
-    Easier version of task - place one round nut into its peg.
+    Easier version of task - place either one round nut or one square nut into its peg.
     """
 
     def __init__(self, **kwargs):
@@ -484,9 +538,9 @@ class SawyerNutAssemblySquare(SawyerNutAssembly):
 
     def __init__(self, **kwargs):
         assert (
-            "single_object_mode" not in kwargs and "selected_peg" not in kwargs
+            "single_object_mode" not in kwargs and "nut_type" not in kwargs
         ), "invalid set of arguments"
-        super().__init__(single_object_mode=2, selected_peg=0, **kwargs)
+        super().__init__(single_object_mode=2, nut_type="square", **kwargs)
 
 
 class SawyerNutAssemblyRound(SawyerNutAssembly):
@@ -496,6 +550,6 @@ class SawyerNutAssemblyRound(SawyerNutAssembly):
 
     def __init__(self, **kwargs):
         assert (
-            "single_object_mode" not in kwargs and "selected_peg" not in kwargs
+            "single_object_mode" not in kwargs and "nut_type" not in kwargs
         ), "invalid set of arguments"
-        super().__init__(single_object_mode=2, selected_peg=1, **kwargs)
+        super().__init__(single_object_mode=2, nut_type="round", **kwargs)

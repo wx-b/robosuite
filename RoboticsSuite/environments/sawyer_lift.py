@@ -6,13 +6,16 @@ from RoboticsSuite.utils import RandomizationError
 from RoboticsSuite.utils import postprocess_model_xml
 from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 from RoboticsSuite.environments.sawyer import SawyerEnv
-from RoboticsSuite.environments.demo_sampler import DemoSampler
 from RoboticsSuite.models import *
 from RoboticsSuite.models.arenas.table_arena import TableArena
 from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
 
 
 class SawyerLift(SawyerEnv):
+    """
+    This class corresponds to the lifting task for the Sawyer robot arm.
+    """
+
     def __init__(
         self,
         gripper_type="TwoFingerGripper",
@@ -21,25 +24,81 @@ class SawyerLift(SawyerEnv):
         table_friction=(1., 5e-3, 1e-4),
         use_camera_obs=True,
         use_object_obs=True,
-        camera_name="frontview",
         reward_shaping=False,
-        gripper_visualization=False,
         placement_initializer=None,
-        demo_config=None,
-        **kwargs
+        gripper_visualization=False,
+        use_indicator_object=False,
+        has_renderer=False,
+        has_offscreen_renderer=True,
+        render_collision_mesh=False,
+        render_visual_mesh=True,
+        control_freq=10,
+        horizon=1000,
+        ignore_done=False,
+        camera_name="frontview",
+        camera_height=256,
+        camera_width=256,
+        camera_depth=False,
     ):
         """
-            @gripper_type, string that specifies the gripper type
-            @use_eef_ctrl, position controller or default joint controllder
-            @table_full_size, full dimension of the table
-            @table_friction, friction parameters of the table
-            @use_camera_obs, using camera observations
-            @use_object_obs, using object physics states
-            @camera_name, name of camera to be rendered
-            @camera_height, height of camera observation
-            @camera_width, width of camera observation
-            @camera_depth, rendering depth
-            @reward_shaping, using a shaping reward
+        Args:
+
+            gripper_type (str): type of gripper, used to instantiate
+                gripper models from gripper factory.
+
+            use_eef_ctrl (bool): True if using end-effector control. Using joint
+                velocities otherwise.
+
+            table_full_size (3-tuple): x, y, and z dimensions of the table.
+
+            table_friction (3-tuple): the three mujoco friction parameters for 
+                the table.
+
+            use_camera_obs (bool): if True, every observation includes a 
+                rendered image.
+
+            use_object_obs (bool): if True, include object (cube) information in
+                the observation.
+
+            reward_shaping (bool): if True, use dense rewards.
+
+            placement_initializer (ObjectPositionSampler instance): if provided, will
+                be used to place objects on every reset, else a UniformRandomSampler
+                is used by default.
+
+            gripper_visualization (bool): True if using gripper visualization.
+                Useful for teleoperation.
+
+            use_indicator_object (bool): if True, sets up an indicator object that 
+                is useful for debugging.
+
+            has_renderer (bool): If true, render the simulation state in 
+                a viewer instead of headless mode.
+
+            has_offscreen_renderer (bool): True if using off-screen rendering.
+
+            render_collision_mesh (bool): True if rendering collision meshes 
+                in camera. False otherwise.
+
+            render_visual_mesh (bool): True if rendering visual meshes 
+                in camera. False otherwise.
+
+            control_freq (float): how many control signals to receive 
+                in every second. This sets the amount of simulation time 
+                that passes between every action input.
+
+            horizon (int): Every episode lasts for exactly @horizon timesteps.
+
+            ignore_done (bool): True if never terminating the environment (ignore @horizon).
+
+            camera_name (str): name of camera to be rendered. Must be 
+                set if @use_camera_obs is True.
+
+            camera_height (int): height of camera frame.
+
+            camera_width (int): width of camera frame.
+
+            camera_depth (bool): True if rendering RGB-D, and RGB otherwise.
         """
 
         # settings for table top
@@ -49,18 +108,8 @@ class SawyerLift(SawyerEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
-        # whether to show visual aid about where is the gripper
-        self.gripper_visualization = gripper_visualization
-
         # reward configuration
         self.reward_shaping = reward_shaping
-
-        self.demo_config = demo_config
-        if self.demo_config is not None:
-            self.demo_sampler = DemoSampler(
-                "demonstrations/sawyer-lift.pkl", self.demo_config, need_xml=True
-            )
-        self.eps_reward = 0
 
         # object placement initializer
         if placement_initializer:
@@ -76,20 +125,32 @@ class SawyerLift(SawyerEnv):
         super().__init__(
             gripper_type=gripper_type,
             use_eef_ctrl=use_eef_ctrl,
+            gripper_visualization=gripper_visualization,
+            use_indicator_object=use_indicator_object,
+            has_renderer=has_renderer,
+            has_offscreen_renderer=has_offscreen_renderer,
+            render_collision_mesh=render_collision_mesh,
+            render_visual_mesh=render_visual_mesh,
+            control_freq=control_freq,
+            horizon=horizon,
+            ignore_done=ignore_done,
             use_camera_obs=use_camera_obs,
             camera_name=camera_name,
-            gripper_visualization=gripper_visualization,
-            **kwargs
+            camera_height=camera_height,
+            camera_width=camera_width,
+            camera_depth=camera_depth,
         )
 
     def _load_model(self):
+        """
+        Loads an xml model, puts it in self.model
+        """
         super()._load_model()
         self.mujoco_robot.set_base_xpos([0, 0, 0])
 
         # load model for table top workspace
         self.mujoco_arena = TableArena(
-            table_full_size=self.table_full_size,
-            table_friction=self.table_friction,
+            table_full_size=self.table_full_size, table_friction=self.table_friction
         )
 
         # The sawyer robot has a pedestal, we want to align it with the table
@@ -113,43 +174,53 @@ class SawyerLift(SawyerEnv):
         self.model.place_objects()
 
     def _get_reference(self):
+        """
+        Set up references to important components. A reference is typically an
+        index or a list of indices that point to the corresponding elements
+        in a flatten array, which is how MuJoCo stores physical simulation data.
+        """
         super()._get_reference()
         self.cube_body_id = self.sim.model.body_name2id("cube")
         self.l_finger_geom_id = self.sim.model.geom_name2id("l_fingertip_g0")
         self.r_finger_geom_id = self.sim.model.geom_name2id("r_fingertip_g0")
         self.cube_geom_id = self.sim.model.geom_name2id("cube")
 
-    def _reset_from_random(self):
-        # inherited class should reset positions of objects
+    def _reset_internal(self):
+        """
+        Reset simulation internal configurations.
+        """
+        super()._reset_internal()
+
+        # reset positions of objects
         self.model.place_objects()
+
         # reset joint positions
         init_pos = np.array([-0.5538, -0.8208, 0.4155, 1.8409, -0.4955, 0.6482, 1.9628])
         init_pos += np.random.randn(init_pos.shape[0]) * 0.02
         self.sim.data.qpos[self._ref_joint_pos_indexes] = np.array(init_pos)
 
-    def _reset_internal(self):
-        super()._reset_internal()
-        if self.demo_config is not None:
-            self.demo_sampler.log_score(self.eps_reward)
-            state = self.demo_sampler.sample()
-            if state is None:
-                self._reset_from_random()
-            else:
-                # state, xml = self.demo_sampler.uniform_sample()
-                state, xml = state
-                self.reset_from_xml_string(xml)
-                self.sim.set_state_from_flattened(state)
-                self.sim.forward()
-        else:
-            self._reset_from_random()
-
     def reward(self, action=None):
-        reward = 0
-        cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
-        table_height = self.table_full_size[2]
+        """
+        Reward function for the task. 
 
-        # cube is higher than the table top above a margin
-        if cube_height > table_height + 0.04:
+        The dense reward has three components.
+
+            Reaching: in [0, 1], to encourage the arm to reach the cube
+            Grasping: in {0, 0.25}, non-zero if arm is grasping the cube
+            Lifting: in {0, 1}, non-zero if arm has lifted the cube
+
+        The sparse reward only consists of the lifting component.
+
+        Args:
+            action (np array): unused for this task 
+
+        Returns:
+            reward (float): the reward
+        """
+        reward = 0.
+
+        # sparse completion reward
+        if self._check_success():
             reward = 1.0
 
         # use a shaping reward
@@ -178,10 +249,21 @@ class SawyerLift(SawyerEnv):
             if touch_left_finger and touch_right_finger:
                 reward += 0.25
 
-        self.eps_reward = max(reward, self.eps_reward)
         return reward
 
     def _get_observation(self):
+        """
+        Returns an OrderedDict containing observations [(name_string, np.array), ...].
+        
+        Important keys:
+            robot-state: contains robot-centric information.
+            object-state: requires @self.use_object_obs to be True.
+                contains object-centric information.
+            image: requires @self.use_camera_obs to be True.
+                contains a rendered frame from the simulation.
+            depth: requires @self.use_camera_obs and @self.camera_depth to be True.
+                contains a rendered depth map from the simulation
+        """
         di = super()._get_observation()
         # camera observations
         if self.use_camera_obs:
@@ -207,22 +289,11 @@ class SawyerLift(SawyerEnv):
             di["cube_quat"] = cube_quat
 
             gripper_site_pos = np.array(self.sim.data.site_xpos[self.eef_site_id])
-            di["gripper_site_pos"] = gripper_site_pos
             di["gripper_to_cube"] = gripper_site_pos - cube_pos
 
-            di["low-level"] = np.concatenate(
-                [cube_pos, cube_quat, di["gripper_to_cube"], di["gripper_site_pos"]]
+            di["object-state"] = np.concatenate(
+                [cube_pos, cube_quat, di["gripper_to_cube"]]
             )
-
-        # proprioception
-        di["proprio"] = np.concatenate(
-            [
-                np.sin(di["joint_pos"]),
-                np.cos(di["joint_pos"]),
-                di["joint_vel"],
-                di["gripper_pos"],
-            ]
-        )
 
         return di
 
@@ -242,14 +313,15 @@ class SawyerLift(SawyerEnv):
                 break
         return collision
 
-    def _check_terminated(self):
+    def _check_success(self):
         """
-        Returns True if task is successfully completed
+        Returns True if task has been completed.
         """
-        # cube is higher than the table top above a margin
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
         table_height = self.table_full_size[2]
-        return cube_height > table_height + 0.10
+
+        # cube is higher than the table top above a margin
+        return cube_height > table_height + 0.04
 
     def _gripper_visualization(self):
         """

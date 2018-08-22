@@ -7,9 +7,9 @@ from RoboticsSuite.utils.mjcf_utils import array_to_string, string_to_array
 class PegsArena(Arena):
     """Workspace that contains a tabletop with two fixed pegs."""
 
-    def __init__(self,
-                 table_full_size=(0.45, 0.69, 0.82),
-                 table_friction=(1, 0.005, 0.0001)):
+    def __init__(
+        self, table_full_size=(0.45, 0.69, 0.82), table_friction=(1, 0.005, 0.0001)
+    ):
         """
         Args:
             table_full_size: full dimensions of the table

@@ -32,7 +32,7 @@ class Robot(MujocoXML):
         arm_subtree = self.worldbody.find(".//body[@name='{}']".format(arm_name))
 
         for actuator in gripper.actuator:
-            
+
             if actuator.get("name") is None:
                 raise XMLError("Actuator has no name")
 

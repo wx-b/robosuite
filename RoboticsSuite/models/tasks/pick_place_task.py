@@ -105,7 +105,7 @@ class PickPlaceTask(Task):
 
                 # make sure objects do not overlap
                 object_xy = np.array([object_x, object_y, 0])
-                pos = (self.bin_offset - bottom_offset + object_xy)
+                pos = self.bin_offset - bottom_offset + object_xy
                 location_valid = True
                 for pos2, r in placed_objects:
                     dist = np.linalg.norm(pos[:2] - pos2[:2], np.inf)
@@ -148,10 +148,9 @@ class PickPlaceTask(Task):
             bin_y_high = bin_y_low + bin_size[1] / 2
             bottom_offset = obj_mjcf.get_bottom_offset()
 
-            bin_center = np.array([
-                bin_x_low + bin_x_high,
-                bin_y_low + bin_y_high,
-                2 * bin_pos[2]]) / 2.0
+            bin_range = [bin_x_low + bin_x_high, bin_y_low + bin_y_high, 2 * bin_pos[2]]
+            bin_center = np.array(bin_range) / 2.0
+
             pos = bin_center - bottom_offset
             self.visual_obj_mjcf[index].set("pos", array_to_string(pos))
             index += 1

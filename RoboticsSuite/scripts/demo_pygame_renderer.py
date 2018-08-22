@@ -24,7 +24,6 @@ if __name__ == "__main__":
     parser.add_argument("--height", type=int, default=384)
     args = parser.parse_args()
 
-
     width = args.width
     height = args.height
     screen = pygame.display.set_mode((width, height))

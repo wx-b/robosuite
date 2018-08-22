@@ -43,8 +43,7 @@ if __name__ == "__main__":
     bullet_data_path = os.path.join(RoboticsSuite.__path__[0], urdf_file_path)
 
     ik_controller = BaxterIKController(
-        bullet_data_path=bullet_data_path,
-        robot_jpos_getter=robot_jpos_getter,
+        bullet_data_path=bullet_data_path, robot_jpos_getter=robot_jpos_getter
     )
 
     gripper_controls = [[1., -1.], [-1., 1.]]

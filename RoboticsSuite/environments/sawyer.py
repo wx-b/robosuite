@@ -15,16 +15,63 @@ class SawyerEnv(MujocoEnv):
         use_eef_ctrl=False,
         gripper_visualization=False,
         use_indicator_object=False,
-        **kwargs
+        has_renderer=False,
+        has_offscreen_renderer=True,
+        render_collision_mesh=False,
+        render_visual_mesh=True,
+        control_freq=10,
+        horizon=1000,
+        ignore_done=False,
+        use_camera_obs=False,
+        camera_name="frontview",
+        camera_height=256,
+        camera_width=256,
+        camera_depth=False,
     ):
         """
         Args:
             gripper_type (str): type of gripper, used to instantiate
                 gripper models from gripper factory.
-            use_eef_ctrl: True if using end-effector control. Using joint
+
+            use_eef_ctrl (bool): True if using end-effector control. Using joint
                 velocities otherwise.
-            gripper_visualization: True if using gripper visualization.
+
+            gripper_visualization (bool): True if using gripper visualization.
                 Useful for teleoperation.
+
+            use_indicator_object (bool): if True, sets up an indicator object that 
+                is useful for debugging.
+
+            has_renderer (bool): If true, render the simulation state in 
+                a viewer instead of headless mode.
+
+            has_offscreen_renderer (bool): True if using off-screen rendering.
+
+            render_collision_mesh (bool): True if rendering collision meshes 
+                in camera. False otherwise.
+
+            render_visual_mesh (bool): True if rendering visual meshes 
+                in camera. False otherwise.
+
+            control_freq (float): how many control signals to receive 
+                in every second. This sets the amount of simulation time 
+                that passes between every action input.
+
+            horizon (int): Every episode lasts for exactly @horizon timesteps.
+
+            ignore_done (bool): True if never terminating the environment (ignore @horizon).
+
+            use_camera_obs (bool): if True, every observation includes a 
+                rendered image.
+
+            camera_name (str): name of camera to be rendered. Must be 
+                set if @use_camera_obs is True.
+
+            camera_height (int): height of camera frame.
+
+            camera_width (int): width of camera frame.
+
+            camera_depth (bool): True if rendering RGB-D, and RGB otherwise.
         """
 
         self.has_gripper = gripper_type is not None
@@ -32,7 +79,20 @@ class SawyerEnv(MujocoEnv):
         self.use_eef_ctrl = use_eef_ctrl
         self.gripper_visualization = gripper_visualization
         self.use_indicator_object = use_indicator_object
-        super().__init__(**kwargs)
+        super().__init__(
+            has_renderer=has_renderer,
+            has_offscreen_renderer=has_offscreen_renderer,
+            render_collision_mesh=render_collision_mesh,
+            render_visual_mesh=render_visual_mesh,
+            control_freq=control_freq,
+            horizon=horizon,
+            ignore_done=ignore_done,
+            use_camera_obs=use_camera_obs,
+            camera_name=camera_name,
+            camera_height=camera_height,
+            camera_width=camera_height,
+            camera_depth=camera_depth,
+        )
 
         # setup mocap if necessary
         if self.use_eef_ctrl:
@@ -72,10 +132,12 @@ class SawyerEnv(MujocoEnv):
         ]
 
         if self.use_indicator_object:
-            self._ref_indicator_pos_low, self._ref_indicator_pos_high = \
-                self.sim.model.get_joint_qpos_addr("pos_indicator")
-            self._ref_indicator_vel_low, self._ref_indicator_vel_high = \
-                self.sim.model.get_joint_qvel_addr("pos_indicator")
+            ind_qpos = self.sim.model.get_joint_qpos_addr("pos_indicator")
+            self._ref_indicator_pos_low, self._ref_indicator_pos_high = ind_qpos
+
+            ind_qvel = self.sim.model.get_joint_qvel_addr("pos_indicator")
+            self._ref_indicator_vel_low, self._ref_indicator_vel_high = ind_qvel
+
             self.indicator_id = self.sim.model.body_name2id("pos_indicator")
 
         # indices for grippers in qpos, qvel
@@ -116,7 +178,7 @@ class SawyerEnv(MujocoEnv):
         """Set 3d position of indicator object to @pos."""
         if self.use_indicator_object:
             index = self._ref_indicator_pos_low
-            self.sim.data.qpos[index:index+3] = pos
+            self.sim.data.qpos[index : index + 3] = pos
 
     # overrides MujocoEnv method
     def _pre_action(self, action):
@@ -195,7 +257,13 @@ class SawyerEnv(MujocoEnv):
             self.sim.step()
 
     def _get_observation(self):
-        """Add proprioceptive features of joints and grippers to observations."""
+        """
+        Returns an OrderedDict containing observations [(name_string, np.array), ...].
+        
+        Important keys:
+            robot-state: contains robot-centric information.
+        """
+
         di = super()._get_observation()
         # proprioceptive features
         di["joint_pos"] = np.array(
@@ -204,13 +272,30 @@ class SawyerEnv(MujocoEnv):
         di["joint_vel"] = np.array(
             [self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes]
         )
+
+        robot_states = [
+            np.sin(di["joint_pos"]),
+            np.cos(di["joint_pos"]),
+            di["joint_vel"],
+        ]
+
         if self.has_gripper:
-            di["gripper_pos"] = np.array(
+            di["gripper_qpos"] = np.array(
                 [self.sim.data.qpos[x] for x in self._ref_gripper_joint_pos_indexes]
             )
-            di["gripper_vel"] = np.array(
+            di["gripper_qvel"] = np.array(
                 [self.sim.data.qvel[x] for x in self._ref_gripper_joint_vel_indexes]
             )
+
+            di["eef_pos"] = self.sim.data.site_xpos[self.eef_site_id]
+            di["eef_quat"] = U.convert_quat(
+                self.sim.data.get_body_xquat("right_hand"), to="xyzw"
+            )
+
+            # add in gripper information
+            robot_states.extend([di["gripper_qpos"], di["eef_pos"], di["eef_quat"]])
+
+        di["robot-state"] = np.concatenate(robot_states)
         return di
 
     @property
