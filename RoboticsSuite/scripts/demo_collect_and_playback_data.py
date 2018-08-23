@@ -1,5 +1,5 @@
 """
-Record trajectory data with the DataCollector wrapper and play them back.
+Record trajectory data with the DataCollectionWrapper wrapper and play them back.
 
 Example:
     $ python demo_collect_and_playback_data.py --environment BaxterLift
@@ -11,14 +11,14 @@ from glob import glob
 import numpy as np
 
 import RoboticsSuite
-from RoboticsSuite import DataCollector
+from RoboticsSuite import DataCollectionWrapper
 
 
 def collect_random_trajectory(env, timesteps=1000):
     """Run a random policy to collect trajectories.
 
     The rollout trajectory is saved to files in npz format.
-    Modify the DataCollector wrapper to add new fields or change data formats.
+    Modify the DataCollectionWrapper wrapper to add new fields or change data formats.
     """
 
     obs = env.reset()
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     data_directory = args.directory
 
     # wrap the environment with data collection wrapper
-    env = DataCollector(env, data_directory)
+    env = DataCollectionWrapper(env, data_directory)
 
     # testing to make sure multiple env.reset calls don't create multiple directories
     env.reset()

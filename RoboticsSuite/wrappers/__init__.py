@@ -1,5 +1,5 @@
 from RoboticsSuite.wrappers.wrapper import Wrapper
-from RoboticsSuite.wrappers.data_collector import DataCollector
+from RoboticsSuite.wrappers.data_collection_wrapper import DataCollectionWrapper
 from RoboticsSuite.wrappers.demo_sampler_wrapper import DemoSamplerWrapper
 
 try:

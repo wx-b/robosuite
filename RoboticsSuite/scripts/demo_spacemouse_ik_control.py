@@ -30,7 +30,7 @@ import numpy as np
 
 import RoboticsSuite
 from RoboticsSuite.models import *
-from RoboticsSuite.wrappers import DataCollector
+from RoboticsSuite.wrappers import DataCollectionWrapper
 from RoboticsSuite.controllers.spacemouse import SpaceMouse
 from RoboticsSuite.controllers.ik_controller import IKController
 

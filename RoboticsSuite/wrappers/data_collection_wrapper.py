@@ -9,7 +9,7 @@ import time
 import numpy as np
 
 
-class DataCollector(Wrapper):
+class DataCollectionWrapper(Wrapper):
     def __init__(self, env, directory, collect_freq=1, flush_freq=1000):
         """Initialize the DataCollection wrapper.
 
@@ -34,7 +34,7 @@ class DataCollector(Wrapper):
         self.flush_freq = flush_freq
 
         if not os.path.exists(directory):
-            print("DataCollector: making new directory at {}".format(directory))
+            print("DataCollectionWrapper: making new directory at {}".format(directory))
             os.makedirs(directory)
 
         # store logging directory for current episode
@@ -70,7 +70,7 @@ class DataCollector(Wrapper):
         t1, t2 = str(time.time()).split(".")
         self.ep_directory = os.path.join(self.directory, "ep_{}_{}".format(t1, t2))
         assert not os.path.exists(self.ep_directory)
-        print("DataCollector: making new directory at {}".format(self.ep_directory))
+        print("DataCollectionWrapper: making new directory at {}".format(self.ep_directory))
         os.makedirs(self.ep_directory)
 
         # save the model xml
