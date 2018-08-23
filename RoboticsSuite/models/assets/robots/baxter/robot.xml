@@ -1,5 +1,5 @@
 <mujoco model="baxter">
-  <compiler coordinate="local" angle="radian" meshdir="meshes/" strippath="false" />
+  <compiler coordinate="local" angle="radian" strippath="false" />
   <size njmax="795" nconmax="250" nstack="631875" />
   <asset>
     <mesh name="base_link" file="meshes/torso/base_link.STL" />
