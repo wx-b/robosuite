@@ -14,34 +14,41 @@ from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
 
 
 class BaxterLift(BaxterEnv):
+    """
+    This class corresponds to the bimanual lifting task for the Baxter robot.
+    """
+
     def __init__(
         self,
-        gripper_type="TwoFingerGripper",
-        use_eef_ctrl=False,
+        gripper_type_right="TwoFingerGripper",
+        gripper_type_left="LeftTwoFingerGripper",
         table_full_size=(0.8, 0.8, 0.8),
         table_friction=(1., 5e-3, 1e-4),
-        use_camera_obs=True,
         use_object_obs=True,
-        camera_name="frontview",
         reward_shaping=True,
-        gripper_visualization=False,
-        demo_config=None,
         **kwargs
     ):
         """
-            @gripper_type, string that specifies the gripper type
-            @use_eef_ctrl, position controller or default joint controllder
-            @table_full_size, full dimension of the table
-            @table_friction, friction parameters of the table
-            @use_camera_obs, using camera observations
-            @use_object_obs, using object physics states
-            @camera_name, name of camera to be rendered
-            @camera_height, height of camera observation
-            @camera_width, width of camera observation
-            @camera_depth, rendering depth
-            @reward_shaping, using a shaping reward
+        Args:
+
+            gripper_type_right (str): type of gripper used on the right hand.
+
+            gripper_type_lefft (str): type of gripper used on the right hand.
+
+            table_full_size (3-tuple): x, y, and z dimensions of the table.
+
+            table_friction (3-tuple): the three mujoco friction parameters for 
+                the table.
+
+            use_object_obs (bool): if True, include object (pot) information in
+                the observation.
+
+            reward_shaping (bool): if True, use dense rewards.
+
+        Inherits the Baxter environment; refer to other parameters described there.
         """
-        # initialize objects of interest
+
+        # initialize the pot
         self.pot = GeneratedPotObject()
         self.mujoco_objects = OrderedDict([("pot", self.pot)])
 
@@ -52,16 +59,6 @@ class BaxterLift(BaxterEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
-        # whether to show visual aid about where is the gripper
-        self.gripper_visualization = gripper_visualization
-
-        self.demo_config = demo_config
-        if self.demo_config is not None:
-            self.demo_sampler = DemoSampler(
-                "demonstrations/baxter-lift.pkl", self.demo_config
-            )
-
-        self.eps_reward = 0
         # reward configuration
         self.reward_shaping = reward_shaping
 
@@ -73,16 +70,13 @@ class BaxterLift(BaxterEnv):
         )
 
         super().__init__(
-            gripper_left="LeftTwoFingerGripper",
-            gripper_right="TwoFingerGripper",
-            use_eef_ctrl=use_eef_ctrl,
-            use_camera_obs=use_camera_obs,
-            camera_name=camera_name,
-            gripper_visualization=gripper_visualization,
-            **kwargs
+            gripper_left=gripper_type_left, gripper_right=gripper_type_right, **kwargs
         )
 
     def _load_model(self):
+        """
+        Loads the arena and pot object.
+        """
         super()._load_model()
         self.mujoco_robot.set_base_xpos([0, 0, 0])
 
@@ -106,6 +100,11 @@ class BaxterLift(BaxterEnv):
         self.model.place_objects()
 
     def _get_reference(self):
+        """
+        Set up references to important components. A reference is typically an
+        index or a list of indices that point to the corresponding elements
+        in a flattened array, which is how MuJoCo stores physical simulation data.
+        """
         super()._get_reference()
         self.cube_body_id = self.sim.model.body_name2id("pot")
         self.handle_1_site_id = self.sim.model.site_name2id("pot_handle_1")
@@ -113,32 +112,25 @@ class BaxterLift(BaxterEnv):
         self.table_top_id = self.sim.model.site_name2id("table_top")
         self.pot_center_id = self.sim.model.site_name2id("pot_center")
 
-    def _reset_from_random(self):
-        # inherited class should reset positions of objects
-        self.model.place_objects()
-
     def _reset_internal(self):
+        """
+        Reset simulation internal configurations.
+        """
         super()._reset_internal()
-        if self.demo_config is not None:
-            self.demo_sampler.log_score(self.eps_reward)
-            state = self.demo_sampler.sample()
-            if state is None:
-                self._reset_from_random()
-            else:
-                self.sim.set_state_from_flattened(state)
-                self.sim.forward()
-        else:
-            self._reset_from_random()
+
+        self.model.place_objects()
 
     def reward(self, action):
         """
-        1. the agent only gets the lifting reward when flipping no more than 30 degrees.
-        2. the lifting reward is smoothed and ranged from 0 to 2, capped at 2.0. 
-           the initial lifting reward is 0 when the pot is on the table;
-           the agent gets the maximum 2.0 reward when the pot’s height is above a threshold.
-        3. the reaching reward is 0.5 when the left gripper touches the left handle,
-           or when the right gripper touches the right handle before the gripper geom 
-           touches the handle geom, and once it touches we use 0.5
+        Reward function for the task.
+
+          1. the agent only gets the lifting reward when flipping no more than 30 degrees.
+          2. the lifting reward is smoothed and ranged from 0 to 2, capped at 2.0. 
+             the initial lifting reward is 0 when the pot is on the table;
+             the agent gets the maximum 2.0 reward when the pot’s height is above a threshold.
+          3. the reaching reward is 0.5 when the left gripper touches the left handle,
+             or when the right gripper touches the right handle before the gripper geom 
+             touches the handle geom, and once it touches we use 0.5
         """
         reward = 0
 
@@ -195,42 +187,51 @@ class BaxterLift(BaxterEnv):
             else:
                 reward += 0.5 * (1 - np.tanh(r_gh_dist))
 
-        self.eps_reward = max(reward, self.eps_reward)
         return reward
 
     @property
-    def _l_eef_xpos(self):
-        return self.sim.data.site_xpos[self.left_eef_site_id]
-
-    @property
-    def _r_eef_xpos(self):
-        return self.sim.data.site_xpos[self.right_eef_site_id]
-
-    @property
     def _handle_1_xpos(self):
+        """Returns the position of the first handle."""
         return self.sim.data.site_xpos[self.handle_1_site_id]
 
     @property
     def _handle_2_xpos(self):
+        """Returns the position of the second handle."""
         return self.sim.data.site_xpos[self.handle_2_site_id]
 
     @property
     def _pot_quat(self):
+        """Returns the orientation of the pot."""
         return U.convert_quat(self.sim.data.body_xquat[self.cube_body_id], to="xyzw")
 
     @property
     def _world_quat(self):
+        """World quaternion."""
         return U.convert_quat(np.array([1, 0, 0, 0]), to="xyzw")
 
     @property
     def _l_gripper_to_handle(self):
+        """Returns vector from the left gripper to the handle."""
         return self._handle_1_xpos - self._l_eef_xpos
 
     @property
     def _r_gripper_to_handle(self):
+        """Returns vector from the right gripper to the handle."""
         return self._handle_2_xpos - self._r_eef_xpos
 
     def _get_observation(self):
+        """
+        Returns an OrderedDict containing observations [(name_string, np.array), ...].
+        
+        Important keys:
+            robot-state: contains robot-centric information.
+            object-state: requires @self.use_object_obs to be True.
+                contains object-centric information.
+            image: requires @self.use_camera_obs to be True.
+                contains a rendered frame from the simulation.
+            depth: requires @self.use_camera_obs and @self.camera_depth to be True.
+                contains a rendered depth map from the simulation
+        """
         di = super()._get_observation()
         # camera observations
         if self.use_camera_obs:
@@ -262,7 +263,7 @@ class BaxterLift(BaxterEnv):
             di["l_gripper_to_handle"] = self._l_gripper_to_handle
             di["r_gripper_to_handle"] = self._r_gripper_to_handle
 
-            di["low-level"] = np.concatenate(
+            di["object-state"] = np.concatenate(
                 [
                     di["cube_pos"],
                     di["cube_quat"],
@@ -274,11 +275,6 @@ class BaxterLift(BaxterEnv):
                     di["r_gripper_to_handle"],
                 ]
             )
-
-        # proprioception
-        di["proprio"] = np.concatenate(
-            [np.sin(di["joint_pos"]), np.cos(di["joint_pos"]), di["joint_vel"]]
-        )
 
         return di
 
@@ -299,7 +295,7 @@ class BaxterLift(BaxterEnv):
                 break
         return collision
 
-    def _check_terminated(self):
+    def _check_success(self):
         """
         Returns True if task is successfully completed
         """

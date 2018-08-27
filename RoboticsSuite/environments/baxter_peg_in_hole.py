@@ -9,30 +9,33 @@ from RoboticsSuite.models import *
 
 
 class BaxterPegInHole(BaxterEnv):
+    """
+    This class corresponds to the peg in hole task for the Baxter robot. There's
+    a cylinder attached to one gripper and a hole attached to the other one.
+    """
+
     def __init__(
         self,
-        gripper_type="TwoFingerGripper",
-        use_eef_ctrl=False,
-        use_camera_obs=True,
+        cylinder_radius=(0.015, 0.03),
+        cylinder_length=0.13,
         use_object_obs=True,
-        camera_name="frontview",
         reward_shaping=True,
-        gripper_visualization=False,
         **kwargs
     ):
         """
-            @gripper_type, string that specifies the gripper type
-            @use_eef_ctrl, position controller or default joint controllder
-            @table_size, full dimension of the table
-            @table_friction, friction parameters of the table
-            @use_camera_obs, using camera observations
-            @use_object_obs, using object physics states
-            @camera_name, name of camera to be rendered
-            @camera_height, height of camera observation
-            @camera_width, width of camera observation
-            @camera_depth, rendering depth
-            @reward_shaping, using a shaping reward
+        Args:
+            cylinder_radius (2-tuple): low and high limits of the (uniformly sampled)
+                radius of the cylinder
+
+            cylinder_length (float): length of the cylinder
+
+            use_object_obs (bool): if True, include object information in the observation.
+
+            reward_shaping (bool): if True, use dense rewards
+
+        Inherits the Baxter environment; refer to other parameters described there.
         """
+
         # initialize objects of interest
         self.hole = PlateWithHoleObject()
 
@@ -46,32 +49,19 @@ class BaxterPegInHole(BaxterEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
-        # whether to show visual aid about where is the gripper
-        self.gripper_visualization = gripper_visualization
-
         # reward configuration
         self.reward_shaping = reward_shaping
 
-        super().__init__(
-            gripper_left=None,  # 'LeftTwoFingerGripper',
-            gripper_right=None,  # 'TwoFingerGripper',
-            use_eef_ctrl=use_eef_ctrl,
-            use_camera_obs=use_camera_obs,
-            camera_name=camera_name,
-            gripper_visualization=gripper_visualization,
-            **kwargs
-        )
+        super().__init__(gripper_left=None, gripper_right=None, **kwargs)
 
     def _load_model(self):
+        """
+        Loads the peg and the hole models.
+        """
         super()._load_model()
         self.mujoco_robot.set_base_xpos([0, 0, 0])
 
-        """self.mujoco_arena = TableArena(table_full_size=self.table_size,
-                                       friction=self.table_friction)
-
-        self.mujoco_arena.set_origin([0.45 + self.table_size[0] / 2,0,0])
-        """
-
+        # Add arena and robot
         self.model = MujocoWorldBase()
         self.arena = EmptyArena()
         if self.use_indicator_object:
@@ -79,28 +69,43 @@ class BaxterPegInHole(BaxterEnv):
         self.model.merge(self.arena)
         self.model.merge(self.mujoco_robot)
 
+        # Load hole object
         self.hole_obj = self.hole.get_collision(name="hole", site=True)
         self.hole_obj.set("quat", "0 0 0.707 0.707")
         self.hole_obj.set("pos", "0.11 0 0.18")
         self.model.merge_asset(self.hole)
         self.model.worldbody.find(".//body[@name='left_hand']").append(self.hole_obj)
 
+        # Load cylinder object
         self.cyl_obj = self.cylinder.get_collision(name="cylinder", site=True)
         self.cyl_obj.set("pos", "0 0 0.15")
-
         self.model.merge_asset(self.cylinder)
         self.model.worldbody.find(".//body[@name='right_hand']").append(self.cyl_obj)
         self.model.worldbody.find(".//geom[@name='cylinder']").set("rgba", "0 1 0 1")
 
     def _get_reference(self):
+        """
+        Set up references to important components. A reference is typically an
+        index or a list of indices that point to the corresponding elements
+        in a flattened array, which is how MuJoCo stores physical simulation data.
+        """
         super()._get_reference()
         self.hole_body_id = self.sim.model.body_name2id("hole")
         self.cyl_body_id = self.sim.model.body_name2id("cylinder")
 
     def _reset_internal(self):
+        """
+        Reset simulation internal configurations.
+        """
         super()._reset_internal()
 
     def _compute_orientation(self):
+        """
+        Helper function to return the relative positions between the hole and the peg.
+        In particular, the intersection of the line defined by the peg and the plane
+        defined by the hole is computed; the parallel distance, perpendicular distance,
+        and angle are returned.
+        """
         cyl_mat = self.sim.data.body_xmat[self.cyl_body_id]
         cyl_mat.shape = (3, 3)
         cyl_pos = self.sim.data.body_xpos[self.cyl_body_id]
@@ -126,6 +131,18 @@ class BaxterPegInHole(BaxterEnv):
         )
 
     def reward(self, action):
+        """
+        Reward function for the task.
+
+        The sparse reward is 0 if the peg is outside the hole, and 1 if it's inside.
+        We enforce that it's inside at an appropriate angle (cos(theta) > 0.95).
+
+        The dense reward has four components.
+
+            Reaching: in [0, 1], to encourage the arms to get together.
+            Perpendicular and parallel distance: in [0,1], for the same purpose.
+            Cosine of the angle: in [0, 1], to encourage having the right orientation.
+        """
         reward = 0
 
         t, d, cos = self._compute_orientation()
@@ -159,6 +176,7 @@ class BaxterPegInHole(BaxterEnv):
         peg_pos_in_world = self.sim.data.get_body_xpos("cylinder")
         peg_rot_in_world = self.sim.data.get_body_xmat("cylinder").reshape((3, 3))
         peg_pose_in_world = U.make_pose(peg_pos_in_world, peg_rot_in_world)
+
         # World frame
         hole_pos_in_world = self.sim.data.get_body_xpos("hole")
         hole_rot_in_world = self.sim.data.get_body_xmat("hole").reshape((3, 3))
@@ -172,7 +190,20 @@ class BaxterPegInHole(BaxterEnv):
         return peg_pose_in_hole
 
     def _get_observation(self):
+        """
+        Returns an OrderedDict containing observations [(name_string, np.array), ...].
+        
+        Important keys:
+            robot-state: contains robot-centric information.
+            object-state: requires @self.use_object_obs to be True.
+                contains object-centric information.
+            image: requires @self.use_camera_obs to be True.
+                contains a rendered frame from the simulation.
+            depth: requires @self.use_camera_obs and @self.camera_depth to be True.
+                contains a rendered depth map from the simulation
+        """
         di = super()._get_observation()
+
         # camera observations
         if self.use_camera_obs:
             camera_obs = self.sim.render(
@@ -209,7 +240,7 @@ class BaxterPegInHole(BaxterEnv):
             di["t"] = t
             di["d"] = d
 
-            di["low-level"] = np.concatenate(
+            di["object-state"] = np.concatenate(
                 [
                     di["hole_pos"],
                     di["hole_quat"],
@@ -220,11 +251,6 @@ class BaxterPegInHole(BaxterEnv):
                     [di["d"]],
                 ]
             )
-
-        # proprioception
-        di["proprio"] = np.concatenate(
-            [np.sin(di["joint_pos"]), np.cos(di["joint_pos"]), di["joint_vel"]]
-        )
 
         return di
 
@@ -246,8 +272,10 @@ class BaxterPegInHole(BaxterEnv):
                 break
         return collision
 
-    def _check_terminated(self):
+    def _check_success(self):
         """
         Returns True if task is successfully completed
         """
-        return False
+        t, d, cos = self._compute_orientation()
+
+        return d < 0.06 and t >= -0.12 and t <= 0.14 and cos > 0.95

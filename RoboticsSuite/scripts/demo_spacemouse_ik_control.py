@@ -27,12 +27,13 @@ Note:
 
 import argparse
 import numpy as np
+import os
 
 import RoboticsSuite
 from RoboticsSuite.models import *
 from RoboticsSuite.wrappers import DataCollectionWrapper
 from RoboticsSuite.controllers.spacemouse import SpaceMouse
-from RoboticsSuite.controllers.ik_controller import IKController
+from RoboticsSuite.controllers.sawyer_ik_controller import SawyerIKController
 
 
 if __name__ == "__main__":
@@ -60,17 +61,15 @@ if __name__ == "__main__":
     space_mouse = SpaceMouse()
 
     # initialize IK controller
-    ik_controller = IKController(
-        bullet_data_path="../models/assets/bullet_data",
+    ik_controller = SawyerIKController(
+        bullet_data_path=os.path.join(RoboticsSuite.assets_path, "bullet_data"),
         robot_jpos_getter=robot_jpos_getter,
     )
 
     gripper_controls = [[1.], [-1.]]
 
     obs = env.reset()
-    env.viewer.set_camera(2)
-    env.viewer.viewer._hide_overlay = True
-    env.render()
+    env.render(camera_id=2)
 
     # rotate the gripper so we can see it easily
     env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
@@ -82,7 +81,7 @@ if __name__ == "__main__":
         action = np.concatenate([velocities, [grasp, -grasp]])
 
         obs, reward, done, info = env.step(action)
-        env.render()
+        env.render(camera_id=2)
         print("reward: {0:.2f}".format(reward))
 
         if done:

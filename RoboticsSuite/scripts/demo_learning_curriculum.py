@@ -26,8 +26,11 @@ Sham Kakade and John Langford
 ICML 2002
 """
 
+import os
 import time
 import numpy as np
+
+import RoboticsSuite
 from RoboticsSuite import make
 from RoboticsSuite.wrappers import DemoSamplerWrapper
 
@@ -46,7 +49,9 @@ if __name__ == "__main__":
 
     env = DemoSamplerWrapper(
         env,
-        file_path="../models/assets/demonstrations/sawyer-lift.pkl",
+        file_path=os.path.join(
+            RoboticsSuite.assets_path, "demonstrations/sawyer-lift.pkl"
+        ),
         need_xml=True,
         preload=True,
         num_traj=-1,

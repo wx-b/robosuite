@@ -9,14 +9,17 @@ Example:
 import sys
 import argparse
 import numpy as np
+import os
 
 from mujoco_py import load_model_from_path
 from mujoco_py import MjSim, MjViewer
 
+import RoboticsSuite
+
 
 if __name__ == "__main__":
 
-    arena_file = "../models/assets/arenas/pegs_arena.xml"
+    arena_file = os.path.join(RoboticsSuite.assets_path, "arenas/pegs_arena.xml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--filepath", type=str, default=arena_file)

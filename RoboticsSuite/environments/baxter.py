@@ -18,6 +18,50 @@ class BaxterEnv(MujocoEnv):
         rescale_actions=True,
         **kwargs
     ):
+        """
+        Args:
+            gripper_right (str): type of gripper used on the right hand, used to
+                instantiate gripper models from gripper factory.
+
+            gripper_left (str): type of gripper used on the left hand.
+
+            gripper_visualization (bool): True if using gripper visualization.
+                Useful for teleoperation.
+
+            use_indicator_object (bool): if True, sets up an indicator object that 
+                is useful for debugging.
+
+            has_renderer (bool): If true, render the simulation state in 
+                a viewer instead of headless mode.
+
+            has_offscreen_renderer (bool): True if using off-screen rendering.
+
+            render_collision_mesh (bool): True if rendering collision meshes 
+                in camera. False otherwise.
+
+            render_visual_mesh (bool): True if rendering visual meshes 
+                in camera. False otherwise.
+
+            control_freq (float): how many control signals to receive 
+                in every second. This sets the amount of simulation time 
+                that passes between every action input.
+
+            horizon (int): Every episode lasts for exactly @horizon timesteps.
+
+            ignore_done (bool): True if never terminating the environment (ignore @horizon).
+
+            use_camera_obs (bool): if True, every observation includes a 
+                rendered image.
+
+            camera_name (str): name of camera to be rendered. Must be 
+                set if @use_camera_obs is True.
+
+            camera_height (int): height of camera frame.
+
+            camera_width (int): width of camera frame.
+
+            camera_depth (bool): True if rendering RGB-D, and RGB otherwise.
+        """
         self.has_gripper_right = not (gripper_right is None)
         self.has_gripper_left = not (gripper_left is None)
         self.gripper_right_name = gripper_right
@@ -27,21 +71,8 @@ class BaxterEnv(MujocoEnv):
         self.rescale_actions = rescale_actions
         super().__init__(**kwargs)
 
-    def _setup_mocap(self):
-        U.mjpy_reset_mocap_welds(self.sim)
-        self.sim.forward()
-
-        # Move end effectors into position.
-        gripper_target = self.sim.data.get_body_xpos("right_hand")
-        gripper_rotation = self.sim.data.get_body_xquat("right_hand")
-
-        self.sim.data.set_mocap_pos("mocap", gripper_target)
-        self.sim.data.set_mocap_quat("mocap", gripper_rotation)
-
-        for _ in range(10):
-            self.sim.step()
-
     def _load_model(self):
+        """Load robot and optionally add grippers."""
         super()._load_model()
         self.mujoco_robot = Baxter()
         if self.has_gripper_right:
@@ -57,23 +88,24 @@ class BaxterEnv(MujocoEnv):
             self.mujoco_robot.add_gripper("left_hand", self.gripper_left)
 
     def _reset_internal(self):
+        """Resets the pose of the arm and grippers."""
         super()._reset_internal()
-        self.sim.data.qpos[self._ref_joint_pos_indexes] = (
-            self.mujoco_robot.init_qpos
-            + 0.01 * np.random.normal(len(self._ref_joint_pos_indexes))
-        )
+        self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos
 
         if self.has_gripper_right:
             self.sim.data.qpos[
                 self._ref_joint_gripper_right_actuator_indexes
             ] = self.gripper_right.init_qpos
+
         if self.has_gripper_left:
             self.sim.data.qpos[
                 self._ref_joint_gripper_left_actuator_indexes
             ] = self.gripper_left.init_qpos
 
     def _get_reference(self):
+        """Set up references for robots, grippers, and objects."""
         super()._get_reference()
+
         # indices for joints in qpos, qvel
         self.robot_joints = list(self.mujoco_robot.joints)
         self._ref_joint_pos_indexes = [
@@ -83,12 +115,12 @@ class BaxterEnv(MujocoEnv):
             self.sim.model.get_joint_qvel_addr(x) for x in self.robot_joints
         ]
         if self.use_indicator_object:
-            self._ref_indicator_pos_low, self._ref_indicator_pos_high = self.sim.model.get_joint_qpos_addr(
-                "pos_indicator"
-            )
-            self._ref_indicator_vel_low, self._ref_indicator_vel_high = self.sim.model.get_joint_qvel_addr(
-                "pos_indicator"
-            )
+            ind_qpos = self.sim.model.get_joint_qpos_addr("pos_indicator")
+            self._ref_indicator_pos_low, self._ref_indicator_pos_high = ind_qpos
+
+            ind_qvel = self.sim.model.get_joint_qvel_addr("pos_indicator")
+            self._ref_indicator_vel_low, self._ref_indicator_vel_high = ind_qvel
+
             self.indicator_id = self.sim.model.body_name2id("pos_indicator")
 
         # indices for grippers in qpos, qvel
@@ -145,6 +177,7 @@ class BaxterEnv(MujocoEnv):
             self.eef_cylinder_id = self.sim.model.site_name2id("grip_site_cylinder")
 
     def move_indicator(self, pos):
+        """Moves the position of the indicator object to @pos."""
         if self.use_indicator_object:
             self.sim.data.qpos[
                 self._ref_indicator_pos_low : self._ref_indicator_pos_low + 3
@@ -152,10 +185,17 @@ class BaxterEnv(MujocoEnv):
 
     # Note: Overrides super
     def _pre_action(self, action):
+        # Optionally (and by default) rescale actions to [-1, 1]. Not desirable
+        # for certain controllers. They later get normalized to the control range.
         if self.rescale_actions:
             action = np.clip(action, -1, 1)
-        last = self.mujoco_robot.dof
+
+        # Action is stored as [right arm, left arm, right gripper?, left gripper?]
+        # We retrieve the relevant actions.
+        last = self.mujoco_robot.dof  # Degrees of freedom in arm, i.e. 14
         arm_action = action[:last]
+
+        # Right gripper
         if self.has_gripper_right:
             gripper_right_action_in = action[last : last + self.gripper_right.dof]
             gripper_right_action_actual = self.gripper_right.format_action(
@@ -163,12 +203,15 @@ class BaxterEnv(MujocoEnv):
             )
             arm_action = np.concatenate([arm_action, gripper_right_action_actual])
             last = last + self.gripper_right.dof
+
+        # Left gripper
         if self.has_gripper_left:
             gripper_left_action_in = action[last : last + self.gripper_left.dof]
             gripper_left_action_actual = self.gripper_left.format_action(
                 gripper_left_action_in
             )
             arm_action = np.concatenate([arm_action, gripper_left_action_actual])
+
         action = arm_action
 
         if self.rescale_actions:
@@ -195,11 +238,18 @@ class BaxterEnv(MujocoEnv):
             ]
 
     def _post_action(self, action):
+        """Optionally perform gripper visualization after the actions."""
         ret = super()._post_action(action)
         self._gripper_visualization()
         return ret
 
     def _get_observation(self):
+        """
+        Returns an OrderedDict containing observations [(name_string, np.array), ...].
+        
+        Important keys:
+            robot-state: contains robot-centric information.
+        """
         di = super()._get_observation()
         # proprioceptive features
         di["joint_pos"] = np.array(
@@ -208,17 +258,60 @@ class BaxterEnv(MujocoEnv):
         di["joint_vel"] = np.array(
             [self.sim.data.qvel[x] for x in self._ref_joint_vel_indexes]
         )
+        robot_states = [
+            np.sin(di["joint_pos"]),
+            np.cos(di["joint_pos"]),
+            di["joint_vel"],
+        ]
+
         if self.has_gripper_right:
-            di["gripper_pos"] = [
-                self.sim.data.qpos[x] for x in self._ref_gripper_right_joint_pos_indexes
-            ]
-            di["gripper_vel"] = [
-                self.sim.data.qvel[x] for x in self._ref_gripper_right_joint_vel_indexes
-            ]
+            di["right_gripper_qpos"] = np.array(
+                [
+                    self.sim.data.qpos[x]
+                    for x in self._ref_gripper_right_joint_pos_indexes
+                ]
+            )
+            di["right_gripper_qvel"] = np.array(
+                [
+                    self.sim.data.qvel[x]
+                    for x in self._ref_gripper_right_joint_vel_indexes
+                ]
+            )
+            di["right_eef_pos"] = self.sim.data.site_xpos[self.right_eef_site_id]
+            di["right_eef_quat"] = U.convert_quat(
+                self.sim.data.get_body_xquat("right_hand"), to="xyzw"
+            )
+            robot_states.extend(
+                [di["right_gripper_qpos"], di["right_eef_pos"], di["right_eef_quat"]]
+            )
+
+        if self.has_gripper_left:
+            di["left_gripper_qpos"] = np.array(
+                [
+                    self.sim.data.qpos[x]
+                    for x in self._ref_gripper_left_joint_pos_indexes
+                ]
+            )
+            di["left_gripper_qvel"] = np.array(
+                [
+                    self.sim.data.qvel[x]
+                    for x in self._ref_gripper_left_joint_vel_indexes
+                ]
+            )
+            di["left_eef_pos"] = self.sim.data.site_xpos[self.left_eef_site_id]
+            di["left_eef_quat"] = U.convert_quat(
+                self.sim.data.get_body_xquat("left_hand"), to="xyzw"
+            )
+            robot_states.extend(
+                [di["left_gripper_qpos"], di["left_eef_pos"], di["left_eef_quat"]]
+            )
+
+        di["robot-state"] = np.concatenate(robot_states)
         return di
 
     @property
     def dof(self):
+        """Returns the DoF of the robot (with grippers)."""
         dof = self.mujoco_robot.dof
         if self.has_gripper_left:
             dof += self.gripper_left.dof
@@ -369,19 +462,29 @@ class BaxterEnv(MujocoEnv):
 
     @property
     def _joint_positions(self):
+        """Returns a numpy array of joint positions (angles), of dimension 14."""
         return self.sim.data.qpos[self._ref_joint_pos_indexes]
 
     @property
     def _joint_velocities(self):
+        """Returns a numpy array of joint (angular) velocities, of dimension 14."""
         return self.sim.data.qvel[self._ref_joint_vel_indexes]
+
+    @property
+    def _l_eef_xpos(self):
+        """Returns the position of the left hand."""
+        return self.sim.data.site_xpos[self.left_eef_site_id]
+
+    @property
+    def _r_eef_xpos(self):
+        """Returns the position of the right hand."""
+        return self.sim.data.site_xpos[self.right_eef_site_id]
 
     def _gripper_visualization(self):
         """
-        Do any needed visualization here.
+        Do any needed visualization here. Using defaults.
         """
-        # By default, don't do any coloring.
-        if self.has_gripper_right:
-            self.sim.model.site_rgba[self.eef_site_id] = [0., 0., 0., 0.]
+        pass
 
     def _check_contact(self):
         """

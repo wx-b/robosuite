@@ -1,3 +1,5 @@
+from os.path import join as _pjoin
+
 from RoboticsSuite.environments.base import make
 from RoboticsSuite.environments.sawyer_lift import SawyerLift
 from RoboticsSuite.environments.sawyer_stack import SawyerStack
@@ -15,3 +17,5 @@ __logo__ = """
     /[_]\  [~]\/    |//  |
      ] [   OOO      /o|__|
 """
+
+assets_path = _pjoin(__path__[0], "models/assets")
