@@ -205,8 +205,12 @@ class SawyerStack(SawyerEnv):
         super()._get_reference()
         self.cubeA_body_id = self.sim.model.body_name2id("cubeA")
         self.cubeB_body_id = self.sim.model.body_name2id("cubeB")
-        self.l_finger_geom_id = self.sim.model.geom_name2id("l_fingertip_g0")
-        self.r_finger_geom_id = self.sim.model.geom_name2id("r_fingertip_g0")
+        self.l_finger_geom_ids = [
+            self.sim.model.geom_name2id(x) for x in self.gripper.left_finger_geoms
+        ]
+        self.r_finger_geom_ids = [
+            self.sim.model.geom_name2id(x) for x in self.gripper.right_finger_geoms
+        ]
         self.cubeA_geom_id = self.sim.model.geom_name2id("cubeA")
         self.cubeB_geom_id = self.sim.model.geom_name2id("cubeB")
 
@@ -277,13 +281,13 @@ class SawyerStack(SawyerEnv):
 
         for i in range(self.sim.data.ncon):
             c = self.sim.data.contact[i]
-            if c.geom1 == self.l_finger_geom_id and c.geom2 == self.cubeA_geom_id:
+            if c.geom1 in self.l_finger_geom_ids and c.geom2 == self.cubeA_geom_id:
                 touch_left_finger = True
-            if c.geom1 == self.cubeA_geom_id and c.geom2 == self.l_finger_geom_id:
+            if c.geom1 == self.cubeA_geom_id and c.geom2 in self.l_finger_geom_ids:
                 touch_left_finger = True
-            if c.geom1 == self.r_finger_geom_id and c.geom2 == self.cubeA_geom_id:
+            if c.geom1 in self.r_finger_geom_ids and c.geom2 == self.cubeA_geom_id:
                 touch_right_finger = True
-            if c.geom1 == self.cubeA_geom_id and c.geom2 == self.r_finger_geom_id:
+            if c.geom1 == self.cubeA_geom_id and c.geom2 in self.r_finger_geom_ids:
                 touch_right_finger = True
             if c.geom1 == self.cubeA_geom_id and c.geom2 == self.cubeB_geom_id:
                 touch_cubeA_cubeB = True

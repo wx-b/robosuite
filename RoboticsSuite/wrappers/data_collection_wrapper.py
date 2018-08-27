@@ -70,7 +70,7 @@ class DataCollectionWrapper(Wrapper):
         t1, t2 = str(time.time()).split(".")
         self.ep_directory = os.path.join(self.directory, "ep_{}_{}".format(t1, t2))
         assert not os.path.exists(self.ep_directory)
-        print("DataCollectionWrapper: making new directory at {}".format(self.ep_directory))
+        print("DataCollectionWrapper: making folder at {}".format(self.ep_directory))
         os.makedirs(self.ep_directory)
 
         # save the model xml

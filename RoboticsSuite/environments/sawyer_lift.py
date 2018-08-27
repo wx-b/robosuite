@@ -181,8 +181,12 @@ class SawyerLift(SawyerEnv):
         """
         super()._get_reference()
         self.cube_body_id = self.sim.model.body_name2id("cube")
-        self.l_finger_geom_id = self.sim.model.geom_name2id("l_fingertip_g0")
-        self.r_finger_geom_id = self.sim.model.geom_name2id("r_fingertip_g0")
+        self.l_finger_geom_ids = [
+            self.sim.model.geom_name2id(x) for x in self.gripper.left_finger_geoms
+        ]
+        self.r_finger_geom_ids = [
+            self.sim.model.geom_name2id(x) for x in self.gripper.right_finger_geoms
+        ]
         self.cube_geom_id = self.sim.model.geom_name2id("cube")
 
     def _reset_internal(self):
@@ -238,13 +242,13 @@ class SawyerLift(SawyerEnv):
             touch_right_finger = False
             for i in range(self.sim.data.ncon):
                 c = self.sim.data.contact[i]
-                if c.geom1 == self.l_finger_geom_id and c.geom2 == self.cube_geom_id:
+                if c.geom1 in self.l_finger_geom_ids and c.geom2 == self.cube_geom_id:
                     touch_left_finger = True
-                if c.geom1 == self.cube_geom_id and c.geom2 == self.l_finger_geom_id:
+                if c.geom1 == self.cube_geom_id and c.geom2 in self.l_finger_geom_ids:
                     touch_left_finger = True
-                if c.geom1 == self.r_finger_geom_id and c.geom2 == self.cube_geom_id:
+                if c.geom1 in self.r_finger_geom_ids and c.geom2 == self.cube_geom_id:
                     touch_right_finger = True
-                if c.geom1 == self.cube_geom_id and c.geom2 == self.r_finger_geom_id:
+                if c.geom1 == self.cube_geom_id and c.geom2 in self.r_finger_geom_ids:
                     touch_right_finger = True
             if touch_left_finger and touch_right_finger:
                 reward += 0.25
@@ -254,7 +258,7 @@ class SawyerLift(SawyerEnv):
     def _get_observation(self):
         """
         Returns an OrderedDict containing observations [(name_string, np.array), ...].
-        
+
         Important keys:
             robot-state: contains robot-centric information.
             object-state: requires @self.use_object_obs to be True.

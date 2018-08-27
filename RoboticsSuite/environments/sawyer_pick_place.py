@@ -245,8 +245,12 @@ class SawyerPickPlace(SawyerEnv):
         self.obj_body_id = {}
         self.obj_geom_id = {}
 
-        self.l_finger_geom_id = self.sim.model.geom_name2id("l_fingertip_g0")
-        self.r_finger_geom_id = self.sim.model.geom_name2id("r_fingertip_g0")
+        self.l_finger_geom_ids = [
+            self.sim.model.geom_name2id(x) for x in self.gripper.left_finger_geoms
+        ]
+        self.r_finger_geom_ids = [
+            self.sim.model.geom_name2id(x) for x in self.gripper.right_finger_geoms
+        ]
 
         for i in range(len(self.ob_inits)):
             obj_str = str(self.item_names[i]) + "0"
@@ -339,15 +343,15 @@ class SawyerPickPlace(SawyerEnv):
             c = self.sim.data.contact[i]
             if c.geom1 in geoms_to_grasp:
                 bin_id = geoms_to_grasp.index(c.geom1)
-                if c.geom2 == self.l_finger_geom_id:
+                if c.geom2 in self.l_finger_geom_ids:
                     touch_left_finger = True
-                if c.geom2 == self.r_finger_geom_id:
+                if c.geom2 in self.r_finger_geom_ids:
                     touch_right_finger = True
             elif c.geom2 in geoms_to_grasp:
                 bin_id = geoms_to_grasp.index(c.geom2)
-                if c.geom1 == self.l_finger_geom_id:
+                if c.geom1 in self.l_finger_geom_ids:
                     touch_left_finger = True
-                if c.geom1 == self.r_finger_geom_id:
+                if c.geom1 in self.r_finger_geom_ids:
                     touch_right_finger = True
         has_grasp = touch_left_finger and touch_right_finger
         r_grasp = int(has_grasp) * grasp_mult

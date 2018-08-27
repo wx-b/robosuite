@@ -124,6 +124,19 @@ def new_body(name=None, pos=None, **kwargs):
     return element
 
 
+def new_inertial(name=None, pos=(0, 0, 0), mass=None, **kwargs):
+    """Create a inertial element with attributes specified by @**kwargs.
+
+    Args:
+        mass: The mass of inertial
+    """
+    if mass is not None:
+        kwargs["mass"] = str(mass)
+    kwargs["pos"] = array_to_string(pos)
+    element = ET.Element("inertial", attrib=kwargs)
+    return element
+
+
 def postprocess_model_xml(xml_str):
     """
     This function postprocesses the model.xml collected from a MuJoCo demonstration

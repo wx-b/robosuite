@@ -245,8 +245,12 @@ class SawyerNutAssembly(SawyerEnv):
 
         # id of grippers for contact checking
         self.finger_names = self.gripper.contact_geoms()
-        self.l_finger_geom_id = self.sim.model.geom_name2id("l_fingertip_g0")
-        self.r_finger_geom_id = self.sim.model.geom_name2id("r_fingertip_g0")
+        self.l_finger_geom_ids = [
+            self.sim.model.geom_name2id(x) for x in self.gripper.left_finger_geoms
+        ]
+        self.r_finger_geom_ids = [
+            self.sim.model.geom_name2id(x) for x in self.gripper.right_finger_geoms
+        ]
         # self.sim.data.contact # list, geom1, geom2
         self.collision_check_geom_names = self.sim.model._geom_name2id.keys()
         self.collision_check_geom_ids = [
@@ -323,14 +327,14 @@ class SawyerNutAssembly(SawyerEnv):
         for i in range(self.sim.data.ncon):
             c = self.sim.data.contact[i]
             if c.geom1 in geoms_to_grasp:
-                if c.geom2 == self.l_finger_geom_id:
+                if c.geom2 in self.l_finger_geom_ids:
                     touch_left_finger = True
-                if c.geom2 == self.r_finger_geom_id:
+                if c.geom2 in self.r_finger_geom_ids:
                     touch_right_finger = True
             elif c.geom2 in geoms_to_grasp:
-                if c.geom1 == self.l_finger_geom_id:
+                if c.geom1 in self.l_finger_geom_ids:
                     touch_left_finger = True
-                if c.geom1 == self.r_finger_geom_id:
+                if c.geom1 in self.r_finger_geom_ids:
                     touch_right_finger = True
         has_grasp = touch_left_finger and touch_right_finger
         r_grasp = int(has_grasp) * grasp_mult
