@@ -176,10 +176,10 @@ class SawyerStack(SawyerEnv):
         self.mujoco_arena.set_origin([0.16 + self.table_full_size[0] / 2, 0, 0])
 
         # initialize objects of interest
-        cubeA = RandomBoxObject(
+        cubeA = BoxObject(
             size_min=[0.02, 0.02, 0.02], size_max=[0.02, 0.02, 0.02], rgba=[1, 0, 0, 1]
         )
-        cubeB = RandomBoxObject(
+        cubeB = BoxObject(
             size_min=[0.025, 0.025, 0.025],
             size_max=[0.025, 0.025, 0.025],
             rgba=[0, 1, 0, 1],

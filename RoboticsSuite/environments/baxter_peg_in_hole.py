@@ -34,10 +34,12 @@ class BaxterPegInHole(BaxterEnv):
             @reward_shaping, using a shaping reward
         """
         # initialize objects of interest
-        self.hole = DefaultHoleObject()
+        self.hole = PlateWithHoleObject()
 
         cylinder_radius = np.random.uniform(0.015, 0.03)
-        self.cylinder = CylinderObject(size=(cylinder_radius, 0.13))
+        self.cylinder = CylinderObject(
+            size_min=(cylinder_radius, 0.13), size_max=(cylinder_radius, 0.13)
+        )
 
         self.mujoco_objects = OrderedDict()
 

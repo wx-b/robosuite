@@ -185,16 +185,16 @@ class SawyerPickPlace(SawyerEnv):
         self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, -0.3, 0])
 
         self.ob_inits = [
-            DefaultMilkObject,
-            DefaultBreadObject,
-            DefaultCerealObject,
-            DefaultCanObject,
+            MilkObject,
+            BreadObject,
+            CerealObject,
+            CanObject,
         ]
         self.vis_inits = [
-            DefaultMilkVisualObject,
-            DefaultBreadVisualObject,
-            DefaultCerealVisualObject,
-            DefaultCanVisualObject,
+            MilkVisualObject,
+            BreadVisualObject,
+            CerealVisualObject,
+            CanVisualObject,
         ]
         self.item_names = ["Milk", "Bread", "Cereal", "Can"]
         self.item_names_org = list(self.item_names)

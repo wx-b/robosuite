@@ -181,7 +181,7 @@ class SawyerNutAssembly(SawyerEnv):
         self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, -0.15, 0])
 
         # define mujoco objects
-        self.ob_inits = [DefaultSquareNutObject, DefaultRoundNutObject]
+        self.ob_inits = [SquareNutObject, RoundNutObject]
         self.item_names = ["SquareNut", "RoundNut"]
         self.item_names_org = list(self.item_names)
         self.obj_to_use = (self.item_names[1] + "{}").format(0)

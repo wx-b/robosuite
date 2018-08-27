@@ -13,11 +13,13 @@ The [robots](robots) folder contains robot classes which load robot specificatio
 
 Grippers
 --------
-The [grippers](grippers) folder consists of a variety of end-effector models that can be mounted to the arms of a robot model by the [`add_gripper`](https://github.com/StanfordVL/MujocoManipulation/blob/refactor4readme/RoboticsSuite/models/robots/robot.py#L20) method in the robot class.
+The [grippers](grippers) folder consists of a variety of end-effector models that can be mounted to the arms of a robot model by the [`add_gripper`](robots/robot.py#L20) method in the robot class.
 
 Objects
 -------
-[Objects](objects) are small interactable scene elements that robots interact with using their actuators. Objects can be either defined as 3D [meshes](http://mujoco.org/book/modeling.html#mesh) (e.g., in STL format) or procedurally generated from primitive shapes of MuJoCo [geoms](http://mujoco.org/book/modeling.html#geom). 
+[Objects](objects) are small interactable scene elements that robots interact with using their actuators. Objects can be either defined as 3D [meshes](http://mujoco.org/book/modeling.html#mesh) (e.g., in STL format) or procedurally generated from primitive shapes of MuJoCo [geoms](http://mujoco.org/book/modeling.html#geom).
+
+[MujocoObject](objects/mujoco_object.py) is the base object class. [MujocoXMLObject](objects/mujoco_object.py) is the base class for all objects that are loaded from MJCF XML files. [MujocoGeneratedObject](objects/mujoco_object.py) is the base class for procedurally generated objects with support for size and other physical property randomization.
 
 Arenas
 ------
