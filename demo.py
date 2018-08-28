@@ -35,6 +35,7 @@ if __name__ == "__main__":
         control_freq=100,
     )
     env.reset()
+    env.viewer.set_camera(camera_id=0)
 
     # do visualization
     for i in range(1000):

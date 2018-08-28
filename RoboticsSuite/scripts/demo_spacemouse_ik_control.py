@@ -69,7 +69,8 @@ if __name__ == "__main__":
     gripper_controls = [[1.], [-1.]]
 
     obs = env.reset()
-    env.render(camera_id=2)
+    env.viewer.set_camera(camera_id=2)
+    env.render()
 
     # rotate the gripper so we can see it easily
     env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
@@ -81,7 +82,7 @@ if __name__ == "__main__":
         action = np.concatenate([velocities, [grasp, -grasp]])
 
         obs, reward, done, info = env.step(action)
-        env.render(camera_id=2)
+        env.render()
         print("reward: {0:.2f}".format(reward))
 
         if done:

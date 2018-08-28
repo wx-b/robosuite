@@ -40,9 +40,8 @@ class MujocoPyRenderer:
         self.viewer.cam.fixedcamid = camera_id
         self.viewer.cam.type = const.CAMERA_FIXED
 
-    def render(self, camera_id=0):
+    def render(self):
         # safe for multiple calls
-        self.set_camera(camera_id)
         self.viewer.render()
 
     def close(self):

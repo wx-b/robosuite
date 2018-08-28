@@ -217,9 +217,11 @@ class MujocoEnv(metaclass=EnvMeta):
         """Reward should be a function of state and action."""
         return 0
 
-    def render(self, camera_id=0):
-        """Render image observation from camera @camera_id"""
-        self.viewer.render(camera_id=camera_id)
+    def render(self):
+        """
+        Renders to an on-screen window.
+        """
+        self.viewer.render()
 
     def observation_spec(self):
         """Returns an observation as observation specification.
