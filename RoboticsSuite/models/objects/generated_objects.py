@@ -276,7 +276,6 @@ def five_sided_box(size, rgba, group, thickness):
     return geoms
 
 
-
 DEFAULT_DENSITY_RANGE = [200, 500, 1000, 3000, 5000]
 DEFAULT_FRICTION_RANGE = [0.25, 0.5, 1, 1.5, 2]
 
@@ -359,7 +358,6 @@ class CylinderObject(MujocoGeneratedObject):
             density_range=density_range,
             friction_range=friction_range,
         )
-
 
     def sanity_check(self):
         assert len(self.size) == 2, "cylinder size should have length 2"

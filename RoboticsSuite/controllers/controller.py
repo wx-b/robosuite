@@ -1,4 +1,5 @@
-import abc # for abstract base class definitions
+import abc  # for abstract base class definitions
+
 
 class Controller(metaclass=abc.ABCMeta):
     """

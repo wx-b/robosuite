@@ -162,12 +162,7 @@ class SawyerIKController(Controller):
 
         return U.mat2pose(eef_pose_in_base)
 
-    def inverse_kinematics(
-        self, 
-        target_position, 
-        target_orientation, 
-        rest_poses=None,
-    ):
+    def inverse_kinematics(self, target_position, target_orientation, rest_poses=None):
         """
         Helper function to do inverse kinematics for a given target position and 
         orientation in the PyBullet world frame.

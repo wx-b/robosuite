@@ -184,12 +184,7 @@ class SawyerPickPlace(SawyerEnv):
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([.4 + self.table_size[0] / 2, -0.3, 0])
 
-        self.ob_inits = [
-            MilkObject,
-            BreadObject,
-            CerealObject,
-            CanObject,
-        ]
+        self.ob_inits = [MilkObject, BreadObject, CerealObject, CanObject]
         self.vis_inits = [
             MilkVisualObject,
             BreadVisualObject,
