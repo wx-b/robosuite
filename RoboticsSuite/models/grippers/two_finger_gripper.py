@@ -94,6 +94,7 @@ class LeftTwoFingerGripperBase(Gripper):
     def dof(self):
         return 2
 
+    @property
     def visualization_sites(self):
         return ["l_g_grip_site", "l_g_grip_site_cylinder"]
 
