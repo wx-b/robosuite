@@ -83,21 +83,15 @@ class MujocoXML(object):
             self.default.append(one_default)
         # self.config.append(other.config)
 
-    def get_model(self, mode="dm_control"):
+    def get_model(self, mode="mujoco_py"):
         """
-        Returns a MJModel instance from the current xml tree.
+        Returns a MjModel instance from the current xml tree.
         """
 
-        available_modes = ["dm_control", "mujoco_py"]
+        available_modes = ["mujoco_py"]
         with io.StringIO() as string:
             string.write(ET.tostring(self.root, encoding="unicode"))
-            # TODO(yukez): is dm_control still supported?
-            if mode == "dm_control":
-                from RoboticsSuite.dm_control_ext import Physics
-
-                model = Physics.from_xml_string(string.getvalue())
-                return model
-            elif mode == "mujoco_py":
+            if mode == "mujoco_py":
                 from mujoco_py import load_model_from_xml
 
                 model = load_model_from_xml(string.getvalue())
