@@ -14,7 +14,7 @@ class Baxter(Robot):
         self.left_hand = self.worldbody.find(".//body[@name='left_hand']")
 
     def set_base_xpos(self, pos):
-        """Place the robot on position @pos."""
+        """Places the robot on position @pos."""
         node = self.worldbody.find("./body[@name='base']")
         node.set("pos", array_to_string(pos - self.bottom_offset))
 

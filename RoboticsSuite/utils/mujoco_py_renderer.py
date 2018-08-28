@@ -26,9 +26,11 @@ class CustomMjViewer(MjViewer):
 
 
 class MujocoPyRenderer:
+
     def __init__(self, sim):
         """
-        sim should be MjSim
+        Args:
+            sim: MjSim object
         """
         self.viewer = CustomMjViewer(sim)
         self.callbacks = {}

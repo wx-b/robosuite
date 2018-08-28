@@ -1,5 +1,5 @@
 """
-    Gripper with two fingers
+Gripper with two fingers.
 """
 import numpy as np
 from RoboticsSuite.utils.mjcf_utils import xml_path_completion
@@ -8,7 +8,7 @@ from RoboticsSuite.models.grippers.gripper import Gripper
 
 class TwoFingerGripperBase(Gripper):
     """
-    Gripper with two fingers
+    Gripper with two fingers.
     """
 
     def __init__(self):
@@ -54,7 +54,7 @@ class TwoFingerGripperBase(Gripper):
 
 class TwoFingerGripper(TwoFingerGripperBase):
     """
-    Modifies two finger base to only take one action
+    Modifies two finger base to only take one action.
     """
 
     def format_action(self, action):
@@ -71,8 +71,8 @@ class TwoFingerGripper(TwoFingerGripperBase):
 
 class LeftTwoFingerGripperBase(Gripper):
     """
-        A copy of two finger gripper with non-overlapping names
-        to allow two grippers on a same robot
+    A copy of two finger gripper with non-overlapping names
+    to allow two grippers on a same robot.
     """
 
     def __init__(self):
@@ -119,8 +119,8 @@ class LeftTwoFingerGripperBase(Gripper):
 
 class LeftTwoFingerGripper(LeftTwoFingerGripperBase):
     """
-        A copy of two finger gripper with non-overlapping names
-        to allow two grippers on a same robot
+    A copy of two finger gripper with non-overlapping names
+    to allow two grippers on a same robot.
     """
 
     def format_action(self, action):

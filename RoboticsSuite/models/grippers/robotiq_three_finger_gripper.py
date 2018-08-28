@@ -1,6 +1,5 @@
 """
-    Gripper with 11 dof controlling three fingers
-    and its open/close variant
+Gripper with 11-DoF controlling three fingers and its open/close variant.
 """
 import numpy as np
 from RoboticsSuite.models.grippers.gripper import Gripper
@@ -9,7 +8,7 @@ import RoboticsSuite.utils as U
 
 class RobotiqThreeFingerGripperBase(Gripper):
     """
-    Gripper with 11 dof controlling three fingers
+    Gripper with 11 dof controlling three fingers.
     """
 
     def __init__(self):
@@ -65,7 +64,7 @@ class RobotiqThreeFingerGripperBase(Gripper):
 
 class RobotiqThreeFingerGripper(RobotiqThreeFingerGripperBase):
     """
-    One dof variant of RobotiqThreeFingerGripperBase
+    1-DoF variant of RobotiqThreeFingerGripperBase.
     """
 
     def format_action(self, action):

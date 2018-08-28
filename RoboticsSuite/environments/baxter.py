@@ -7,7 +7,7 @@ import RoboticsSuite.utils as U
 
 
 class BaxterEnv(MujocoEnv):
-    """Initialize a Baxter robot environment."""
+    """Initializes a Baxter robot environment."""
 
     def __init__(
         self,
@@ -72,7 +72,7 @@ class BaxterEnv(MujocoEnv):
         super().__init__(**kwargs)
 
     def _load_model(self):
-        """Load robot and optionally add grippers."""
+        """Loads robot and optionally add grippers."""
         super()._load_model()
         self.mujoco_robot = Baxter()
         if self.has_gripper_right:
@@ -103,7 +103,7 @@ class BaxterEnv(MujocoEnv):
             ] = self.gripper_left.init_qpos
 
     def _get_reference(self):
-        """Set up references for robots, grippers, and objects."""
+        """Sets up references for robots, grippers, and objects."""
         super()._get_reference()
 
         # indices for joints in qpos, qvel
@@ -238,7 +238,7 @@ class BaxterEnv(MujocoEnv):
             ]
 
     def _post_action(self, action):
-        """Optionally perform gripper visualization after the actions."""
+        """Optionally performs gripper visualization after the actions."""
         ret = super()._post_action(action)
         self._gripper_visualization()
         return ret

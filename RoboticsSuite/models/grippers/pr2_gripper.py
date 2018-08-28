@@ -8,7 +8,7 @@ import RoboticsSuite.utils as U
 
 class PR2GripperBase(Gripper):
     """
-        A 4 dof gripper with two fingers
+    A 4 dof gripper with two fingers.
     """
 
     def __init__(self):
@@ -57,7 +57,7 @@ class PR2GripperBase(Gripper):
 
 class PR2Gripper(PR2GripperBase):
     """
-        open/close variant of PR2 gripper
+    Open/close variant of PR2 gripper.
     """
 
     def format_action(self, action):

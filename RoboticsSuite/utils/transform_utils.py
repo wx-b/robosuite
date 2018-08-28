@@ -64,7 +64,8 @@ def convert_quat(q, to="xyzw"):
 
 
 def vec(values):
-    """Convert value tuple into a numpy vector.
+    """
+    Converts value tuple into a numpy vector.
 
     Args:
         values: a tuple of numbers
@@ -76,7 +77,8 @@ def vec(values):
 
 
 def mat4(array):
-    """Convert an array to 4x4 matrix.
+    """
+    Converts an array to 4x4 matrix.
 
     Args:
         array: the array in form of vec, list, or tuple
@@ -88,7 +90,8 @@ def mat4(array):
 
 
 def mat2pose(hmat):
-    """Convert a homogeneous 4x4 matrix into pose.
+    """
+    Converts a homogeneous 4x4 matrix into pose.
 
     Args:
         hmat: a 4x4 homogeneous matrix
@@ -103,7 +106,8 @@ def mat2pose(hmat):
 
 
 def mat2quat(rmat, precise=False):
-    """Convert given rotation matrix to quaternion.
+    """
+    Converts given rotation matrix to quaternion.
 
     Args:
         rmat: 3x3 rotation matrix
@@ -164,7 +168,8 @@ def mat2quat(rmat, precise=False):
 
 
 def mat2euler(rmat, axes="sxyz"):
-    """Convert given rotation matrix to euler angles in radian.
+    """
+    Converts given rotation matrix to euler angles in radian.
 
     Args:
         rmat: 3x3 rotation matrix
@@ -212,7 +217,8 @@ def mat2euler(rmat, axes="sxyz"):
 
 
 def pose2mat(pose):
-    """Convert pose to homogeneous matrix.
+    """
+    Converts pose to homogeneous matrix.
 
     Args:
         pose: a (pos, orn) tuple where pos is vec3 float cartesian, and
@@ -229,7 +235,8 @@ def pose2mat(pose):
 
 
 def quat2mat(quaternion):
-    """Convert given quaternion (x, y, z, w) to matrix.
+    """
+    Converts given quaternion (x, y, z, w) to matrix.
 
     Args:
         quaternion: vec4 float angles
@@ -323,7 +330,8 @@ def _skew_symmetric_translation(pos_A_in_B):
 
 
 def vel_in_A_to_vel_in_B(vel_A, ang_vel_A, pose_A_in_B):
-    """Converts linear and angular velocity of a point in frame A to the equivalent in frame B.
+    """
+    Converts linear and angular velocity of a point in frame A to the equivalent in frame B.
 
     Args:
         vel_A: 3-dim iterable for linear velocity in A
@@ -342,7 +350,8 @@ def vel_in_A_to_vel_in_B(vel_A, ang_vel_A, pose_A_in_B):
 
 
 def force_in_A_to_force_in_B(force_A, torque_A, pose_A_in_B):
-    """Converts linear and rotational force at a point in frame A to the equivalent in frame B.
+    """
+    Converts linear and rotational force at a point in frame A to the equivalent in frame B.
 
     Args:
         force_A: 3-dim iterable for linear force in A
@@ -361,7 +370,8 @@ def force_in_A_to_force_in_B(force_A, torque_A, pose_A_in_B):
 
 
 def rotation_matrix(angle, direction, point=None):
-    """Return matrix to rotate about axis defined by point and direction.
+    """
+    Returns matrix to rotate about axis defined by point and direction.
 
     Examples:
 
@@ -411,7 +421,8 @@ def rotation_matrix(angle, direction, point=None):
 
 
 def make_pose(translation, rotation):
-    """Make a homogenous pose matrix from a translation vector and a rotation matrix.
+    """
+    Makes a homogenous pose matrix from a translation vector and a rotation matrix.
 
     Args:
         translation: a 3-dim iterable
@@ -428,7 +439,8 @@ def make_pose(translation, rotation):
 
 
 def unit_vector(data, axis=None, out=None):
-    """Return ndarray normalized by length, i.e. eucledian norm, along axis.
+    """
+    Returns ndarray normalized by length, i.e. eucledian norm, along axis.
 
     Examples:
 

@@ -1,5 +1,5 @@
 """
-    6 dof gripper with its open/close variant
+6-DoF gripper with its open/close variant
 """
 import numpy as np
 from RoboticsSuite.models.grippers.gripper import Gripper
@@ -8,7 +8,7 @@ import RoboticsSuite.utils as U
 
 class RobotiqGripperBase(Gripper):
     """
-        6 dof gripper
+    6-DoF Robotiq gripper.
     """
 
     def __init__(self):
@@ -70,7 +70,7 @@ class RobotiqGripperBase(Gripper):
 
 class RobotiqGripper(RobotiqGripperBase):
     """
-    One dof variant of RobotiqGripperBase
+    1-DoF variant of RobotiqGripperBase.
     """
 
     def format_action(self, action):

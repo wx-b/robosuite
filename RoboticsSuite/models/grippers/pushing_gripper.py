@@ -1,5 +1,5 @@
 """
-    A version of TwoFingerGripper but always closed
+A version of TwoFingerGripper but always closed.
 """
 import numpy as np
 from RoboticsSuite.models.grippers.two_finger_gripper import TwoFingerGripper
@@ -7,7 +7,7 @@ from RoboticsSuite.models.grippers.two_finger_gripper import TwoFingerGripper
 
 class PushingGripper(TwoFingerGripper):
     """
-        Same as TwoFingerGripper, but always closed
+    Same as TwoFingerGripper, but always closed
     """
 
     def format_action(self, action):

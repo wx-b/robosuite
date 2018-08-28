@@ -10,7 +10,8 @@ from RoboticsSuite.utils.mjcf_utils import *
 
 
 class TableTopTask(Task):
-    """Create MJCF model of a tabletop task.
+    """
+    Creates MJCF model of a tabletop task.
 
     A tabletop task consists of one robot interacting with a variable number of
     objects placed on the tabletop. This class combines the robot, the table
@@ -38,19 +39,19 @@ class TableTopTask(Task):
         self.initializer.setup(mjcfs, self.table_top_offset, self.table_size)
 
     def merge_robot(self, mujoco_robot):
-        """Add robot model to the MJCF model."""
+        """Adds robot model to the MJCF model."""
         self.robot = mujoco_robot
         self.merge(mujoco_robot)
 
     def merge_arena(self, mujoco_arena):
-        """Add arena model to the MJCF model."""
+        """Adds arena model to the MJCF model."""
         self.arena = mujoco_arena
         self.table_top_offset = mujoco_arena.table_top_abs
         self.table_size = mujoco_arena.table_full_size
         self.merge(mujoco_arena)
 
     def merge_objects(self, mujoco_objects):
-        """Add physical objects to the MJCF model."""
+        """Adds physical objects to the MJCF model."""
         self.mujoco_objects = mujoco_objects
         self.objects = []  # xml manifestation
         self.targets = []  # xml manifestation
@@ -69,7 +70,7 @@ class TableTopTask(Task):
             )
 
     def place_objects(self):
-        """Place objects randomly until no collisions or max iterations hit."""
+        """Places objects randomly until no collisions or max iterations hit."""
         pos_arr, quat_arr = self.initializer.sample()
         for i in range(len(self.objects)):
             self.objects[i].set("pos", array_to_string(pos_arr[i]))

@@ -37,7 +37,7 @@ class EnvMeta(type):
 
 
 class MujocoEnv(metaclass=EnvMeta):
-    """Initialize a Mujoco Environment."""
+    """Initializes a Mujoco Environment."""
 
     def __init__(
         self,
@@ -113,7 +113,9 @@ class MujocoEnv(metaclass=EnvMeta):
         self._reset_internal()
 
     def initialize_time(self, control_freq):
-        """Initialize the time constants used for simulation."""
+        """
+        Initializes the time constants used for simulation.
+        """
         self.cur_time = 0
         self.model_timestep = self.sim.model.opt.timestep
         if self.model_timestep <= 0:
@@ -131,14 +133,14 @@ class MujocoEnv(metaclass=EnvMeta):
 
     def _get_reference(self):
         """
-        Set up references to important components. A reference is typically an
+        Sets up references to important components. A reference is typically an
         index or a list of indices that point to the corresponding elements
         in a flatten array, which is how MuJoCo stores physical simulation data.
         """
         pass
 
     def reset(self):
-        """Reset simulation."""
+        """Resets simulation."""
         # TODO(yukez): investigate black screen of death
         # if there is an active viewer window, destroy it
         self.close()
@@ -147,7 +149,7 @@ class MujocoEnv(metaclass=EnvMeta):
         return self._get_observation()
 
     def _reset_internal(self):
-        """Reset simulation internal configurations."""
+        """Resets simulation internal configurations."""
         # instantiate simulation from MJCF model
         self._load_model()
         self.mjpy_model = self.model.get_model(mode="mujoco_py")
@@ -188,7 +190,7 @@ class MujocoEnv(metaclass=EnvMeta):
         return OrderedDict()
 
     def step(self, action):
-        """Take a step in simulation with control command @action."""
+        """Takes a step in simulation with control command @action."""
         if self.done:
             raise ValueError("executing action in terminated episode")
 
@@ -224,7 +226,8 @@ class MujocoEnv(metaclass=EnvMeta):
         self.viewer.render()
 
     def observation_spec(self):
-        """Returns an observation as observation specification.
+        """
+        Returns an observation as observation specification.
 
         An alternative design is to return an OrderedDict where the keys
         are the observation names and the values are the shapes of observations.
@@ -240,7 +243,8 @@ class MujocoEnv(metaclass=EnvMeta):
         # return observation_spec
 
     def action_spec(self):
-        """Action specification should be implemented in subclasses.
+        """
+        Action specification should be implemented in subclasses.
 
         Action space is represented by a tuple of (low, high), which are two numpy
         vectors that specify the min/max action limits per dimension.
@@ -281,7 +285,8 @@ class MujocoEnv(metaclass=EnvMeta):
         self.done = False
 
     def find_contacts(self, geoms_1, geoms_2):
-        """Finding contact between two geom groups.
+        """
+        Finds contact between two geom groups.
 
         Args:
             geoms_1: a list of geom names (string)

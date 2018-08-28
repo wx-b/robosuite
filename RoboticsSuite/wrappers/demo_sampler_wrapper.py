@@ -33,13 +33,12 @@ class DemoSamplerWrapper(Wrapper):
         open_loop_window_increment=25,
     ):
         """
-        Initialize a wrapper that provides support for resetting the environment
+        Initializes a wrapper that provides support for resetting the environment
         state to one from a demonstration. It also supports curriculums for
         altering how often to sample from demonstration vs. sampling a reset
         state from the environment.
 
         Args:
-
             env (MujocoEnv instance): The environment to wrap.
 
             file_path (string): The path to the demonstrations, in pkl format.
@@ -63,25 +62,25 @@ class DemoSamplerWrapper(Wrapper):
 
                     "forward" : sample a state from a window that grows progressively from
                         the start of demonstrations
-                    
+
                     "reverse" : sample a state from a window that grows progressively from
                         the end of demonstrations
-            
-            scheme_ratios (list of floats): A list of probability values to 
-                assign to each member of @sampling_schemes. Must be non-negative and 
-                sum to 1. 
+
+            scheme_ratios (list of floats): A list of probability values to
+                assign to each member of @sampling_schemes. Must be non-negative and
+                sum to 1.
 
             open_loop_increment_freq (int): How frequently to increase
                 the window size in open loop schemes ("forward" and "reverse"). The
-                window size will increase by @open_loop_window_increment every 
+                window size will increase by @open_loop_window_increment every
                 @open_loop_increment_freq samples. Only samples that are generated
                 by open loop schemes contribute to this count.
 
             open_loop_initial_window_width (int): The width of the initial sampling
-                window, in terms of number of demonstration time steps, for 
-                open loop schemes. 
+                window, in terms of number of demonstration time steps, for
+                open loop schemes.
 
-            open_loop_window_increment (int): The window size will increase by 
+            open_loop_window_increment (int): The window size will increase by
                 @open_loop_window_increment every @open_loop_increment_freq samples.
                 This number is in terms of number of demonstration time steps.
         """
@@ -177,7 +176,7 @@ class DemoSamplerWrapper(Wrapper):
 
     def sample(self):
         """
-        This is the core sampling method. Samples a state from a 
+        This is the core sampling method. Samples a state from a
         demonstration, in accordance with the configuration.
         """
 
@@ -257,7 +256,7 @@ class DemoSamplerWrapper(Wrapper):
         """
         Sampling method.
 
-        Open loop forward sampling from demonstrations. Starts by 
+        Open loop forward sampling from demonstrations. Starts by
         sampling from states near the beginning of the demonstrations.
         Increases the window forwards as the number of calls to
         this sampling method increases at a fixed rate.

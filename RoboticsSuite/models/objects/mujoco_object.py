@@ -7,7 +7,8 @@ from RoboticsSuite.utils.mjcf_utils import *
 
 
 class MujocoObject:
-    """Base class for all objects.
+    """
+    Base class for all objects.
 
     We use Mujoco Objects to implement all objects that
         1) may appear for multiple times in a task
@@ -29,6 +30,7 @@ class MujocoObject:
 
         Returns:
             np.array: eg. np.array([0, 0, -2])
+
         Raises:
             NotImplementedError: Description
         """
@@ -102,7 +104,7 @@ class MujocoObject:
 
     def get_site_attrib_template(self):
         """
-        Return attribs of spherical site used to mark body origin
+        Returns attribs of spherical site used to mark body origin
 
         Returns:
             Dictionary of default site attributes

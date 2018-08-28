@@ -198,7 +198,7 @@ class SawyerStack(SawyerEnv):
 
     def _get_reference(self):
         """
-        Set up references to important components. A reference is typically an
+        Sets up references to important components. A reference is typically an
         index or a list of indices that point to the corresponding elements
         in a flatten array, which is how MuJoCo stores physical simulation data.
         """
@@ -216,7 +216,7 @@ class SawyerStack(SawyerEnv):
 
     def _reset_internal(self):
         """
-        Reset simulation internal configurations.
+        Resets simulation internal configurations.
         """
         super()._reset_internal()
 

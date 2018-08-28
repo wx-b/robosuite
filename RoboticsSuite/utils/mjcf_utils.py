@@ -13,7 +13,7 @@ BLUE = [0, 0, 1, 1]
 
 def xml_path_completion(xml_path):
     """
-        Takes in a local xml path and returns a full path.
+    Takes in a local xml path and returns a full path.
         if @xml_path is absolute, do nothing
         if @xml_path is not absolute, load xml that is shipped by the package
     """
@@ -26,7 +26,9 @@ def xml_path_completion(xml_path):
 
 def array_to_string(array):
     """
-        Converts a numeric array into the string format in mujoco
+    Converts a numeric array into the string format in mujoco.
+
+    Examples:
         [0, 1, 2] => "0 1 2"
     """
     return " ".join(["{}".format(x) for x in array])
@@ -34,7 +36,9 @@ def array_to_string(array):
 
 def string_to_array(string):
     """
-        Converts a array string in mujoco xml to np.array
+    Converts a array string in mujoco xml to np.array.
+
+    Examples:
         "0 1 2" => [0, 1, 2]
     """
     return np.array([float(x) for x in string.split(" ")])
@@ -42,9 +46,9 @@ def string_to_array(string):
 
 def set_alpha(node, alpha=0.1):
     """
-        Sets all a(lpha) field of the rgba attribute to be @alpha
-        for @node and all subnodes
-        used for managing display
+    Sets all a(lpha) field of the rgba attribute to be @alpha
+    for @node and all subnodes
+    used for managing display
     """
     for child_node in node.findall(".//*[@rgba]"):
         rgba_orig = string_to_array(child_node.get("rgba"))
@@ -52,13 +56,17 @@ def set_alpha(node, alpha=0.1):
 
 
 def new_joint(**kwargs):
-    """Create a joint tag with attributes specified by @**kwargs."""
+    """
+    Creates a joint tag with attributes specified by @**kwargs.
+    """
+
     element = ET.Element("joint", attrib=kwargs)
     return element
 
 
 def new_actuator(joint, act_type="actuator", **kwargs):
-    """Create an actuator tag with attributes specified by @**kwargs.
+    """
+    Creates an actuator tag with attributes specified by @**kwargs.
 
     Args:
         joint: type of actuator transmission.
@@ -72,7 +80,8 @@ def new_actuator(joint, act_type="actuator", **kwargs):
 
 
 def new_site(name, rgba=RED, pos=(0, 0, 0), size=(0.005,), **kwargs):
-    """Create a site element with attributes specified by @**kwargs.
+    """
+    Creates a site element with attributes specified by @**kwargs.
 
     Args:
         name (str): site name.
@@ -89,7 +98,8 @@ def new_site(name, rgba=RED, pos=(0, 0, 0), size=(0.005,), **kwargs):
 
 
 def new_geom(geom_type, size, pos=(0, 0, 0), rgba=RED, group=0, **kwargs):
-    """Create a geom element with attributes specified by @**kwargs.
+    """
+    Creates a geom element with attributes specified by @**kwargs.
 
     Args:
         geom_type (str): type of the geom.
@@ -110,7 +120,8 @@ def new_geom(geom_type, size, pos=(0, 0, 0), rgba=RED, group=0, **kwargs):
 
 
 def new_body(name=None, pos=None, **kwargs):
-    """Create a body element with attributes specified by @**kwargs.
+    """
+    Creates a body element with attributes specified by @**kwargs.
 
     Args:
         name (str): body name.
@@ -125,7 +136,8 @@ def new_body(name=None, pos=None, **kwargs):
 
 
 def new_inertial(name=None, pos=(0, 0, 0), mass=None, **kwargs):
-    """Create a inertial element with attributes specified by @**kwargs.
+    """
+    Creates a inertial element with attributes specified by @**kwargs.
 
     Args:
         mass: The mass of inertial

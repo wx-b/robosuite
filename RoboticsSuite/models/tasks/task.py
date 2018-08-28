@@ -2,7 +2,8 @@ from RoboticsSuite.models.world import MujocoWorldBase
 
 
 class Task(MujocoWorldBase):
-    """Base class for creating MJCF model of a task.
+    """
+    Base class for creating MJCF model of a task.
 
     A task typically involves a robot interacting with objects in an arena
     (workshpace). The purpose of a task class is to generate a MJCF model
@@ -12,24 +13,24 @@ class Task(MujocoWorldBase):
     """
 
     def merge_robot(self, mujoco_robot):
-        """Add robot model to the MJCF model."""
+        """Adds robot model to the MJCF model."""
         pass
 
     def merge_arena(self, mujoco_arena):
-        """Add arena model to the MJCF model."""
+        """Adds arena model to the MJCF model."""
         pass
 
     def merge_objects(self, mujoco_objects):
-        """Add physical objects to the MJCF model."""
+        """Adds physical objects to the MJCF model."""
         pass
 
     def merge_visual(self, mujoco_objects):
-        """Add visual objects to the MJCF model."""
+        """Adds visual objects to the MJCF model."""
 
     def place_objects(self):
-        """Place objects randomly until no collisions or max iterations hit."""
+        """Places objects randomly until no collisions or max iterations hit."""
         pass
 
     def place_visual(self):
-        """Place visual objects randomly until no collisions or max iterations hit."""
+        """Places visual objects randomly until no collisions or max iterations hit."""
         pass

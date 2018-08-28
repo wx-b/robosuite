@@ -1,6 +1,5 @@
 """
-    Defines GripperTester that is used to test
-    the physical properties of various grippers
+Defines GripperTester that is used to test the physical properties of various grippers
 """
 import xml.etree.ElementTree as ET
 from RoboticsSuite.models.world import MujocoWorldBase

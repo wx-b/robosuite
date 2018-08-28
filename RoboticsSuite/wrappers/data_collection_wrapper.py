@@ -11,7 +11,8 @@ import numpy as np
 
 class DataCollectionWrapper(Wrapper):
     def __init__(self, env, directory, collect_freq=1, flush_freq=1000):
-        """Initialize the DataCollection wrapper.
+        """
+        Initializes the data collection wrapper.
 
         Args:
             env: The environment to monitor.
@@ -58,7 +59,7 @@ class DataCollectionWrapper(Wrapper):
 
     def _on_first_interaction(self):
         """
-        Bookkeeping for first timestep of episode. 
+        Bookkeeping for first timestep of episode.
         This function is necessary to make sure that logging only happens after the first
         step call to the simulation, instead of on the reset (people tend to call
         reset more than is necessary in code).
@@ -79,7 +80,7 @@ class DataCollectionWrapper(Wrapper):
 
     def _flush(self):
         """
-        Method to flush internal state to disk. 
+        Method to flush internal state to disk.
         """
         t1, t2 = str(time.time()).split(".")
         state_path = os.path.join(self.ep_directory, "state_{}_{}.npz".format(t1, t2))

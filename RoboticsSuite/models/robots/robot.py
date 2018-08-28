@@ -12,13 +12,14 @@ class Robot(MujocoXML):
     """Base class for all robot models."""
 
     def __init__(self, fname):
-        """Initialize from file @fname."""
+        """Initializes from file @fname."""
         super().__init__(fname)
         # key: gripper name and value: gripper model
         self.grippers = OrderedDict()
 
     def add_gripper(self, arm_name, gripper):
-        """Mounts gripper to arm.
+        """
+        Mounts gripper to arm.
 
         Throws error if robot already has a gripper or gripper type is incorrect.
 

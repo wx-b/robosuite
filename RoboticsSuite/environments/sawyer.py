@@ -7,7 +7,7 @@ import RoboticsSuite.utils as U
 
 
 class SawyerEnv(MujocoEnv):
-    """Initialize a Sawyer robot environment."""
+    """Initializes a Sawyer robot environment."""
 
     def __init__(
         self,
@@ -99,7 +99,7 @@ class SawyerEnv(MujocoEnv):
             self._setup_mocap()
 
     def _load_model(self):
-        """Load robot and optionally add grippers."""
+        """Loads robot and optionally add grippers."""
         super()._load_model()
         self.mujoco_robot = Sawyer(use_eef_ctrl=self.use_eef_ctrl)
         if self.has_gripper:
@@ -109,7 +109,7 @@ class SawyerEnv(MujocoEnv):
             self.mujoco_robot.add_gripper("right_hand", self.gripper)
 
     def _reset_internal(self):
-        """Set initial pose of arm and grippers."""
+        """Sets initial pose of arm and grippers."""
         super()._reset_internal()
         self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos
 
@@ -119,7 +119,7 @@ class SawyerEnv(MujocoEnv):
             ] = self.gripper.init_qpos
 
     def _get_reference(self):
-        """Set up necessary reference for robots, grippers, and objects."""
+        """Sets up necessary reference for robots, grippers, and objects."""
         super()._get_reference()
 
         # indices for joints in qpos, qvel
@@ -175,7 +175,7 @@ class SawyerEnv(MujocoEnv):
         self.eef_cylinder_id = self.sim.model.site_name2id("grip_site_cylinder")
 
     def move_indicator(self, pos):
-        """Set 3d position of indicator object to @pos."""
+        """Sets 3d position of indicator object to @pos."""
         if self.use_indicator_object:
             index = self._ref_indicator_pos_low
             self.sim.data.qpos[index : index + 3] = pos
@@ -236,13 +236,13 @@ class SawyerEnv(MujocoEnv):
             ]
 
     def _post_action(self, action):
-        """(Optional) do gripper visualization after actions."""
+        """(Optional) doe gripper visualization after actions."""
         ret = super()._post_action(action)
         self._gripper_visualization()
         return ret
 
     def _setup_mocap(self):
-        """Set up mocap body for end-effector control."""
+        """Sets up mocap body for end-effector control."""
         U.mjpy_reset_mocap_welds(self.sim)
         self.sim.forward()
 

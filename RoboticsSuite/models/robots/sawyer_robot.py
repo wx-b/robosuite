@@ -16,7 +16,7 @@ class Sawyer(Robot):
         self.bottom_offset = np.array([0, 0, -0.913])
 
     def set_base_xpos(self, pos):
-        """place the robot on position @pos"""
+        """Places the robot on position @pos."""
         node = self.worldbody.find("./body[@name='base']")
         node.set("pos", array_to_string(pos - self.bottom_offset))
 

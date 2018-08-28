@@ -10,7 +10,7 @@ class Arena(MujocoXML):
     """Base arena class."""
 
     def set_origin(self, offset):
-        """Apply a constant offset to all objects."""
+        """Applies a constant offset to all objects."""
         offset = np.array(offset)
         for node in self.worldbody.findall("./*[@pos]"):
             cur_pos = string_to_array(node.get("pos"))
@@ -18,7 +18,7 @@ class Arena(MujocoXML):
             node.set("pos", array_to_string(new_pos))
 
     def add_pos_indicator(self):
-        """Add a new position indicator."""
+        """Adds a new position indicator."""
         body = new_body(name="pos_indicator")
         body.append(
             new_geom(

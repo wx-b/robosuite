@@ -14,11 +14,11 @@ class GymWrapper(Wrapper):
 
     def __init__(self, env, keys=None):
         """
-        Initialize the Gym wrapper.
+        Initializes the Gym wrapper.
 
         Args:
             env (MujocoEnv instance): The environment to wrap.
-            keys (list of strings): If provided, each observation will 
+            keys (list of strings): If provided, each observation will
                 consist of concatenated keys from the wrapped environment's
                 observation dictionary. Defaults to robot-state and object-state.
         """
@@ -40,9 +40,10 @@ class GymWrapper(Wrapper):
 
     def _flatten_obs(self, obs_dict, verbose=False):
         """
-        Filter keys of interest out and concatenate the information.
+        Filters keys of interest out and concatenate the information.
 
-        :param obs_dict: ordered dictionary of observations
+        Args:
+            obs_dict: ordered dictionary of observations
         """
         ob_lst = []
         for key in obs_dict:

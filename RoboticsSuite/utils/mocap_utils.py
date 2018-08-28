@@ -41,7 +41,10 @@ def mjpy_mocap_set_action(sim, action):
 
 
 def mjpy_reset_mocap_welds(sim):
-    """Resets the mocap welds that we use for actuation."""
+    """
+    Resets the mocap welds that we use for actuation.
+    """
+
     if sim.model.nmocap > 0 and sim.model.eq_data is not None:
         for i in range(sim.model.eq_data.shape[0]):
             if sim.model.eq_type[i] == mujoco_py.const.EQ_WELD:

@@ -9,7 +9,8 @@ from .robotiq_three_finger_gripper import RobotiqThreeFingerGripper
 
 
 def gripper_factory(name):
-    """Genreator for grippers
+    """
+    Genreator for grippers
 
     Creates a Gripper instance with the provided name.
 
