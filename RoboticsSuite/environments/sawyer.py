@@ -12,7 +12,6 @@ class SawyerEnv(MujocoEnv):
     def __init__(
         self,
         gripper_type=None,
-        use_eef_ctrl=False,
         gripper_visualization=False,
         use_indicator_object=False,
         has_renderer=False,
@@ -32,9 +31,6 @@ class SawyerEnv(MujocoEnv):
         Args:
             gripper_type (str): type of gripper, used to instantiate
                 gripper models from gripper factory.
-
-            use_eef_ctrl (bool): True if using end-effector control. Using joint
-                velocities otherwise.
 
             gripper_visualization (bool): True if using gripper visualization.
                 Useful for teleoperation.
@@ -76,7 +72,6 @@ class SawyerEnv(MujocoEnv):
 
         self.has_gripper = gripper_type is not None
         self.gripper_type = gripper_type
-        self.use_eef_ctrl = use_eef_ctrl
         self.gripper_visualization = gripper_visualization
         self.use_indicator_object = use_indicator_object
         super().__init__(
@@ -94,14 +89,12 @@ class SawyerEnv(MujocoEnv):
             camera_depth=camera_depth,
         )
 
-        # setup mocap if necessary
-        if self.use_eef_ctrl:
-            self._setup_mocap()
-
     def _load_model(self):
-        """Loads robot and optionally add grippers."""
+        """
+        Loads robot and optionally add grippers.
+        """
         super()._load_model()
-        self.mujoco_robot = Sawyer(use_eef_ctrl=self.use_eef_ctrl)
+        self.mujoco_robot = Sawyer()
         if self.has_gripper:
             self.gripper = gripper_factory(self.gripper_type)
             if not self.gripper_visualization:
@@ -109,7 +102,9 @@ class SawyerEnv(MujocoEnv):
             self.mujoco_robot.add_gripper("right_hand", self.gripper)
 
     def _reset_internal(self):
-        """Sets initial pose of arm and grippers."""
+        """
+        Sets initial pose of arm and grippers.
+        """
         super()._reset_internal()
         self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos
 
@@ -119,7 +114,9 @@ class SawyerEnv(MujocoEnv):
             ] = self.gripper.init_qpos
 
     def _get_reference(self):
-        """Sets up necessary reference for robots, grippers, and objects."""
+        """
+        Sets up necessary reference for robots, grippers, and objects.
+        """
         super()._get_reference()
 
         # indices for joints in qpos, qvel
@@ -175,53 +172,45 @@ class SawyerEnv(MujocoEnv):
         self.eef_cylinder_id = self.sim.model.site_name2id("grip_site_cylinder")
 
     def move_indicator(self, pos):
-        """Sets 3d position of indicator object to @pos."""
+        """
+        Sets 3d position of indicator object to @pos.
+        """
         if self.use_indicator_object:
             index = self._ref_indicator_pos_low
             self.sim.data.qpos[index : index + 3] = pos
 
-    # overrides MujocoEnv method
     def _pre_action(self, action):
         """
-        Overrides the superclass method for supporting different controller types.
-        Currently, we support joint velocity control and end-effector control. The
-        end-effector control is achieved by a MoCap body.
+        Overrides the superclass method to actuate the robot with the 
+        passed joint velocities and gripper control.
+
+        Args:
+            action (numpy array): The control to apply to the robot. The first
+                @self.mujoco_robot.dof dimensions should be the desired 
+                normalized joint velocities and if the robot has 
+                a gripper, the next @self.gripper.dof dimensions should be
+                actuation controls for the gripper.
         """
 
-        if self.use_eef_ctrl:
-            # TODO (Ajay): are we assuming EEF only works with sawyer + parallel jaws?
-            assert len(action) == 9
-            # ensure that we don't change the action outside of this scope
-            action = action.copy()
+        # clip actions into valid range
+        assert(len(action) == self.dof), "environment got invalid action dimension"
+        low, high = self.action_spec
+        action = np.clip(action, low, high)
 
-            pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:]
+        if self.has_gripper:
+            arm_action = action[: self.mujoco_robot.dof]
+            gripper_action_in = action[
+                self.mujoco_robot.dof : self.mujoco_robot.dof + self.gripper.dof
+            ]
+            gripper_action_actual = self.gripper.format_action(gripper_action_in)
+            action = np.concatenate([arm_action, gripper_action_actual])
 
-            # TODO (Ajay): Are we only supporting eef control with two-finger gripper?
-            assert gripper_ctrl.shape == (2,)
-            action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
-
-            # Apply action to simulation.
-            U.mjpy_ctrl_set_action(self.sim, action)
-            U.mjpy_mocap_set_action(self.sim, action)
-
-        else:
-            # TODO (Ajay): use action_spec for the action limits instead of constants?
-            action = np.clip(action, -1, 1)
-
-            if self.has_gripper:
-                arm_action = action[: self.mujoco_robot.dof]
-                gripper_action_in = action[
-                    self.mujoco_robot.dof : self.mujoco_robot.dof + self.gripper.dof
-                ]
-                gripper_action_actual = self.gripper.format_action(gripper_action_in)
-                action = np.concatenate([arm_action, gripper_action_actual])
-
-            # rescale normalized action to control ranges
-            ctrl_range = self.sim.model.actuator_ctrlrange
-            bias = 0.5 * (ctrl_range[:, 1] + ctrl_range[:, 0])
-            weight = 0.5 * (ctrl_range[:, 1] - ctrl_range[:, 0])
-            applied_action = bias + weight * action
-            self.sim.data.ctrl[:] = applied_action
+        # rescale normalized action to control ranges
+        ctrl_range = self.sim.model.actuator_ctrlrange
+        bias = 0.5 * (ctrl_range[:, 1] + ctrl_range[:, 0])
+        weight = 0.5 * (ctrl_range[:, 1] - ctrl_range[:, 0])
+        applied_action = bias + weight * action
+        self.sim.data.ctrl[:] = applied_action
 
         # gravity compensation
         self.sim.data.qfrc_applied[
@@ -236,25 +225,12 @@ class SawyerEnv(MujocoEnv):
             ]
 
     def _post_action(self, action):
-        """(Optional) doe gripper visualization after actions."""
+        """
+        (Optional) does gripper visualization after actions.
+        """
         ret = super()._post_action(action)
         self._gripper_visualization()
         return ret
-
-    def _setup_mocap(self):
-        """Sets up mocap body for end-effector control."""
-        U.mjpy_reset_mocap_welds(self.sim)
-        self.sim.forward()
-
-        # Move end effector into position.
-        gripper_target = self.sim.data.get_body_xpos("right_hand")
-        gripper_rotation = self.sim.data.get_body_xquat("right_hand")
-
-        self.sim.data.set_mocap_pos("mocap", gripper_target)
-        self.sim.data.set_mocap_quat("mocap", gripper_rotation)
-
-        for _ in range(10):
-            self.sim.step()
 
     def _get_observation(self):
         """
@@ -300,18 +276,18 @@ class SawyerEnv(MujocoEnv):
 
     @property
     def action_spec(self):
-        """Action lower/upper limits per dimension."""
-        # TODO (Ajay): what is the range with eef control?
-        assert not self.use_eef_ctrl, "action spec for eef control not supported"
+        """
+        Action lower/upper limits per dimension.
+        """
         low = np.ones(self.dof) * -1.
         high = np.ones(self.dof) * 1.
         return low, high
 
     @property
     def dof(self):
-        """Returns the DoF of the robot (with grippers)."""
-        if self.use_eef_ctrl:
-            return 7  # 3 for position and 4 for rotation
+        """
+        Returns the DoF of the robot (with grippers).
+        """
         dof = self.mujoco_robot.dof
         if self.has_gripper:
             dof += self.gripper.dof
@@ -336,23 +312,31 @@ class SawyerEnv(MujocoEnv):
         return pose_in_base
 
     def set_robot_joint_positions(self, jpos):
-        """Helper method to force robot joint positions to the passed values."""
+        """
+        Helper method to force robot joint positions to the passed values.
+        """
         self.sim.data.qpos[self._ref_joint_pos_indexes] = jpos
         self.sim.forward()
 
     @property
     def _right_hand_joint_cartesian_pose(self):
-        """Returns the cartesian pose of the last robot joint in base frame of robot."""
+        """
+        Returns the cartesian pose of the last robot joint in base frame of robot.
+        """
         return self.pose_in_base_from_name("right_l6")
 
     @property
     def _right_hand_pose(self):
-        """Returns eef pose in base frame of robot."""
+        """
+        Returns eef pose in base frame of robot.
+        """
         return self.pose_in_base_from_name("right_hand")
 
     @property
     def _right_hand_quat(self):
-        """Returns eef quaternion in base frame of robot."""
+        """
+        Returns eef quaternion in base frame of robot.
+        """
         return U.mat2quat(self._right_hand_orn)
 
     @property
@@ -375,19 +359,25 @@ class SawyerEnv(MujocoEnv):
 
     @property
     def _right_hand_pos(self):
-        """Returns position of eef in base frame of robot."""
+        """
+        Returns position of eef in base frame of robot.
+        """
         eef_pose_in_base = self._right_hand_pose
         return eef_pose_in_base[:3, 3]
 
     @property
     def _right_hand_orn(self):
-        """Returns orientation of eef in base frame of robot as a rotation matrix."""
+        """
+        Returns orientation of eef in base frame of robot as a rotation matrix.
+        """
         eef_pose_in_base = self._right_hand_pose
         return eef_pose_in_base[:3, :3]
 
     @property
     def _right_hand_vel(self):
-        """Returns velocity of eef in base frame of robot."""
+        """
+        Returns velocity of eef in base frame of robot.
+        """
         return self._right_hand_total_velocity[:3]
 
     @property
@@ -414,10 +404,15 @@ class SawyerEnv(MujocoEnv):
         return self.sim.data.qvel[self._ref_joint_vel_indexes]
 
     def _gripper_visualization(self):
-        """Do any needed visualization here."""
+        """
+        Do any needed visualization here.
+        """
+
         # By default, don't do any coloring.
         self.sim.model.site_rgba[self.eef_site_id] = [0., 0., 0., 0.]
 
     def _check_contact(self):
-        """Returns True if the gripper is in contact with another object."""
+        """
+        Returns True if the gripper is in contact with another object.
+        """
         return False

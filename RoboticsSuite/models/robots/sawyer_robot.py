@@ -6,11 +6,8 @@ from RoboticsSuite.utils.mjcf_utils import xml_path_completion, array_to_string
 class Sawyer(Robot):
     """Sawyer is a witty single-arm robot designed by Rethink Robotics."""
 
-    def __init__(self, use_eef_ctrl=False):
-        if use_eef_ctrl:
-            super().__init__(xml_path_completion("robots/sawyer/robot_mocap.xml"))
-        else:
-            super().__init__(xml_path_completion("robots/sawyer/robot.xml"))
+    def __init__(self):
+        super().__init__(xml_path_completion("robots/sawyer/robot.xml"))
 
         # TODO: fix me to the correct value
         self.bottom_offset = np.array([0, 0, -0.913])

@@ -17,7 +17,6 @@ class SawyerNutAssembly(SawyerEnv):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",
-        use_eef_ctrl=False,
         table_size=(0.2, 0.4, 0.4),
         table_friction=None,
         use_camera_obs=True,
@@ -45,9 +44,6 @@ class SawyerNutAssembly(SawyerEnv):
 
             gripper_type (str): type of gripper, used to instantiate
                 gripper models from gripper factory.
-
-            use_eef_ctrl (bool): True if using end-effector control. Using joint
-                velocities otherwise.
 
             table_size (3-tuple): x, y, and z dimensions of the table.
 
@@ -153,7 +149,6 @@ class SawyerNutAssembly(SawyerEnv):
 
         super().__init__(
             gripper_type=gripper_type,
-            use_eef_ctrl=use_eef_ctrl,
             gripper_visualization=gripper_visualization,
             use_indicator_object=use_indicator_object,
             has_renderer=has_renderer,
