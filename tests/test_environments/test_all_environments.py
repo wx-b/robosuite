@@ -1,5 +1,5 @@
 """
-Test all environments with random policies
+Test all environments with random policies.
 """
 import numpy as np
 

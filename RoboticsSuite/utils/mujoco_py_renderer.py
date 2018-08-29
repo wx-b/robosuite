@@ -26,7 +26,6 @@ class CustomMjViewer(MjViewer):
 
 
 class MujocoPyRenderer:
-
     def __init__(self, sim):
         """
         Args:

@@ -47,9 +47,7 @@ class GripperTester:
         gripper_body.set("pos", pos)
         gripper_body.set("quat", quat)  # flip z
         gripper_body.append(
-            new_joint(
-                name="gripper_z_joint", type="slide", axis="0 0 -1", damping="50"
-            )
+            new_joint(name="gripper_z_joint", type="slide", axis="0 0 -1", damping="50")
         )
         world.merge(gripper, merge_body=False)
         world.worldbody.append(gripper_body)
