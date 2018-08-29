@@ -9,7 +9,8 @@ import pybullet as p
 from os.path import join as pjoin
 
 import RoboticsSuite.utils as U
-from RoboticsSuite.controllers.controller import Controller
+
+from RoboticsSuite.controllers import Controller
 
 
 class SawyerIKController(Controller):

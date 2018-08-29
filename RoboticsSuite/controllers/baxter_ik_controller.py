@@ -5,13 +5,11 @@ Run `pip install pybullet==1.9.5`.
 """
 
 import os
-import time
 import numpy as np
 import pybullet as p
 
-from os.path import join as pjoin
-import RoboticsSuite.utils as U
-from RoboticsSuite.controllers.controller import Controller
+import RoboticsSuite.utils.transform_utils as T
+from RoboticsSuite.controllers import Controller
 
 
 class BaxterIKController(Controller):
@@ -187,7 +185,7 @@ class BaxterIKController(Controller):
         for eff in [self.effector_right, self.effector_left]:
             eef_pos_in_world = np.array(p.getLinkState(self.ik_robot, eff)[0])
             eef_orn_in_world = np.array(p.getLinkState(self.ik_robot, eff)[1])
-            eef_pose_in_world = U.pose2mat((eef_pos_in_world, eef_orn_in_world))
+            eef_pose_in_world = T.pose2mat((eef_pos_in_world, eef_orn_in_world))
 
             base_pos_in_world = np.array(
                 p.getBasePositionAndOrientation(self.ik_robot)[0]
@@ -195,13 +193,13 @@ class BaxterIKController(Controller):
             base_orn_in_world = np.array(
                 p.getBasePositionAndOrientation(self.ik_robot)[1]
             )
-            base_pose_in_world = U.pose2mat((base_pos_in_world, base_orn_in_world))
-            world_pose_in_base = U.pose_inv(base_pose_in_world)
+            base_pose_in_world = T.pose2mat((base_pos_in_world, base_orn_in_world))
+            world_pose_in_base = T.pose_inv(base_pose_in_world)
 
-            eef_pose_in_base = U.pose_in_A_to_pose_in_B(
+            eef_pose_in_base = T.pose_in_A_to_pose_in_B(
                 pose_A=eef_pose_in_world, pose_A_in_B=world_pose_in_base
             )
-            out.extend(U.mat2pose(eef_pose_in_base))
+            out.extend(T.mat2pose(eef_pose_in_base))
 
         return out
 
@@ -214,7 +212,7 @@ class BaxterIKController(Controller):
         rest_poses,
     ):
         """
-        Helper function to do inverse kinematics for a given target position and 
+        Helper function to do inverse kinematics for a given target position and
         orientation in the PyBullet world frame.
 
         Args:
@@ -270,16 +268,16 @@ class BaxterIKController(Controller):
         Returns:
             pose_in world: a (pos, orn) tuple.
         """
-        pose_in_base = U.pose2mat(pose_in_base)
+        pose_in_base = T.pose2mat(pose_in_base)
 
         base_pos_in_world = np.array(p.getBasePositionAndOrientation(self.ik_robot)[0])
         base_orn_in_world = np.array(p.getBasePositionAndOrientation(self.ik_robot)[1])
-        base_pose_in_world = U.pose2mat((base_pos_in_world, base_orn_in_world))
+        base_pose_in_world = T.pose2mat((base_pos_in_world, base_orn_in_world))
 
-        pose_in_world = U.pose_in_A_to_pose_in_B(
+        pose_in_world = T.pose_in_A_to_pose_in_B(
             pose_A=pose_in_base, pose_A_in_B=base_pose_in_world
         )
-        return U.mat2pose(pose_in_world)
+        return T.mat2pose(pose_in_world)
 
     def joint_positions_for_eef_command(self, right, left):
         """
@@ -301,8 +299,8 @@ class BaxterIKController(Controller):
 
         rotation_right = right["rotation"]
         rotation_left = left["rotation"]
-        self.ik_robot_target_orn_right = U.mat2quat(rotation_right)
-        self.ik_robot_target_orn_left = U.mat2quat(rotation_left)
+        self.ik_robot_target_orn_right = T.mat2quat(rotation_right)
+        self.ik_robot_target_orn_left = T.mat2quat(rotation_left)
 
         # convert from target pose in base frame to target pose in bullet world frame
         world_targets_right = self.bullet_base_pose_to_world_pose(
@@ -313,7 +311,7 @@ class BaxterIKController(Controller):
         )
 
         # Empirically, more iterations aren't needed, and it's faster
-        for bullet_i in range(5):
+        for _ in range(5):
             arm_joint_pos = self.inverse_kinematics(
                 world_targets_right[0],
                 world_targets_right[1],

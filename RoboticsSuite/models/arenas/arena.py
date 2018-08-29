@@ -1,9 +1,8 @@
 import numpy as np
-import xml.etree.ElementTree as ET
 
 from RoboticsSuite.models.base import MujocoXML
-from RoboticsSuite.utils.mjcf_utils import *
-from RoboticsSuite.utils import XMLError
+from RoboticsSuite.utils.mjcf_utils import array_to_string, string_to_array
+from RoboticsSuite.utils.mjcf_utils import new_geom, new_body, new_joint
 
 
 class Arena(MujocoXML):
@@ -30,5 +29,5 @@ class Arena(MujocoXML):
                 conaffinity="0",
             )
         )
-        body.append(joint(type="free", name="pos_indicator"))
+        body.append(new_joint(type="free", name="pos_indicator"))
         self.worldbody.append(body)

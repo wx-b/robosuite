@@ -1,8 +1,8 @@
 import numpy as np
 
 from RoboticsSuite.models.objects import MujocoGeneratedObject
-from RoboticsSuite.utils.mjcf_utils import *
-
+from RoboticsSuite.utils.mjcf_utils import new_body, new_geom, new_site
+from RoboticsSuite.utils.mjcf_utils import RED, GREEN, BLUE
 
 class PotWithHandlesObject(MujocoGeneratedObject):
     """
@@ -220,14 +220,12 @@ class PotWithHandlesObject(MujocoGeneratedObject):
     def handle_1_geoms(self):
         if self.solid_handle:
             return ["handle_1"]
-        else:
-            return ["handle_1_c", "handle_1_+", "handle_1_-"]
+        return ["handle_1_c", "handle_1_+", "handle_1_-"]
 
     def handle_2_geoms(self):
         if self.solid_handle:
             return ["handle_2"]
-        else:
-            return ["handle_2_c", "handle_2_+", "handle_2_-"]
+        return ["handle_2_c", "handle_2_+", "handle_2_-"]
 
     def get_visual(self, name=None, site=None):
         return self.get_collision(name, site)

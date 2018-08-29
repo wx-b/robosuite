@@ -1,12 +1,5 @@
-import numpy as np
-import xml.etree.ElementTree as ET
-import collections
-
-from RoboticsSuite.models.base import MujocoXML
-from RoboticsSuite.utils import XMLError, RandomizationError
-from RoboticsSuite.models.tasks import Task
-from RoboticsSuite.utils import *
-from RoboticsSuite.utils.mjcf_utils import *
+from RoboticsSuite.models.tasks import Task, UniformRandomSampler
+from RoboticsSuite.utils.mjcf_utils import new_joint, array_to_string
 
 
 class TableTopTask(Task):

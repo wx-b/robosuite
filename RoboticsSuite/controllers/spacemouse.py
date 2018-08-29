@@ -5,7 +5,7 @@ In particular, we assume you are using a SpaceMouse Wireless by default.
 
 To set up a new SpaceMouse controller:
     1. Download and install driver from https://www.3dconnexion.com/service/drivers.html
-    2. Install hidapi library through pip 
+    2. Install hidapi library through pip
        (make sure you run uninstall hid first if it is installed).
     3. Make sure SpaceMouse is connected before running the script
     4. (Optional) Based on the model of SpaceMouse, you might need to change the
@@ -22,11 +22,11 @@ from collections import namedtuple
 import numpy as np
 import hid
 
-import RoboticsSuite.utils as U
+from RoboticsSuite.utils.transform_utils import rotation_matrix
 
 AxisSpec = namedtuple("AxisSpec", ["channel", "byte1", "byte2", "scale"])
 
-SpaceMouseSpec = {
+SPACE_MOUSE_SPEC = {
     "x": AxisSpec(channel=1, byte1=1, byte2=2, scale=1),
     "y": AxisSpec(channel=1, byte1=3, byte2=4, scale=-1),
     "z": AxisSpec(channel=1, byte1=5, byte2=6, scale=-1),
@@ -98,14 +98,10 @@ class SpaceMouse:
         self.grasp = self.control_gripper
 
         # convert RPY to an absolute orientation
-        drot1 = U.rotation_matrix(angle=-pitch, direction=[1., 0., 0.], point=None)[
-            :3, :3
-        ]
+        drot1 = rotation_matrix(angle=-pitch, direction=[1., 0, 0], point=None)[:3, :3]
+        drot2 = rotation_matrix(angle=roll, direction=[0, 1., 0], point=None)[:3, :3]
+        drot3 = rotation_matrix(angle=yaw, direction=[0, 0, 1.], point=None)[:3, :3]
 
-        drot2 = U.rotation_matrix(angle=roll, direction=[0., 1., 0.], point=None)[
-            :3, :3
-        ]
-        drot3 = U.rotation_matrix(angle=yaw, direction=[0., 0., 1.], point=None)[:3, :3]
         self.rotation = self.rotation.dot(drot1.dot(drot2.dot(drot3)))
 
         return dict(dpos=dpos, rotation=self.rotation, grasp=self.grasp)
@@ -168,7 +164,7 @@ class SpaceMouse:
         """Maps internal states into gripper commands."""
         if self.double_click_and_hold:
             return -1.0
-        elif self.single_click_and_hold:
+        if self.single_click_and_hold:
             return 1.0
         return 0
 
@@ -177,5 +173,5 @@ if __name__ == "__main__":
 
     space_mouse = SpaceMouse()
     for i in range(100):
-        print(space_mouse.control, space_mouse.control_gripper())
+        print(space_mouse.control, space_mouse.control_gripper)
         time.sleep(0.02)

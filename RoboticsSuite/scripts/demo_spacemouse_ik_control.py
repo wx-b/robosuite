@@ -26,12 +26,10 @@ Note:
 """
 
 import argparse
-import numpy as np
 import os
+import numpy as np
 
 import RoboticsSuite
-from RoboticsSuite.models import *
-from RoboticsSuite.wrappers import DataCollectionWrapper
 from RoboticsSuite.controllers.spacemouse import SpaceMouse
 from RoboticsSuite.controllers.sawyer_ik_controller import SawyerIKController
 
@@ -62,7 +60,7 @@ if __name__ == "__main__":
 
     # initialize IK controller
     ik_controller = SawyerIKController(
-        bullet_data_path=os.path.join(RoboticsSuite.assets_path, "bullet_data"),
+        bullet_data_path=os.path.join(RoboticsSuite.models.assets_root, "bullet_data"),
         robot_jpos_getter=robot_jpos_getter,
     )
 

@@ -1,12 +1,9 @@
-import xml.etree.ElementTree as ET
 from collections import OrderedDict
 import numpy as np
 
-from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.models.tasks import Task
-from RoboticsSuite.utils import XMLError
-from RoboticsSuite.utils import *
-from RoboticsSuite.utils.mjcf_utils import *
+from RoboticsSuite.utils import RandomizationError
+from RoboticsSuite.utils.mjcf_utils import new_joint, array_to_string, string_to_array
 
 
 class PickPlaceTask(Task):

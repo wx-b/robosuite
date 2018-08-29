@@ -3,7 +3,7 @@ import abc  # for abstract base class definitions
 
 class Controller(metaclass=abc.ABCMeta):
     """
-    Base class for all robot controllers. 
+    Base class for all robot controllers.
     Defines basic interface for all controllers to adhere to.
     """
 
@@ -27,8 +27,8 @@ class Controller(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def sync_state(self):
         """
-        This function does internal bookkeeping to maintain 
-        consistency between the robot being controlled and 
+        This function does internal bookkeeping to maintain
+        consistency between the robot being controlled and
         the controller state.
         """
         raise NotImplementedError
