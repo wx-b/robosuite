@@ -4,6 +4,7 @@ from RoboticsSuite.models.objects import MujocoGeneratedObject
 from RoboticsSuite.utils.mjcf_utils import new_body, new_geom, new_site
 from RoboticsSuite.utils.mjcf_utils import RED, GREEN, BLUE
 
+
 class PotWithHandlesObject(MujocoGeneratedObject):
     """
     Generates the Pot object with side handles (used in BaxterLift)
@@ -433,7 +434,14 @@ class CapsuleObject(MujocoGeneratedObject):
     A randomized capsule object.
     """
 
-    def __init__(self, size_max=None, size_min=None, rgba="random"):
+    def __init__(
+        self,
+        size_max=None,
+        size_min=None,
+        density_range=None,
+        friction_range=None,
+        rgba="random",
+    ):
         if size_max is None:
             size_max = [0.07, 0.07]
         if size_min is None:

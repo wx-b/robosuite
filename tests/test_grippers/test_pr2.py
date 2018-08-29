@@ -1,4 +1,4 @@
-from RoboticsSuite.models import GripperTester, PR2Gripper
+from RoboticsSuite.models.grippers import GripperTester, PR2Gripper
 
 
 def test_pr2():

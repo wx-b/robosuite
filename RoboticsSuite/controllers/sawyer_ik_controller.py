@@ -8,8 +8,7 @@ import numpy as np
 import pybullet as p
 from os.path import join as pjoin
 
-import RoboticsSuite.utils as U
-
+import RoboticsSuite.utils.transform_utils as T
 from RoboticsSuite.controllers import Controller
 
 
@@ -150,18 +149,18 @@ class SawyerIKController(Controller):
         """
         eef_pos_in_world = np.array(p.getLinkState(self.ik_robot, 6)[0])
         eef_orn_in_world = np.array(p.getLinkState(self.ik_robot, 6)[1])
-        eef_pose_in_world = U.pose2mat((eef_pos_in_world, eef_orn_in_world))
+        eef_pose_in_world = T.pose2mat((eef_pos_in_world, eef_orn_in_world))
 
         base_pos_in_world = np.array(p.getBasePositionAndOrientation(self.ik_robot)[0])
         base_orn_in_world = np.array(p.getBasePositionAndOrientation(self.ik_robot)[1])
-        base_pose_in_world = U.pose2mat((base_pos_in_world, base_orn_in_world))
-        world_pose_in_base = U.pose_inv(base_pose_in_world)
+        base_pose_in_world = T.pose2mat((base_pos_in_world, base_orn_in_world))
+        world_pose_in_base = T.pose_inv(base_pose_in_world)
 
-        eef_pose_in_base = U.pose_in_A_to_pose_in_B(
+        eef_pose_in_base = T.pose_in_A_to_pose_in_B(
             pose_A=eef_pose_in_world, pose_A_in_B=world_pose_in_base
         )
 
-        return U.mat2pose(eef_pose_in_base)
+        return T.mat2pose(eef_pose_in_base)
 
     def inverse_kinematics(self, target_position, target_orientation, rest_poses=None):
         """
@@ -215,16 +214,16 @@ class SawyerIKController(Controller):
         Returns:
             pose_in world: a (pos, orn) tuple.
         """
-        pose_in_base = U.pose2mat(pose_in_base)
+        pose_in_base = T.pose2mat(pose_in_base)
 
         base_pos_in_world = np.array(p.getBasePositionAndOrientation(self.ik_robot)[0])
         base_orn_in_world = np.array(p.getBasePositionAndOrientation(self.ik_robot)[1])
-        base_pose_in_world = U.pose2mat((base_pos_in_world, base_orn_in_world))
+        base_pose_in_world = T.pose2mat((base_pos_in_world, base_orn_in_world))
 
-        pose_in_world = U.pose_in_A_to_pose_in_B(
+        pose_in_world = T.pose_in_A_to_pose_in_B(
             pose_A=pose_in_base, pose_A_in_B=base_pose_in_world
         )
-        return U.mat2pose(pose_in_world)
+        return T.mat2pose(pose_in_world)
 
     def joint_positions_for_eef_command(self, dpos, rotation):
         """
@@ -244,12 +243,12 @@ class SawyerIKController(Controller):
         # scripts is:
         #   `env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])`
         rotation = rotation.dot(
-            U.rotation_matrix(angle=-np.pi / 2, direction=[0., 0., 1.], point=None)[
+            T.rotation_matrix(angle=-np.pi / 2, direction=[0., 0., 1.], point=None)[
                 :3, :3
             ]
         )
 
-        self.ik_robot_target_orn = U.mat2quat(rotation)
+        self.ik_robot_target_orn = T.mat2quat(rotation)
 
         # convert from target pose in base frame to target pose in bullet world frame
         world_targets = self.bullet_base_pose_to_world_pose(

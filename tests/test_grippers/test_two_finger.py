@@ -1,7 +1,11 @@
 """
 Tests two finger gripper and left two finger gripper on grabbing task
 """
-from RoboticsSuite.models import TwoFingerGripper, GripperTester, LeftTwoFingerGripper
+from RoboticsSuite.models.grippers import (
+    TwoFingerGripper,
+    GripperTester,
+    LeftTwoFingerGripper,
+)
 
 
 def test_two_finger():

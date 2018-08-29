@@ -1,4 +1,6 @@
 ### support for mocap ###
+import numpy as np
+import mujoco_py
 
 
 def mjpy_ctrl_set_action(sim, action):

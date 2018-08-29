@@ -2,8 +2,9 @@
 6-DoF gripper with its open/close variant
 """
 import numpy as np
-from RoboticsSuite.models.grippers.gripper import Gripper
-import RoboticsSuite.utils as U
+
+from RoboticsSuite.models.grippers import Gripper
+from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 
 
 class RobotiqGripperBase(Gripper):
@@ -12,7 +13,7 @@ class RobotiqGripperBase(Gripper):
     """
 
     def __init__(self):
-        super().__init__(U.xml_path_completion("grippers/robotiq_gripper.xml"))
+        super().__init__(xml_path_completion("grippers/robotiq_gripper.xml"))
 
     @property
     def init_qpos(self):

@@ -1,7 +1,8 @@
 from collections import OrderedDict
 import numpy as np
 
-from RoboticsSuite.utils.transform_utils import convert_quat
+import RoboticsSuite.utils.transform_utils as T
+import RoboticsSuite.utils.mocap_utils as M
 from RoboticsSuite.environments import MujocoEnv
 
 from RoboticsSuite.models.grippers import gripper_factory
@@ -203,8 +204,8 @@ class SawyerEnv(MujocoEnv):
             action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
 
             # Apply action to simulation.
-            U.mjpy_ctrl_set_action(self.sim, action)
-            U.mjpy_mocap_set_action(self.sim, action)
+            M.mjpy_ctrl_set_action(self.sim, action)
+            M.mjpy_mocap_set_action(self.sim, action)
 
         else:
             # TODO (Ajay): use action_spec for the action limits instead of constants?
@@ -245,7 +246,7 @@ class SawyerEnv(MujocoEnv):
 
     def _setup_mocap(self):
         """Sets up mocap body for end-effector control."""
-        U.mjpy_reset_mocap_welds(self.sim)
+        M.mjpy_reset_mocap_welds(self.sim)
         self.sim.forward()
 
         # Move end effector into position.
@@ -290,7 +291,7 @@ class SawyerEnv(MujocoEnv):
             )
 
             di["eef_pos"] = self.sim.data.site_xpos[self.eef_site_id]
-            di["eef_quat"] = convert_quat(
+            di["eef_quat"] = T.convert_quat(
                 self.sim.data.get_body_xquat("right_hand"), to="xyzw"
             )
 
@@ -327,14 +328,14 @@ class SawyerEnv(MujocoEnv):
 
         pos_in_world = self.sim.data.get_body_xpos(name)
         rot_in_world = self.sim.data.get_body_xmat(name).reshape((3, 3))
-        pose_in_world = U.make_pose(pos_in_world, rot_in_world)
+        pose_in_world = T.make_pose(pos_in_world, rot_in_world)
 
         base_pos_in_world = self.sim.data.get_body_xpos("base")
         base_rot_in_world = self.sim.data.get_body_xmat("base").reshape((3, 3))
-        base_pose_in_world = U.make_pose(base_pos_in_world, base_rot_in_world)
-        world_pose_in_base = U.pose_inv(base_pose_in_world)
+        base_pose_in_world = T.make_pose(base_pos_in_world, base_rot_in_world)
+        world_pose_in_base = T.pose_inv(base_pose_in_world)
 
-        pose_in_base = U.pose_in_A_to_pose_in_B(pose_in_world, world_pose_in_base)
+        pose_in_base = T.pose_in_A_to_pose_in_B(pose_in_world, world_pose_in_base)
         return pose_in_base
 
     def set_robot_joint_positions(self, jpos):
@@ -355,7 +356,7 @@ class SawyerEnv(MujocoEnv):
     @property
     def _right_hand_quat(self):
         """Returns eef quaternion in base frame of robot."""
-        return U.mat2quat(self._right_hand_orn)
+        return T.mat2quat(self._right_hand_orn)
 
     @property
     def _right_hand_total_velocity(self):

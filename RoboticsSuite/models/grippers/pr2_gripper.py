@@ -2,8 +2,9 @@
     4 dof gripper with two fingers and its open/close variant
 """
 import numpy as np
-from RoboticsSuite.models.grippers.gripper import Gripper
-import RoboticsSuite.utils as U
+
+from RoboticsSuite.models.grippers import Gripper
+from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 
 
 class PR2GripperBase(Gripper):
@@ -12,7 +13,7 @@ class PR2GripperBase(Gripper):
     """
 
     def __init__(self):
-        super().__init__(U.xml_path_completion("grippers/pr2_gripper.xml"))
+        super().__init__(xml_path_completion("grippers/pr2_gripper.xml"))
 
     def format_action(self, action):
         return action

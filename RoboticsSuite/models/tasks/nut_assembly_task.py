@@ -1,5 +1,5 @@
 from RoboticsSuite.utils.mjcf_utils import new_joint, array_to_string
-from RoboticsSuite.models.tasks import Task
+from RoboticsSuite.models.tasks import Task, UniformRandomPegsSampler
 
 
 class NutAssemblyTask(Task):
