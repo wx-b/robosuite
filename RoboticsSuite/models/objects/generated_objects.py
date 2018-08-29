@@ -4,7 +4,7 @@ from RoboticsSuite.models.objects import MujocoGeneratedObject
 from RoboticsSuite.utils.mjcf_utils import *
 
 
-class GeneratedPotObject(MujocoGeneratedObject):
+class PotWithHandlesObject(MujocoGeneratedObject):
     """
     Generates the Pot object with side handles (used in BaxterLift)
     """

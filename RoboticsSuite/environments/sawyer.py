@@ -1,9 +1,11 @@
-import numpy as np
 from collections import OrderedDict
-from RoboticsSuite.environments.base import MujocoEnv
-from RoboticsSuite.models import gripper_factory
-from RoboticsSuite.models.robots.sawyer_robot import Sawyer
-import RoboticsSuite.utils as U
+import numpy as np
+
+from RoboticsSuite.utils.transform_utils import convert_quat
+from RoboticsSuite.environments import MujocoEnv
+
+from RoboticsSuite.models.grippers import gripper_factory
+from RoboticsSuite.models.robots import Sawyer
 
 
 class SawyerEnv(MujocoEnv):
@@ -39,32 +41,32 @@ class SawyerEnv(MujocoEnv):
             gripper_visualization (bool): True if using gripper visualization.
                 Useful for teleoperation.
 
-            use_indicator_object (bool): if True, sets up an indicator object that 
+            use_indicator_object (bool): if True, sets up an indicator object that
                 is useful for debugging.
 
-            has_renderer (bool): If true, render the simulation state in 
+            has_renderer (bool): If true, render the simulation state in
                 a viewer instead of headless mode.
 
             has_offscreen_renderer (bool): True if using off-screen rendering.
 
-            render_collision_mesh (bool): True if rendering collision meshes 
+            render_collision_mesh (bool): True if rendering collision meshes
                 in camera. False otherwise.
 
-            render_visual_mesh (bool): True if rendering visual meshes 
+            render_visual_mesh (bool): True if rendering visual meshes
                 in camera. False otherwise.
 
-            control_freq (float): how many control signals to receive 
-                in every second. This sets the amount of simulation time 
+            control_freq (float): how many control signals to receive
+                in every second. This sets the amount of simulation time
                 that passes between every action input.
 
             horizon (int): Every episode lasts for exactly @horizon timesteps.
 
             ignore_done (bool): True if never terminating the environment (ignore @horizon).
 
-            use_camera_obs (bool): if True, every observation includes a 
+            use_camera_obs (bool): if True, every observation includes a
                 rendered image.
 
-            camera_name (str): name of camera to be rendered. Must be 
+            camera_name (str): name of camera to be rendered. Must be
                 set if @use_camera_obs is True.
 
             camera_height (int): height of camera frame.
@@ -259,7 +261,7 @@ class SawyerEnv(MujocoEnv):
     def _get_observation(self):
         """
         Returns an OrderedDict containing observations [(name_string, np.array), ...].
-        
+
         Important keys:
             robot-state: contains robot-centric information.
         """
@@ -288,7 +290,7 @@ class SawyerEnv(MujocoEnv):
             )
 
             di["eef_pos"] = self.sim.data.site_xpos[self.eef_site_id]
-            di["eef_quat"] = U.convert_quat(
+            di["eef_quat"] = convert_quat(
                 self.sim.data.get_body_xquat("right_hand"), to="xyzw"
             )
 

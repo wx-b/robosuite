@@ -1,3 +1,25 @@
-from RoboticsSuite.models.objects.mujoco_object import *
-from RoboticsSuite.models.objects.xml_objects import *
-from RoboticsSuite.models.objects.generated_objects import *
+from .objects import MujocoObject, MujocoXMLObject, MujocoGeneratedObject
+
+from .xml_objects import (
+    BottleObject,
+    CanObject,
+    LemonObject,
+    MilkObject,
+    BreadObject,
+    CerealObject,
+    SquareNutObject,
+    RoundNutObject,
+    MilkVisualObject,
+    BreadVisualObject,
+    CerealVisualObject,
+    CanVisualObject,
+    PlateWithHoleObject,
+)
+
+from .generated_objects import (
+    PotWithHandlesObject,
+    BoxObject,
+    CylinderObject,
+    BallObject,
+    CapsuleObject,
+)

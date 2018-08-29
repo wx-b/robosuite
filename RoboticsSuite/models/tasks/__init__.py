@@ -1,4 +1,10 @@
-from RoboticsSuite.models.tasks.task import Task
-from RoboticsSuite.models.tasks.pick_place_task import PickPlaceTask
-from RoboticsSuite.models.tasks.nut_assembly_task import NutAssemblyTask
-from RoboticsSuite.models.tasks.table_top_task import TableTopTask
+from .task import Task
+from .pick_place_task import PickPlaceTask
+from .nut_assembly_task import NutAssemblyTask
+from .table_top_task import TableTopTask
+
+from .placement_sampler import (
+    ObjectPositionSampler,
+    UniformRandomSampler,
+    UniformRandomPegsSampler,
+)

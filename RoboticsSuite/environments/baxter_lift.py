@@ -1,16 +1,13 @@
-import pickle
-import random
 from collections import OrderedDict
 import numpy as np
 
-import RoboticsSuite.utils as U
-from RoboticsSuite.utils import RandomizationError
-from RoboticsSuite.utils.mjcf_utils import xml_path_completion
+import RoboticsSuite.utils.transform_utils as T
 from RoboticsSuite.environments.baxter import BaxterEnv
-from RoboticsSuite.environments.demo_sampler import DemoSampler
-from RoboticsSuite.models import *
-from RoboticsSuite.models.arenas.table_arena import TableArena
-from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
+
+from RoboticsSuite.models.objects import PotWithHandlesObject
+from RoboticsSuite.models.arenas import TableArena
+from RoboticsSuite.models.robots import Baxter
+from RoboticsSuite.models.tasks import TableTopTask, UniformRandomSampler
 
 
 class BaxterLift(BaxterEnv):
@@ -37,7 +34,7 @@ class BaxterLift(BaxterEnv):
 
             table_full_size (3-tuple): x, y, and z dimensions of the table.
 
-            table_friction (3-tuple): the three mujoco friction parameters for 
+            table_friction (3-tuple): the three mujoco friction parameters for
                 the table.
 
             use_object_obs (bool): if True, include object (pot) information in
@@ -49,7 +46,7 @@ class BaxterLift(BaxterEnv):
         """
 
         # initialize the pot
-        self.pot = GeneratedPotObject()
+        self.pot = PotWithHandlesObject()
         self.mujoco_objects = OrderedDict([("pot", self.pot)])
 
         # settings for table top
@@ -125,11 +122,11 @@ class BaxterLift(BaxterEnv):
         Reward function for the task.
 
           1. the agent only gets the lifting reward when flipping no more than 30 degrees.
-          2. the lifting reward is smoothed and ranged from 0 to 2, capped at 2.0. 
+          2. the lifting reward is smoothed and ranged from 0 to 2, capped at 2.0.
              the initial lifting reward is 0 when the pot is on the table;
              the agent gets the maximum 2.0 reward when the pot’s height is above a threshold.
           3. the reaching reward is 0.5 when the left gripper touches the left handle,
-             or when the right gripper touches the right handle before the gripper geom 
+             or when the right gripper touches the right handle before the gripper geom
              touches the handle geom, and once it touches we use 0.5
         """
         reward = 0
@@ -139,7 +136,7 @@ class BaxterLift(BaxterEnv):
         table_height = self.sim.data.site_xpos[self.table_top_id][2]
 
         # check if the pot is tilted more than 30 degrees
-        mat = U.quat2mat(self._pot_quat)
+        mat = T.quat2mat(self._pot_quat)
         z_unit = [0, 0, 1]
         z_rotated = np.matmul(mat, z_unit)
         cos_z = np.dot(z_unit, z_rotated)
@@ -202,12 +199,12 @@ class BaxterLift(BaxterEnv):
     @property
     def _pot_quat(self):
         """Returns the orientation of the pot."""
-        return U.convert_quat(self.sim.data.body_xquat[self.cube_body_id], to="xyzw")
+        return T.convert_quat(self.sim.data.body_xquat[self.cube_body_id], to="xyzw")
 
     @property
     def _world_quat(self):
         """World quaternion."""
-        return U.convert_quat(np.array([1, 0, 0, 0]), to="xyzw")
+        return T.convert_quat(np.array([1, 0, 0, 0]), to="xyzw")
 
     @property
     def _l_gripper_to_handle(self):
@@ -222,7 +219,7 @@ class BaxterLift(BaxterEnv):
     def _get_observation(self):
         """
         Returns an OrderedDict containing observations [(name_string, np.array), ...].
-        
+
         Important keys:
             robot-state: contains robot-centric information.
             object-state: requires @self.use_object_obs to be True.
@@ -250,7 +247,7 @@ class BaxterLift(BaxterEnv):
         if self.use_object_obs:
             # position and rotation of object
             cube_pos = self.sim.data.body_xpos[self.cube_body_id]
-            cube_quat = U.convert_quat(
+            cube_quat = T.convert_quat(
                 self.sim.data.body_xquat[self.cube_body_id], to="xyzw"
             )
             di["cube_pos"] = cube_pos

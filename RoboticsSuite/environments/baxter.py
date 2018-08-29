@@ -1,9 +1,11 @@
-import numpy as np
 from collections import OrderedDict
-from RoboticsSuite.environments.base import MujocoEnv
-from RoboticsSuite.models import gripper_factory
-from RoboticsSuite.models.robots.baxter_robot import Baxter
-import RoboticsSuite.utils as U
+import numpy as np
+
+import RoboticsSuite.utils.transform_utils as T
+from RoboticsSuite.environments import MujocoEnv
+
+from RoboticsSuite.models.grippers import gripper_factory
+from RoboticsSuite.models.robots import Baxter
 
 
 class BaxterEnv(MujocoEnv):
@@ -278,7 +280,7 @@ class BaxterEnv(MujocoEnv):
                 ]
             )
             di["right_eef_pos"] = self.sim.data.site_xpos[self.right_eef_site_id]
-            di["right_eef_quat"] = U.convert_quat(
+            di["right_eef_quat"] = T.convert_quat(
                 self.sim.data.get_body_xquat("right_hand"), to="xyzw"
             )
             robot_states.extend(
@@ -299,7 +301,7 @@ class BaxterEnv(MujocoEnv):
                 ]
             )
             di["left_eef_pos"] = self.sim.data.site_xpos[self.left_eef_site_id]
-            di["left_eef_quat"] = U.convert_quat(
+            di["left_eef_quat"] = T.convert_quat(
                 self.sim.data.get_body_xquat("left_hand"), to="xyzw"
             )
             robot_states.extend(
@@ -327,14 +329,14 @@ class BaxterEnv(MujocoEnv):
 
         pos_in_world = self.sim.data.get_body_xpos(name)
         rot_in_world = self.sim.data.get_body_xmat(name).reshape((3, 3))
-        pose_in_world = U.make_pose(pos_in_world, rot_in_world)
+        pose_in_world = T.make_pose(pos_in_world, rot_in_world)
 
         base_pos_in_world = self.sim.data.get_body_xpos("base")
         base_rot_in_world = self.sim.data.get_body_xmat("base").reshape((3, 3))
-        base_pose_in_world = U.make_pose(base_pos_in_world, base_rot_in_world)
-        world_pose_in_base = U.pose_inv(base_pose_in_world)
+        base_pose_in_world = T.make_pose(base_pos_in_world, base_rot_in_world)
+        world_pose_in_base = T.pose_inv(base_pose_in_world)
 
-        pose_in_base = U.pose_in_A_to_pose_in_B(pose_in_world, world_pose_in_base)
+        pose_in_base = T.pose_in_A_to_pose_in_B(pose_in_world, world_pose_in_base)
         return pose_in_base
 
     def set_robot_joint_positions(self, jpos):
