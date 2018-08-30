@@ -28,5 +28,46 @@ TODO(Jiren): A short example of how to create a new environment.
 ## Human Demonstrations
 TODO(Ajay): Talk about how to collect, download, and replay human demonstrations.
 
+#### Collecting human demonstrations
+
+Demonstrations can be collected by using a SpaceNavigator 3D Mouse. 
+
+#### Download CRIMSON dataset
+
+We collected a large-scale dataset on the `SawyerPickPlace` and `SawyerNutAssembly` tasks using the [CRIMSON](https://crowdncloud.ai/) platform. Crowdsourced workers collected these task demonstrations remotely. It consists of **1071** successful `SawyerPickPlace` demonstrations and **1147** successful `SawyerNutAssembly` demonstrations.
+
+We are providing the dataset in the hopes that it will be beneficial to researchers working on imitation learning. Large-scale imitation learning has not been explored much in the community; it will be exciting to see how this data is used.  
+
+You can download the dataset [here](insert link here...).
+
+Due to its large size, the dataset has `*.pkl` pickle files containing indices into the corresponding `*.bkl` pickle files, allowing for on-demand loading of demonstrations. When running any code involving demonstrations, you should still use `*.pkl` file paths, and ensure that the corresponding `*.bkl` file is in the same directory. The dataset consists of the following pickle files:
+
+- **pickplace-full.pkl, pickplace-full.bkl**
+  - The set of complete demonstrations on the full `SawyerPickPlace` task. Every demonstration consists of the Sawyer arm placing one of each object into its corresponding bin.
+- **pickplace-milk.pkl, pickplace-milk.bkl**
+  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceMilk` task. Every demonstration consists of the Sawyer arm placing a can into its corresponding bin. 
+- **pickplace-bread.pkl, pickplace-bread.bkl**
+  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceBread` task. Every demonstration consists of the Sawyer arm placing a loaf of bread into its corresponding bin. 
+- **pickplace-cereal.pkl, pickplace-cereal.bkl**
+  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceCereal` task. Every demonstration consists of the Sawyer arm placing a cereal box into its corresponding bin. 
+- **pickplace-can.pkl, pickplace-can.bkl**
+  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceCan` task. Every demonstration consists of the Sawyer arm placing a can into its corresponding bin. 
+- **nutassembly-full.pkl, nutassembly-full.bkl**
+  - The set of complete demonstrations on the full `SawyerNutAssembly` task. Every demonstration consists of the Sawyer arm fitting a square nut and a round nut onto their corresponding pegs. 
+- **nutassembly-square.pkl, nutassembly-square.bkl**
+  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerNutAssemblySquare` task. Every demonstration consists of the Sawyer arm fitting a square nut onto its corresponding peg. 
+- **nutassembly-round.pkl, nutassembly-round.bkl**
+  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerNutAssemblyRound` task. Every demonstration consists of the Sawyer arm fitting a round nut onto its corresponding peg. 
+
+#### Replay human demonstrations
+
+We have included a generic utility script that shows how demonstrations can be played back. Our [demo_playback_demonstrations](RoboticsSuite/scripts/demo_playback_demonstrations.py) script selects demonstration episodes at random from a demonstration pickle file and replays them.
+
+#### Control start state distribution of environment with demonstration states
+
+Several prior works have demonstrated the effectiveness of altering the start state distribution of training episodes for learning RL policies. We provide a generic utility for setting various types of learning curriculums which dictate how to sample from demonstration episodes when doing an environment reset. For more information see the `DemoSamplerWrapper` class. 
+
+We have provided an example of how to use this wrapper along with a demonstration pickle file in the [demo_learning_curriculum](RoboticsSuite/scripts/demo_learning_curriculum.py) script.
+
 ## Citations
 TODO(Yuke): Add bibtex for citing RoboticsSuite.
