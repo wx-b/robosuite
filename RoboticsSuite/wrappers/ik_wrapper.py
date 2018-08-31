@@ -40,6 +40,14 @@ class IKWrapper(Wrapper):
             raise Exception("Only Sawyer and Baxter robot environments are supported for IK "
                             "control currently.")
 
+    def set_robot_joint_positions(self, positions):
+        """
+        Overrides the function to set the joint positions directly, since we need to notify
+        the IK controller of the change.
+        """
+        self.env.set_robot_joint_positions(positions)
+        self.controller.sync_state()
+
     def _robot_jpos_getter(self):
         """
         Helper function to pass to the ik controller for access to the

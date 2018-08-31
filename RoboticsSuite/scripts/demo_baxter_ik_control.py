@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     for t in range(100000):
         omega = 2 * np.pi / 1000.
-        A = 1e-3
+        A = 5e-4
         dpos_right = np.array([A * np.cos(omega * t), 0, A * np.sin(omega * t)])
         dpos_left = np.array([A * np.sin(omega * t), A * np.cos(omega * t), 0])
         dquat = np.array([0,0,0,1])
