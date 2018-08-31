@@ -51,7 +51,7 @@ if __name__ == "__main__":
     env = DemoSamplerWrapper(
         env,
         file_path=os.path.join(
-            RoboticsSuite.assets_path, "demonstrations/sawyer-lift.pkl"
+            RoboticsSuite.models.assets_root, "demonstrations/sawyer-lift.pkl"
         ),
         need_xml=True,
         preload=True,
@@ -62,6 +62,7 @@ if __name__ == "__main__":
 
     for _ in range(100):
         env.reset()
+        env.viewer.set_camera(0)
         env.render()
         for i in range(100):
             obs, reward, done, _ = env.step(np.zeros(env.dof))

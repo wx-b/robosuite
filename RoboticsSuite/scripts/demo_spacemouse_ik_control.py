@@ -73,6 +73,7 @@ if __name__ == "__main__":
     # rotate the gripper so we can see it easily
     env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
+    space_mouse.start_control()
     for i in range(args.timesteps):
         state = space_mouse.get_controller_state()
         dpos, rotation, grasp = state["dpos"], state["rotation"], state["grasp"]
