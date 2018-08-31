@@ -37,7 +37,8 @@ class IKWrapper(Wrapper):
                 robot_jpos_getter=self._robot_jpos_getter,
             )
         else:
-            raise Exception("Only Sawyer and Baxter robot environments are supported for IK control currently.")
+            raise Exception("Only Sawyer and Baxter robot environments are supported for IK "
+                            "control currently.")
 
     def _robot_jpos_getter(self):
         """
@@ -59,20 +60,34 @@ class IKWrapper(Wrapper):
                     to a quaternion d such that r * d will be the new rotation. 
                 *: Controls for gripper actuation.
 
-                Note: Baxter environments should supply two such actions concatenated
-                together, one for each end effector.
+                Note: When wrapping around a Baxter environment, the indices 0-6 inidicate the
+                right hand. Indices 7-13 indicate the left hand, and the rest (*) are the gripper
+                inputs (first right, then left).
             
         """
 
-        ### TODO(jcreus): support the Baxter here as well. ###
-        dpos = action[:3]
-        dquat = action[3:7]
+        input_1 = self._make_input(action[:7], self.env._right_hand_quat)
+        if self.env.mujoco_robot.name == "sawyer":
+            velocities = self.controller.get_control(**input_1)
+            action = np.concatenate([velocities, action[7:]])
+        elif self.env.mujoco_robot.name == "baxter":
+            input_2 = self._make_input(action[7:14], self.env._left_hand_quat)
+            velocities = self.controller.get_control(input_1, input_2)
+            action = np.concatenate([velocities, action[14:]])
+        else:
+            raise Exception("Only Sawyer and Baxter robot environments are supported for IK "
+                            "control currently.")
 
-        # IK controller takes an absolute orientation in robot base frame
-        rotation = U.quat2mat(U.quat_multiply(self.env._right_hand_quat, action[3:7]))
-        velocities = self.controller.get_control(dpos=dpos, rotation=rotation)
-        action = np.concatenate([velocities, action[7:]])
         return self.env.step(action)
 
-
-
+    def _make_input(self, action, old_quat):
+        """
+        Helper function that returns a dictionary with keys dpos, rotation from a raw input
+        array. The first three elements are taken to be displacement in position, and a
+        quaternion indicating the change in rotation with respect to @old_quat.
+        """
+        return {
+                "dpos": action[:3],
+                # IK controller takes an absolute orientation in robot base frame
+                "rotation": U.quat2mat(U.quat_multiply(old_quat, action[3:7]))
+               }

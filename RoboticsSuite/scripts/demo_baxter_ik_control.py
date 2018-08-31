@@ -10,6 +10,7 @@ import numpy as np
 import RoboticsSuite
 from RoboticsSuite.models import *
 from RoboticsSuite.controllers.baxter_ik_controller import BaxterIKController
+from RoboticsSuite.wrappers import IKWrapper
 
 if __name__ == "__main__":
 
@@ -21,6 +22,7 @@ if __name__ == "__main__":
         gripper_visualization=True,
         use_camera_obs=False,
     )
+    env = IKWrapper(env)
 
     obs = env.reset()
 
@@ -35,29 +37,20 @@ if __name__ == "__main__":
     def robot_jpos_getter():
         return np.array(env._joint_positions)
 
-    ik_controller = BaxterIKController(
-        bullet_data_path=bullet_data_path, robot_jpos_getter=robot_jpos_getter
-    )
+    #ik_controller = BaxterIKController(
+    #    bullet_data_path=bullet_data_path, robot_jpos_getter=robot_jpos_getter
+    #)
 
     # gripper_controls = [[1., -1.], [-1., 1.]]
 
     for t in range(100000):
         omega = 2 * np.pi / 1000.
-        orn = np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]])
         A = 1e-3
-        action_right = {
-            "dpos": np.array([A * np.cos(omega * t), 0, A * np.sin(omega * t)]),
-            "rotation": orn,
-        }
-        action_left = {
-            "dpos": np.array([A * np.sin(omega * t), A * np.cos(omega * t), 0]),
-            "rotation": orn,
-        }
-
-        velocities = ik_controller.get_control(action_right, action_left)
-        assert len(velocities) == 14
+        dpos_right = np.array([A * np.cos(omega * t), 0, A * np.sin(omega * t)])
+        dpos_left = np.array([A * np.sin(omega * t), A * np.cos(omega * t), 0])
+        dquat = np.array([0,0,0,1])
         grasp = 0.
-        action = np.concatenate([velocities, [grasp, grasp]])
+        action = np.concatenate([dpos_right, dquat, dpos_left, dquat, [grasp, grasp]])
 
         obs, reward, done, info = env.step(action)
         env.render()

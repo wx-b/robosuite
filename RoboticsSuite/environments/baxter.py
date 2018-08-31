@@ -392,6 +392,13 @@ class BaxterEnv(MujocoEnv):
         return eef_pose_in_base[:3, :3]
 
     @property
+    def _right_hand_quat(self):
+        """
+        Returns eef orientation of right hand in base from of robot.
+        """
+        return U.mat2quat(self._right_hand_orn)
+
+    @property
     def _right_hand_vel(self):
         """
         Returns velocity of eef in base frame of robot.
@@ -445,6 +452,13 @@ class BaxterEnv(MujocoEnv):
         """
         eef_pose_in_base = self._left_hand_pose
         return eef_pose_in_base[:3, :3]
+
+    @property
+    def _left_hand_quat(self):
+        """
+        Returns eef orientation of left hand in base from of robot.
+        """
+        return U.mat2quat(self._left_hand_orn)
 
     @property
     def _left_hand_vel(self):
