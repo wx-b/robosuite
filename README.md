@@ -32,13 +32,17 @@ TODO(Ajay): Talk about how to collect, download, and replay human demonstrations
 
 Demonstrations can be collected by using a SpaceNavigator 3D Mouse. 
 
+TODO: Support for collecting demonstration PKLs.
+
+TODO: Explain structure of PKLs.
+
 #### Download CRIMSON dataset
 
 We collected a large-scale dataset on the `SawyerPickPlace` and `SawyerNutAssembly` tasks using the [CRIMSON](https://crowdncloud.ai/) platform. Crowdsourced workers collected these task demonstrations remotely. It consists of **1071** successful `SawyerPickPlace` demonstrations and **1147** successful `SawyerNutAssembly` demonstrations.
 
 We are providing the dataset in the hopes that it will be beneficial to researchers working on imitation learning. Large-scale imitation learning has not been explored much in the community; it will be exciting to see how this data is used.  
 
-You can download the dataset [here](insert link here...).
+You can download the dataset [here](https://drive.google.com/open?id=1iZSXTQZfBVcIBC3dRF5xUqMmWCmW64PD).
 
 Due to its large size, the dataset has `*.pkl` pickle files containing indices into the corresponding `*.bkl` pickle files, allowing for on-demand loading of demonstrations. When running any code involving demonstrations, you should still use `*.pkl` file paths, and ensure that the corresponding `*.bkl` file is in the same directory. The dataset consists of the following pickle files:
 
