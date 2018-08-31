@@ -173,8 +173,10 @@ def postprocess_model_xml(xml_str):
         old_path_split = old_path.split("/")
 
         ### TODO: fix this hack... ###
-        # ind = old_path_split.index("RoboticsSuite")
-        ind = old_path_split.index("MujocoManip")
+        if "MujocoManip" in old_path_split:
+            ind = old_path_split.index("MujocoManip")
+        else:
+            ind = old_path_split.index("RoboticsSuite")
 
         new_path_split = path_split + old_path_split[ind + 1 :]
         new_path = "/".join(new_path_split)

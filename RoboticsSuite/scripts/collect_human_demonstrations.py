@@ -9,13 +9,15 @@ script.
 import os
 import time
 import argparse
-import signal
+import pickle
 import numpy as np
+from glob import glob
 
 import RoboticsSuite
 from RoboticsSuite.controllers.spacemouse import SpaceMouse
 from RoboticsSuite.controllers.sawyer_ik_controller import SawyerIKController
 from RoboticsSuite import DataCollectionWrapper
+from RoboticsSuite.utils.mjcf_utils import postprocess_model_xml
 
 def collect_human_trajectory(env, space_mouse, ik_controller):
     """
@@ -63,13 +65,52 @@ def gather_demonstrations_as_pkl(directory, large=False):
             all of the demonstrations. This allows for lazy loading of
             demonstrations, which is useful if there are a lot of them. 
     """
-    pass
+    pickle_name = os.path.join(directory, 'demo.pkl')
+    if large:
+        big = open(os.path.join(directory, pickle_name.replace(".pkl",".bkl")), "wb")
+        ofs = [0]
+
+    all_data = []
+    for ep_directory in os.listdir(directory):
+        # collect episode data into dictionary
+        ep_data = {}
+        xml_path = os.path.join(directory, ep_directory, 'model.xml')
+        with open(xml_path, "r") as f:
+            ep_data['model.xml'] = f.read()
+        state_paths = os.path.join(directory, ep_directory, "state_*.npz")
+        states = []
+        for state_file in sorted(glob(state_paths)):
+            dic = np.load(state_file)
+            for s in dic['states']:
+                states.append(s)
+        ep_data['states'] = states
+
+        if large:
+            # write episode to large pickle file as serialized string
+            # and remember its offset in the small pickle file
+            raw = pickle.dumps(ep_data)
+            delta_ofs = big.write(raw)
+            ofs.append(ofs[-1] + delta_ofs)
+        else:
+            # collect episode in global list
+            all_data.append(ep_data)
+
+    small = open(os.path.join(directory, pickle_name), "wb")
+    if large:
+        # dump offsets to pickle
+        pickle.dump(ofs[:-1], small) 
+        big.close()
+    else:
+        # dump actual data to pickle
+        pickle.dump(all_data, small)
+    small.close() 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--environment", type=str, default="SawyerLift")
     parser.add_argument("--directory", type=str, 
         default="/tmp/{}".format(str(time.time()).replace(".", "_")))
+    parser.add_argument("--large", type=bool, default=False)
     args = parser.parse_args()
 
     # create original environment
@@ -86,7 +127,7 @@ if __name__ == "__main__":
     env = DataCollectionWrapper(env, data_directory)
 
     # function to return robot joint angles
-    def robot_jpos_getter():
+    def _robot_jpos_getter():
         return np.array(env._joint_positions)
 
     # initialize space_mouse controller
@@ -95,13 +136,19 @@ if __name__ == "__main__":
     # initialize IK controller
     ik_controller = SawyerIKController(
         bullet_data_path=os.path.join(RoboticsSuite.models.assets_root, "bullet_data"),
-        robot_jpos_getter=robot_jpos_getter,
+        robot_jpos_getter=_robot_jpos_getter,
     )
 
-    ### TODO: signal handling ###
-
+    # collect demonstrations
     while True:
         collect_human_trajectory(env, space_mouse, ik_controller)
+        c = input('continue? [y/n] ')
+        if c != 'y':
+            break
+
+    # turn them into a pkl file
+    gather_demonstrations_as_pkl(data_directory, args.large)
+
 
 
 
