@@ -71,9 +71,11 @@ if __name__ == "__main__":
         dpos, rotation, grasp = state["dpos"], state["rotation"], state["grasp"]
 
         # convert into a suitable end effector action for the environment
-        rotation_quat = U.mat2quat(rotation)
+        current = env._right_hand_orn
+        drotation = current.T.dot(rotation) # relative rotation of desired from current
+        dquat = U.mat2quat(drotation)
         grasp = grasp - 1. # map 0 -> -1, 1 -> 0 so that 0 is open, 1 is closed (halfway)
-        action = np.concatenate([dpos, rotation_quat, [grasp]])
+        action = np.concatenate([dpos, dquat, [grasp]])
         obs, reward, done, info = env.step(action)
         env.render()
         print("reward: {0:.2f}".format(reward))

@@ -111,7 +111,7 @@ class SpaceMouse:
         return dict(dpos=dpos, rotation=self.rotation, grasp=self.grasp)
 
     def run(self):
-        """Lisenter method that keeps pulling new messages."""
+        """Listener method that keeps pulling new messages."""
 
         t_last_click = -1
 

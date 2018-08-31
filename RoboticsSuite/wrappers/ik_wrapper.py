@@ -53,7 +53,10 @@ class IKWrapper(Wrapper):
         Args:
             action (numpy array): The array should have the corresponding elements.
                 0-2: The desired change in end effector position in x, y, and z.
-                3-6: The desired orientation, expressed as a (x, y, z, w) quaternion.
+                3-6: The desired change in orientation, expressed as a (x, y, z, w) quaternion.
+                    Note that this quaternion encodes a relative rotation with respect to the
+                    current gripper orientation. If the current rotation is r, this corresponds
+                    to a quaternion d such that r * d will be the new rotation. 
                 *: Controls for gripper actuation.
 
                 Note: Baxter environments should supply two such actions concatenated
@@ -63,7 +66,10 @@ class IKWrapper(Wrapper):
 
         ### TODO(jcreus): support the Baxter here as well. ###
         dpos = action[:3]
-        rotation = U.quat2mat(action[3:7])
+        dquat = action[3:7]
+
+        # IK controller takes an absolute orientation in robot base frame
+        rotation = U.quat2mat(U.quat_multiply(self.env._right_hand_quat, action[3:7]))
         velocities = self.controller.get_control(dpos=dpos, rotation=rotation)
         action = np.concatenate([velocities, action[7:]])
         return self.env.step(action)
