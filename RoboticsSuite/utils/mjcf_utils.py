@@ -174,9 +174,9 @@ def postprocess_model_xml(xml_str):
 
         ### TODO: fix this hack... ###
         if "MujocoManip" in old_path_split:
-            ind = old_path_split.index("MujocoManip")
+            ind = "".join(old_path_split).rindex("MujocoManip") # last occurrence index
         else:
-            ind = old_path_split.index("RoboticsSuite")
+            ind = "".join(old_path_split).rindex("RoboticsSuite") # last occurrence index
 
         new_path_split = path_split + old_path_split[ind + 1 :]
         new_path = "/".join(new_path_split)
