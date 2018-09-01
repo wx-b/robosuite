@@ -30,12 +30,13 @@ import os
 import numpy as np
 
 import RoboticsSuite
+
+import RoboticsSuite.utils.transform_utils as T
 from RoboticsSuite.controllers.spacemouse import SpaceMouse
-from RoboticsSuite.controllers.sawyer_ik_controller import SawyerIKController
+from RoboticsSuite.wrappers import IKWrapper
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--environment", type=str, default="SawyerPickPlaceCan")
     parser.add_argument("--timesteps", type=int, default=10000)
@@ -51,20 +52,11 @@ if __name__ == "__main__":
         control_freq=100,
     )
 
-    # function to return robot joint angles
-    def robot_jpos_getter():
-        return np.array(env._joint_positions)
+    # enable controlling the end effector directly instead of using joint velocities
+    env = IKWrapper(env)
 
     # initialize space_mouse controller
     space_mouse = SpaceMouse()
-
-    # initialize IK controller
-    ik_controller = SawyerIKController(
-        bullet_data_path=os.path.join(RoboticsSuite.models.assets_root, "bullet_data"),
-        robot_jpos_getter=robot_jpos_getter,
-    )
-
-    gripper_controls = [[1.], [-1.]]
 
     obs = env.reset()
     env.viewer.set_camera(camera_id=2)
@@ -74,11 +66,16 @@ if __name__ == "__main__":
     env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
     for i in range(args.timesteps):
+        # read controller state from spacemouse
         state = space_mouse.get_controller_state()
         dpos, rotation, grasp = state["dpos"], state["rotation"], state["grasp"]
-        velocities = ik_controller.get_control(dpos=dpos, rotation=rotation)
-        action = np.concatenate([velocities, [grasp, -grasp]])
 
+        # convert into a suitable end effector action for the environment
+        current = env._right_hand_orn
+        drotation = current.T.dot(rotation)  # relative rotation of desired from current
+        dquat = T.mat2quat(drotation)
+        grasp = grasp - 1.  # map 0 to -1 (open) and 1 to 0 (closed halfway)
+        action = np.concatenate([dpos, dquat, [grasp]])
         obs, reward, done, info = env.step(action)
         env.render()
         print("reward: {0:.2f}".format(reward))
