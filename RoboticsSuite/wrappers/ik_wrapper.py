@@ -1,7 +1,7 @@
 """
-This file implements a wrapper for facilitating compatibility with OpenAI gym.
-This is useful when using these environments with code that assumes a gym-like 
-interface.
+This file implements a wrapper for controlling the robot through end effector
+movements instead of joint velocities. This is useful in learning pipelines
+that want to output actions in end effector space instead of joint space.
 """
 
 import os
