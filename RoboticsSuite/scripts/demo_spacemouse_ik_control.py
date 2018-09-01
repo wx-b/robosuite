@@ -64,25 +64,24 @@ if __name__ == "__main__":
         robot_jpos_getter=robot_jpos_getter,
     )
 
-    gripper_controls = [[1.], [-1.]]
-
-    obs = env.reset()
-    env.viewer.set_camera(camera_id=2)
-    env.render()
-
-    # rotate the gripper so we can see it easily
-    env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
-
-    space_mouse.start_control()
-    for i in range(args.timesteps):
-        state = space_mouse.get_controller_state()
-        dpos, rotation, grasp = state["dpos"], state["rotation"], state["grasp"]
-        velocities = ik_controller.get_control(dpos=dpos, rotation=rotation)
-        action = np.concatenate([velocities, [grasp, -grasp]])
-
-        obs, reward, done, info = env.step(action)
+    while True:
+        obs = env.reset()
+        env.viewer.set_camera(camera_id=2)
         env.render()
-        print("reward: {0:.2f}".format(reward))
 
-        if done:
-            break
+        # rotate the gripper so we can see it easily
+        env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
+        ik_controller.sync_state()
+
+        space_mouse.start_control()
+        while True:
+            state = space_mouse.get_controller_state()
+            dpos, rotation, grasp, reset = state["dpos"], state["rotation"], state["grasp"], state["reset"]
+            if reset:
+                break
+            grasp = grasp - 1. # map 0 to -1 (open), 1 to 0 (closed halfway)
+            action = np.concatenate([velocities, [grasp]])
+
+            obs, reward, done, info = env.step(action)
+            env.render()
+            print("reward: {0:.2f}".format(reward))
