@@ -78,6 +78,7 @@ if __name__ == "__main__":
             dpos, rotation, grasp, reset = state["dpos"], state["rotation"], state["grasp"], state["reset"]
             if reset:
                 break
+            velocities = ik_controller.get_control(dpos=dpos, rotation=rotation)
             grasp = grasp - 1. # map 0 to -1 (open), 1 to 0 (closed halfway)
             action = np.concatenate([velocities, [grasp]])
 
