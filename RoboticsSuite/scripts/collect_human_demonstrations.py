@@ -55,21 +55,22 @@ def collect_human_trajectory(env, device, ik_controller):
     env.close()
 
 
-def gather_demonstrations_as_pkl(directory, large=False):
+def gather_demonstrations_as_pkl(directory, out_dir, large=False):
     """
     Gathers the demonstrations saved in the current directory into a 
     single pkl file.
 
     Args:
         directory (str): Path to the directory containing raw demonstrations.
+        out_dir (str): Path to where to store the pkl file.
         large (bool): If true, generates both a .pkl and a .bkl file. The 
             .pkl file is for indexing into the .bkl file that contains 
             all of the demonstrations. This allows for lazy loading of
             demonstrations, which is useful if there are a lot of them. 
     """
-    pickle_name = os.path.join(directory, 'demo.pkl')
+    pickle_path = os.path.join(out_dir, 'demo.pkl')
     if large:
-        big = open(os.path.join(directory, pickle_name.replace(".pkl",".bkl")), "wb")
+        big = open(pickle_path.replace(".pkl",".bkl"), "wb")
         ofs = [0]
 
     all_data = []
@@ -99,7 +100,7 @@ def gather_demonstrations_as_pkl(directory, large=False):
             # collect episode in global list
             all_data.append(ep_data)
 
-    small = open(os.path.join(directory, pickle_name), "wb")
+    small = open(pickle_path, "wb")
     if large:
         # dump offsets to pickle
         pickle.dump(ofs[:-1], small) 
@@ -111,9 +112,8 @@ def gather_demonstrations_as_pkl(directory, large=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--directory", type=str, default=os.path.join(RoboticsSuite.models.assets_root, "demonstrations"))
     parser.add_argument("--environment", type=str, default="SawyerLift")
-    parser.add_argument("--directory", type=str, 
-        default="/tmp/{}".format(str(time.time()).replace(".", "_")))
     parser.add_argument("--large", type=bool, default=False)
     parser.add_argument("--device", type=str, default="keyboard")
     args = parser.parse_args()
@@ -127,10 +127,10 @@ if __name__ == "__main__":
         control_freq=100,
         gripper_visualization=True,
     )
-    data_directory = args.directory
 
     # wrap the environment with data collection wrapper
-    env = DataCollectionWrapper(env, data_directory)
+    tmp_directory = "/tmp/{}".format(str(time.time()).replace(".", "_"))
+    env = DataCollectionWrapper(env, tmp_directory)
 
     # function to return robot joint angles
     def _robot_jpos_getter():
@@ -155,12 +155,13 @@ if __name__ == "__main__":
     # collect demonstrations
     while True:
         collect_human_trajectory(env, device, ik_controller)
-        c = input('\n\ncontinue? [yes/no] \n\n')
-        if 'yes' not in c:
-            break
+        gather_demonstrations_as_pkl(tmp_directory, args.directory, args.large)
+        # c = input('\n\ncontinue? [yes/no] \n\n')
+        # if 'yes' not in c:
+        #     break
 
     # turn them into a pkl file
-    gather_demonstrations_as_pkl(data_directory, args.large)
+    # gather_demonstrations_as_pkl(args.directory, args.large)
 
 
 
