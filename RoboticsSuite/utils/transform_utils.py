@@ -78,7 +78,7 @@ def quat_multiply(quaternion1, quaternion0):
             x1 * y0 - y1 * x0 + z1 * w0 + w1 * z0,
             -x1 * x0 - y1 * y0 - z1 * z0 + w1 * w0,
         ),
-        dtype=np.float64,
+        dtype=np.float32,
     )
 
 
@@ -91,7 +91,7 @@ def quat_conjugate(quaternion):
     """
     return np.array(
         (-quaternion[0], -quaternion[1], -quaternion[2], quaternion[3]),
-        dtype=np.float64,
+        dtype=np.float32,
     )
 
 
@@ -167,7 +167,7 @@ def random_quat(rand=None):
     t2 = pi2 * rand[2]
     return np.array(
         (np.sin(t1) * r1, np.cos(t1) * r1, np.sin(t2) * r2, np.cos(t2) * r2),
-        dtype=np.float64,
+        dtype=np.float32,
     )
 
 
@@ -494,7 +494,7 @@ def rotation_matrix(angle, direction, point=None):
         >>> R1 = rotation_matrix(-angle, -direc, point)
         >>> is_same_transform(R0, R1)
         True
-        >>> I = numpy.identity(4, numpy.float64)
+        >>> I = numpy.identity(4, numpy.float32)
         >>> numpy.allclose(I, rotation_matrix(math.pi*2, direc))
         True
         >>> numpy.allclose(2., numpy.trace(rotation_matrix(math.pi/2,
@@ -507,7 +507,7 @@ def rotation_matrix(angle, direction, point=None):
     direction = unit_vector(direction[:3])
     # rotation matrix around unit vector
     R = np.array(
-        ((cosa, 0.0, 0.0), (0.0, cosa, 0.0), (0.0, 0.0, cosa)), dtype=np.float64
+        ((cosa, 0.0, 0.0), (0.0, cosa, 0.0), (0.0, 0.0, cosa)), dtype=np.float32
     )
     R += np.outer(direction, direction) * (1.0 - cosa)
     direction *= sina
@@ -517,13 +517,13 @@ def rotation_matrix(angle, direction, point=None):
             (direction[2], 0.0, -direction[0]),
             (-direction[1], direction[0], 0.0),
         ),
-        dtype=np.float64,
+        dtype=np.float32,
     )
     M = np.identity(4)
     M[:3, :3] = R
     if point is not None:
         # rotation not around origin
-        point = np.array(point[:3], dtype=np.float64, copy=False)
+        point = np.array(point[:3], dtype=np.float32, copy=False)
         M[:3, 3] = point - np.dot(R, point)
     return M
 
@@ -565,7 +565,7 @@ def unit_vector(data, axis=None, out=None):
         >>> v2 = v0 / numpy.expand_dims(numpy.sqrt(numpy.sum(v0*v0, axis=1)), 1)
         >>> numpy.allclose(v1, v2)
         True
-        >>> v1 = numpy.empty((5, 4, 3), dtype=numpy.float64)
+        >>> v1 = numpy.empty((5, 4, 3), dtype=numpy.float32)
         >>> unit_vector(v0, axis=1, out=v1)
         >>> numpy.allclose(v1, v2)
         True
@@ -576,7 +576,7 @@ def unit_vector(data, axis=None, out=None):
 
     """
     if out is None:
-        data = np.array(data, dtype=np.float64, copy=True)
+        data = np.array(data, dtype=np.float32, copy=True)
         if data.ndim == 1:
             data /= math.sqrt(np.dot(data, data))
             return data
