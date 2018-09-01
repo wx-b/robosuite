@@ -38,7 +38,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--environment", type=str, default="SawyerPickPlaceCan")
-    parser.add_argument("--timesteps", type=int, default=10000)
     args = parser.parse_args()
 
     env = RoboticsSuite.make(
