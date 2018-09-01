@@ -69,6 +69,9 @@ if __name__ == "__main__":
     if args.device == "keyboard":
         from RoboticsSuite.devices import Keyboard
         device = Keyboard()
+        env.viewer.add_keypress_callback("any", device.on_press)
+        env.viewer.add_keyup_callback("any", device.on_release)
+        env.viewer.add_keyrepeat_callback("any", device.on_press)
     elif args.device == "spacemouse":
         from RoboticsSuite.devices import SpaceMouse
         device = SpaceMouse()
@@ -102,4 +105,4 @@ if __name__ == "__main__":
 
             obs, reward, done, info = env.step(action)
             env.render()
-            print("reward: {0:.2f}".format(reward))
+            # print("reward: {0:.2f}".format(reward))

@@ -1,12 +1,9 @@
 """
 Driver class for Keyboard controller.
-
-Must run `pip install pynput` to use this device.
 """
 
-import os
+import glfw
 import numpy as np
-from pynput.keyboard import Key, Listener, Controller
 from RoboticsSuite.devices import Device
 from RoboticsSuite.utils.transform_utils import rotation_matrix
 
@@ -17,8 +14,6 @@ class Keyboard(Device):
         """
         Initialize a Keyboard device.
         """
-        if os.name != 'nt' and os.geteuid() != 0:
-            exit("You need to have root privileges to use a keyboard device.\nPlease try again, this time using 'sudo'. Exiting.")
 
         self._display_controls()
         self._reset_internal_state()
@@ -26,12 +21,6 @@ class Keyboard(Device):
         self._reset_state = 0
         self._enabled = False
         self._pos_step = 0.05
-
-        # make a thread to listen to keyboard and register our callback functions
-        self.listener = Listener(on_press=self.on_press, on_release=self.on_release)
-
-        # start listening
-        self.listener.start()
 
     def _display_controls(self):
         """
@@ -75,75 +64,60 @@ class Keyboard(Device):
         self.last_pos = np.array(self.pos)
         return dict(dpos=dpos, rotation=self.rotation, grasp=int(self.grasp), reset=self._reset_state)
 
-    def on_press(self, key):
+    def on_press(self, window, key, scancode, action, mods):
         """
         Key handler for key presses.
         """
 
         # print('{} pressed'.format(key))
 
-        # note that some keys don't have the "char" attribute
-        # this might lead to an AttributeError
-        try:
-            # controls for moving position
-            if key.char == "w":
-                self.pos[0] -= self._pos_step # dec x
-            elif key.char == "s":
-                self.pos[0] += self._pos_step # inc x
-            elif key.char == "a":
-                self.pos[1] -= self._pos_step # dec y
-            elif key.char == "d":
-                self.pos[1] += self._pos_step # inc y
-            elif key.char == "f":
-                self.pos[2] -= self._pos_step # dec z
-            elif key.char == "r":
-                self.pos[2] += self._pos_step # inc z
+        # controls for moving position
+        if key == glfw.KEY_W:
+            self.pos[0] -= self._pos_step # dec x
+        elif key == glfw.KEY_S:
+            self.pos[0] += self._pos_step # inc x
+        elif key == glfw.KEY_A:
+            self.pos[1] -= self._pos_step # dec y
+        elif key == glfw.KEY_D:
+            self.pos[1] += self._pos_step # inc y
+        elif key == glfw.KEY_F:
+            self.pos[2] -= self._pos_step # dec z
+        elif key == glfw.KEY_R:
+            self.pos[2] += self._pos_step # inc z
 
-            # controls for moving orientation
-            elif key.char == "z":
-                drot = rotation_matrix(angle=0.1, direction=[1., 0., 0.], point=None)[:3, :3]
-                self.rotation = self.rotation.dot(drot) # rotates x 
-            elif key.char == "x":
-                drot = rotation_matrix(angle=-0.1, direction=[1., 0., 0.], point=None)[:3, :3]
-                self.rotation = self.rotation.dot(drot) # rotates x
-            elif key.char == "t":
-                drot = rotation_matrix(angle=0.1, direction=[0., 1., 0.], point=None)[:3, :3]
-                self.rotation = self.rotation.dot(drot) # rotates y
-            elif key.char == "g":
-                drot = rotation_matrix(angle=-0.1, direction=[0., 1., 0.], point=None)[:3, :3]
-                self.rotation = self.rotation.dot(drot) # rotates y
-            elif key.char == "c":
-                drot = rotation_matrix(angle=0.1, direction=[0., 0., 1.], point=None)[:3, :3]
-                self.rotation = self.rotation.dot(drot) # rotates z
-            elif key.char == "v":
-                drot = rotation_matrix(angle=-0.1, direction=[0., 0., 1.], point=None)[:3, :3]
-                self.rotation = self.rotation.dot(drot) # rotates z
+        # controls for moving orientation
+        elif key == glfw.KEY_Z:
+            drot = rotation_matrix(angle=0.1, direction=[1., 0., 0.], point=None)[:3, :3]
+            self.rotation = self.rotation.dot(drot) # rotates x 
+        elif key == glfw.KEY_X:
+            drot = rotation_matrix(angle=-0.1, direction=[1., 0., 0.], point=None)[:3, :3]
+            self.rotation = self.rotation.dot(drot) # rotates x
+        elif key == glfw.KEY_T:
+            drot = rotation_matrix(angle=0.1, direction=[0., 1., 0.], point=None)[:3, :3]
+            self.rotation = self.rotation.dot(drot) # rotates y
+        elif key == glfw.KEY_G:
+            drot = rotation_matrix(angle=-0.1, direction=[0., 1., 0.], point=None)[:3, :3]
+            self.rotation = self.rotation.dot(drot) # rotates y
+        elif key == glfw.KEY_C:
+            drot = rotation_matrix(angle=0.1, direction=[0., 0., 1.], point=None)[:3, :3]
+            self.rotation = self.rotation.dot(drot) # rotates z
+        elif key == glfw.KEY_V:
+            drot = rotation_matrix(angle=-0.1, direction=[0., 0., 1.], point=None)[:3, :3]
+            self.rotation = self.rotation.dot(drot) # rotates z
 
-        except AttributeError as e:
-            pass
-
-    def on_release(self, key):
+    def on_release(self, window, key, scancode, action, mods):
         """
         Key handler for key releases.
         """
 
         # print('{0} release'.format(key))
 
-        try:
-            # controls for grasping
-            if key == Key.space:
-                self.grasp = not self.grasp # toggle gripper 
+        # controls for grasping
+        if key == glfw.KEY_SPACE:
+            self.grasp = not self.grasp # toggle gripper 
 
-            # user-commanded reset
-            elif key.char == "q":
-                self._reset_state = 1
-                self._enabled = False
-                self._reset_internal_state()
-
-
-        except AttributeError as e:
-            pass
-
-
-if __name__ == "__main__":
-    pass
+        # user-commanded reset
+        elif key == glfw.KEY_Q:
+            self._reset_state = 1
+            self._enabled = False
+            self._reset_internal_state()
