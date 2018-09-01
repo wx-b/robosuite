@@ -25,20 +25,24 @@ class IKWrapper(Wrapper):
         """
         super().__init__(env)
         if self.env.mujoco_robot.name == "sawyer":
-            from RoboticsSuite.controllers.sawyer_ik_controller import SawyerIKController
+            from RoboticsSuite.controllers import SawyerIKController
+
             self.controller = SawyerIKController(
                 bullet_data_path=os.path.join(RoboticsSuite.assets_path, "bullet_data"),
                 robot_jpos_getter=self._robot_jpos_getter,
             )
         elif self.env.mujoco_robot.name == "baxter":
-            from RoboticsSuite.controllers.baxter_ik_controller import BaxterIKController
+            from RoboticsSuite.controllers import BaxterIKController
+
             self.controller = BaxterIKController(
                 bullet_data_path=os.path.join(RoboticsSuite.assets_path, "bullet_data"),
                 robot_jpos_getter=self._robot_jpos_getter,
             )
         else:
-            raise Exception("Only Sawyer and Baxter robot environments are supported for IK "
-                            "control currently.")
+            raise Exception(
+                "Only Sawyer and Baxter robot environments are supported for IK "
+                "control currently."
+            )
 
     def set_robot_joint_positions(self, positions):
         """
@@ -83,8 +87,10 @@ class IKWrapper(Wrapper):
             velocities = self.controller.get_control(input_1, input_2)
             action = np.concatenate([velocities, action[14:]])
         else:
-            raise Exception("Only Sawyer and Baxter robot environments are supported for IK "
-                            "control currently.")
+            raise Exception(
+                "Only Sawyer and Baxter robot environments are supported for IK "
+                "control currently."
+            )
 
         return self.env.step(action)
 
@@ -95,7 +101,7 @@ class IKWrapper(Wrapper):
         quaternion indicating the change in rotation with respect to @old_quat.
         """
         return {
-                "dpos": action[:3],
-                # IK controller takes an absolute orientation in robot base frame
-                "rotation": U.quat2mat(U.quat_multiply(old_quat, action[3:7]))
-               }
+            "dpos": action[:3],
+            # IK controller takes an absolute orientation in robot base frame
+            "rotation": U.quat2mat(U.quat_multiply(old_quat, action[3:7])),
+        }

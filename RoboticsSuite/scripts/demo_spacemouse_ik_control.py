@@ -66,15 +66,15 @@ if __name__ == "__main__":
     env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
 
     for i in range(args.timesteps):
-        # read controller state from spacemouse 
+        # read controller state from spacemouse
         state = space_mouse.get_controller_state()
         dpos, rotation, grasp = state["dpos"], state["rotation"], state["grasp"]
 
         # convert into a suitable end effector action for the environment
         current = env._right_hand_orn
-        drotation = current.T.dot(rotation) # relative rotation of desired from current
+        drotation = current.T.dot(rotation)  # relative rotation of desired from current
         dquat = U.mat2quat(drotation)
-        grasp = grasp - 1. # map 0 -> -1, 1 -> 0 so that 0 is open, 1 is closed (halfway)
+        grasp = grasp - 1.  # map 0 to -1 (open) and 1 to 0 (closed halfway)
         action = np.concatenate([dpos, dquat, [grasp]])
         obs, reward, done, info = env.step(action)
         env.render()
@@ -82,4 +82,3 @@ if __name__ == "__main__":
 
         if done:
             break
-

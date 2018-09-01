@@ -49,7 +49,7 @@ class Robot(MujocoXML):
 
         self.merge(gripper, merge_body=False)
         self.grippers[arm_name] = gripper
-    
+
     @property
     def dof(self):
         """Returns the number of DOF of the robot, not including gripper."""

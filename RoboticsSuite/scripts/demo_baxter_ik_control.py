@@ -37,18 +37,12 @@ if __name__ == "__main__":
     def robot_jpos_getter():
         return np.array(env._joint_positions)
 
-    #ik_controller = BaxterIKController(
-    #    bullet_data_path=bullet_data_path, robot_jpos_getter=robot_jpos_getter
-    #)
-
-    # gripper_controls = [[1., -1.], [-1., 1.]]
-
     for t in range(100000):
         omega = 2 * np.pi / 1000.
         A = 5e-4
         dpos_right = np.array([A * np.cos(omega * t), 0, A * np.sin(omega * t)])
         dpos_left = np.array([A * np.sin(omega * t), A * np.cos(omega * t), 0])
-        dquat = np.array([0,0,0,1])
+        dquat = np.array([0, 0, 0, 1])
         grasp = 0.
         action = np.concatenate([dpos_right, dquat, dpos_left, dquat, [grasp, grasp]])
 

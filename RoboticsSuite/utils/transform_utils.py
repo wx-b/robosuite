@@ -62,6 +62,7 @@ def convert_quat(q, to="xyzw"):
         return q[[3, 0, 1, 2]]
     raise Exception("convert_quat: choose a valid `to` argument (xyzw or wxyz)")
 
+
 def quat_multiply(quaternion1, quaternion0):
     """Return multiplication of two quaternions.
     >>> q = quat_multiply([1, -2, 3, 4], [-5, 6, 7, 8])
@@ -70,11 +71,15 @@ def quat_multiply(quaternion1, quaternion0):
     """
     x0, y0, z0, w0 = quaternion0
     x1, y1, z1, w1 = quaternion1
-    return np.array((
-         x1*w0 + y1*z0 - z1*y0 + w1*x0,
-        -x1*z0 + y1*w0 + z1*x0 + w1*y0,
-         x1*y0 - y1*x0 + z1*w0 + w1*z0,
-        -x1*x0 - y1*y0 - z1*z0 + w1*w0), dtype=np.float64)
+    return np.array(
+        (
+            x1 * w0 + y1 * z0 - z1 * y0 + w1 * x0,
+            -x1 * z0 + y1 * w0 + z1 * x0 + w1 * y0,
+            x1 * y0 - y1 * x0 + z1 * w0 + w1 * z0,
+            -x1 * x0 - y1 * y0 - z1 * z0 + w1 * w0,
+        ),
+        dtype=np.float64,
+    )
 
 
 def quat_conjugate(quaternion):
@@ -84,8 +89,10 @@ def quat_conjugate(quaternion):
     >>> q1[3] == q0[3] and all(q1[:3] == -q0[:3])
     True
     """
-    return np.array((-quaternion[0], -quaternion[1],
-                        -quaternion[2], quaternion[3]), dtype=np.float64)
+    return np.array(
+        (-quaternion[0], -quaternion[1], -quaternion[2], quaternion[3]),
+        dtype=np.float64,
+    )
 
 
 def quat_inverse(quaternion):
@@ -158,10 +165,11 @@ def random_quat(rand=None):
     pi2 = math.pi * 2.0
     t1 = pi2 * rand[1]
     t2 = pi2 * rand[2]
-    return np.array((np.sin(t1)*r1,
-                        np.cos(t1)*r1,
-                        np.sin(t2)*r2,
-                        np.cos(t2)*r2), dtype=np.float64)
+    return np.array(
+        (np.sin(t1) * r1, np.cos(t1) * r1, np.sin(t2) * r2, np.cos(t2) * r2),
+        dtype=np.float64,
+    )
+
 
 def vec(values):
     """
