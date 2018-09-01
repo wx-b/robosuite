@@ -17,5 +17,3 @@ __logo__ = """
     /[_]\  [~]\/    |//  |
      ] [   OOO      /o|__|
 """
-
-assets_path = os.path.join(__path__[0], "models/assets")

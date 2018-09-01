@@ -2,10 +2,11 @@
 Defines GripperTester that is used to test the physical properties of various grippers
 """
 import xml.etree.ElementTree as ET
+from mujoco_py import MjSim, MjViewer
+
 from RoboticsSuite.models.world import MujocoWorldBase
 from RoboticsSuite.models.arenas.table_arena import TableArena
-import RoboticsSuite.utils as U
-from mujoco_py import MjSim, MjViewer
+from RoboticsSuite.utils.mjcf_utils import new_actuator, new_joint
 
 
 class GripperTester:
@@ -46,14 +47,12 @@ class GripperTester:
         gripper_body.set("pos", pos)
         gripper_body.set("quat", quat)  # flip z
         gripper_body.append(
-            U.new_joint(
-                name="gripper_z_joint", type="slide", axis="0 0 -1", damping="50"
-            )
+            new_joint(name="gripper_z_joint", type="slide", axis="0 0 -1", damping="50")
         )
         world.merge(gripper, merge_body=False)
         world.worldbody.append(gripper_body)
         world.actuator.append(
-            U.new_actuator(
+            new_actuator(
                 joint="gripper_z_joint", act_type="position", name="gripper_z", kp="500"
             )
         )

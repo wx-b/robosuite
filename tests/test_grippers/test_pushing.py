@@ -1,4 +1,4 @@
-from RoboticsSuite.models import GripperTester, PushingGripper
+from RoboticsSuite.models.grippers import GripperTester, PushingGripper
 
 
 def test_pushing():

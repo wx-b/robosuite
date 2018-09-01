@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 from RoboticsSuite.models.base import MujocoXML
-from RoboticsSuite.utils.mjcf_utils import *
+from RoboticsSuite.utils.mjcf_utils import string_to_array, array_to_string
 
 
 class MujocoObject:

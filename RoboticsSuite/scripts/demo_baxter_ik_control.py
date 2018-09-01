@@ -8,9 +8,8 @@ import os
 import numpy as np
 
 import RoboticsSuite
-from RoboticsSuite.models import *
-from RoboticsSuite.controllers.baxter_ik_controller import BaxterIKController
 from RoboticsSuite.wrappers import IKWrapper
+
 
 if __name__ == "__main__":
 
@@ -32,7 +31,7 @@ if __name__ == "__main__":
         0.00, -0.55, 0.00, 1.28, 0.00, 0.26, 0.00,
     ])
 
-    bullet_data_path = os.path.join(RoboticsSuite.assets_path, "bullet_data")
+    bullet_data_path = os.path.join(RoboticsSuite.models.assets_root, "bullet_data")
 
     def robot_jpos_getter():
         return np.array(env._joint_positions)

@@ -1,11 +1,7 @@
-import numpy as np
-import xml.etree.ElementTree as ET
 from collections import OrderedDict
 
 from RoboticsSuite.models.base import MujocoXML
 from RoboticsSuite.utils import XMLError
-from RoboticsSuite.utils.mjcf_utils import *
-from RoboticsSuite.models.grippers import gripper_factory
 
 
 class Robot(MujocoXML):

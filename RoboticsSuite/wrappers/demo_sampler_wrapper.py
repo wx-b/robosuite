@@ -9,10 +9,9 @@ import random
 import os
 import pickle
 import time
-from collections import deque
 import numpy as np
 
-from RoboticsSuite.utils import postprocess_model_xml
+from RoboticsSuite.utils.mjcf_utils import postprocess_model_xml
 from RoboticsSuite.wrappers import Wrapper
 
 

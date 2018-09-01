@@ -7,7 +7,7 @@ interface.
 import os
 import numpy as np
 import RoboticsSuite
-import RoboticsSuite.utils as U
+import RoboticsSuite.utils.transform_utils as T
 from RoboticsSuite.wrappers import Wrapper
 
 
@@ -28,14 +28,14 @@ class IKWrapper(Wrapper):
             from RoboticsSuite.controllers import SawyerIKController
 
             self.controller = SawyerIKController(
-                bullet_data_path=os.path.join(RoboticsSuite.assets_path, "bullet_data"),
+                bullet_data_path=os.path.join(RoboticsSuite.models.assets_root, "bullet_data"),
                 robot_jpos_getter=self._robot_jpos_getter,
             )
         elif self.env.mujoco_robot.name == "baxter":
             from RoboticsSuite.controllers import BaxterIKController
 
             self.controller = BaxterIKController(
-                bullet_data_path=os.path.join(RoboticsSuite.assets_path, "bullet_data"),
+                bullet_data_path=os.path.join(RoboticsSuite.models.assets_root, "bullet_data"),
                 robot_jpos_getter=self._robot_jpos_getter,
             )
         else:
@@ -103,5 +103,5 @@ class IKWrapper(Wrapper):
         return {
             "dpos": action[:3],
             # IK controller takes an absolute orientation in robot base frame
-            "rotation": U.quat2mat(U.quat_multiply(old_quat, action[3:7])),
+            "rotation": T.quat2mat(T.quat_multiply(old_quat, action[3:7])),
         }

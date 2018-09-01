@@ -26,14 +26,14 @@ Note:
 """
 
 import argparse
-import numpy as np
 import os
+import numpy as np
 
 import RoboticsSuite
-import RoboticsSuite.utils as U
-from RoboticsSuite.models import *
-from RoboticsSuite.wrappers import IKWrapper
+
+import RoboticsSuite.utils.transform_utils as T
 from RoboticsSuite.controllers.spacemouse import SpaceMouse
+from RoboticsSuite.wrappers import IKWrapper
 
 
 if __name__ == "__main__":
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         # convert into a suitable end effector action for the environment
         current = env._right_hand_orn
         drotation = current.T.dot(rotation)  # relative rotation of desired from current
-        dquat = U.mat2quat(drotation)
+        dquat = T.mat2quat(drotation)
         grasp = grasp - 1.  # map 0 to -1 (open) and 1 to 0 (closed halfway)
         action = np.concatenate([dpos, dquat, [grasp]])
         obs, reward, done, info = env.step(action)

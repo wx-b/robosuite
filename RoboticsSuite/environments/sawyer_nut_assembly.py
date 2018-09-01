@@ -1,12 +1,15 @@
-import numpy as np
 from collections import OrderedDict
 import random
+import numpy as np
 
-from RoboticsSuite.utils import RandomizationError
+import RoboticsSuite.utils.transform_utils as T
+from RoboticsSuite.utils.mjcf_utils import string_to_array
 from RoboticsSuite.environments.sawyer import SawyerEnv
-from RoboticsSuite.models import *
-from RoboticsSuite.models.tasks.placement_sampler import UniformRandomPegsSampler
-import RoboticsSuite.utils as U
+
+from RoboticsSuite.models.arenas import PegsArena
+from RoboticsSuite.models.objects import SquareNutObject, RoundNutObject
+from RoboticsSuite.models.robots import Sawyer
+from RoboticsSuite.models.tasks import NutAssemblyTask, UniformRandomPegsSampler
 
 
 class SawyerNutAssembly(SawyerEnv):
@@ -47,10 +50,10 @@ class SawyerNutAssembly(SawyerEnv):
 
             table_size (3-tuple): x, y, and z dimensions of the table.
 
-            table_friction (3-tuple): the three mujoco friction parameters for 
+            table_friction (3-tuple): the three mujoco friction parameters for
                 the table.
 
-            use_camera_obs (bool): if True, every observation includes a 
+            use_camera_obs (bool): if True, every observation includes a
                 rendered image.
 
             use_object_obs (bool): if True, include object (cube) information in
@@ -59,7 +62,7 @@ class SawyerNutAssembly(SawyerEnv):
             reward_shaping (bool): if True, use dense rewards.
 
             placement_initializer (ObjectPositionSampler instance): if provided, will
-                be used to place objects on every reset, else a UniformRandomSampler
+                be used to place objects on every reset, else a UniformRandomPegsSampler
                 is used by default.
 
             single_object_mode (int): specifies which version of the task to do. Note that
@@ -76,34 +79,34 @@ class SawyerNutAssembly(SawyerEnv):
 
             nut_type (string): if provided, should be either "round" or "square". Determines
                 which type of nut (round or square) will be spawned on every environment
-                reset. Only used if @single_object_mode is 2. 
+                reset. Only used if @single_object_mode is 2.
 
             gripper_visualization (bool): True if using gripper visualization.
                 Useful for teleoperation.
 
-            use_indicator_object (bool): if True, sets up an indicator object that 
+            use_indicator_object (bool): if True, sets up an indicator object that
                 is useful for debugging.
 
-            has_renderer (bool): If true, render the simulation state in 
+            has_renderer (bool): If true, render the simulation state in
                 a viewer instead of headless mode.
 
             has_offscreen_renderer (bool): True if using off-screen rendering.
 
-            render_collision_mesh (bool): True if rendering collision meshes 
+            render_collision_mesh (bool): True if rendering collision meshes
                 in camera. False otherwise.
 
-            render_visual_mesh (bool): True if rendering visual meshes 
+            render_visual_mesh (bool): True if rendering visual meshes
                 in camera. False otherwise.
 
-            control_freq (float): how many control signals to receive 
-                in every second. This sets the amount of simulation time 
+            control_freq (float): how many control signals to receive
+                in every second. This sets the amount of simulation time
                 that passes between every action input.
 
             horizon (int): Every episode lasts for exactly @horizon timesteps.
 
             ignore_done (bool): True if never terminating the environment (ignore @horizon).
 
-            camera_name (str): name of camera to be rendered. Must be 
+            camera_name (str): name of camera to be rendered. Must be
                 set if @use_camera_obs is True.
 
             camera_height (int): height of camera frame.
@@ -206,7 +209,7 @@ class SawyerNutAssembly(SawyerEnv):
     def clear_objects(self, obj):
         """
         Clears objects with name @obj out of the task space. This is useful
-        for supporting task modes with single types of objects, as in 
+        for supporting task modes with single types of objects, as in
         @self.single_object_mode without changing the model definition.
         """
         for obj_name, obj_mjcf in self.mujoco_objects.items():
@@ -415,8 +418,8 @@ class SawyerNutAssembly(SawyerEnv):
             object_state_keys = []
 
             # for conversion to relative gripper frame
-            gripper_pose = U.pose2mat((di["eef_pos"], di["eef_quat"]))
-            world_pose_in_gripper = U.pose_inv(gripper_pose)
+            gripper_pose = T.pose2mat((di["eef_pos"], di["eef_quat"]))
+            world_pose_in_gripper = T.pose_inv(gripper_pose)
 
             for i in range(len(self.item_names_org)):
 
@@ -426,15 +429,15 @@ class SawyerNutAssembly(SawyerEnv):
 
                 obj_str = str(self.item_names_org[i]) + "0"
                 obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
-                obj_quat = U.convert_quat(
+                obj_quat = T.convert_quat(
                     self.sim.data.body_xquat[self.obj_body_id[obj_str]], to="xyzw"
                 )
                 di["{}_pos".format(obj_str)] = obj_pos
                 di["{}_quat".format(obj_str)] = obj_quat
 
-                object_pose = U.pose2mat((obj_pos, obj_quat))
-                rel_pose = U.pose_in_A_to_pose_in_B(object_pose, world_pose_in_gripper)
-                rel_pos, rel_quat = U.mat2pose(rel_pose)
+                object_pose = T.pose2mat((obj_pos, obj_quat))
+                rel_pose = T.pose_in_A_to_pose_in_B(object_pose, world_pose_in_gripper)
+                rel_pos, rel_quat = T.mat2pose(rel_pose)
                 di["{}_to_eef_pos".format(obj_str)] = rel_pos
                 di["{}_to_eef_quat".format(obj_str)] = rel_quat
 

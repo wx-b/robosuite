@@ -1,6 +1,8 @@
 import collections
 import numpy as np
 
+from RoboticsSuite.utils import RandomizationError
+
 
 class ObjectPositionSampler:
     """Base class of object placement sampler."""

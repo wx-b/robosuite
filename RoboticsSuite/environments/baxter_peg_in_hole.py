@@ -1,11 +1,13 @@
-import numpy as np
 from collections import OrderedDict
+import numpy as np
 
-import RoboticsSuite.utils as U
-from RoboticsSuite.utils import RandomizationError
-from RoboticsSuite.utils.mjcf_utils import xml_path_completion, array_to_string
+import RoboticsSuite.utils.transform_utils as T
 from RoboticsSuite.environments.baxter import BaxterEnv
-from RoboticsSuite.models import *
+
+from RoboticsSuite.models.objects import CylinderObject, PlateWithHoleObject
+from RoboticsSuite.models.arenas import EmptyArena
+from RoboticsSuite.models.robots import Baxter
+from RoboticsSuite.models import MujocoWorldBase
 
 
 class BaxterPegInHole(BaxterEnv):
@@ -41,7 +43,8 @@ class BaxterPegInHole(BaxterEnv):
 
         cylinder_radius = np.random.uniform(0.015, 0.03)
         self.cylinder = CylinderObject(
-            size_min=(cylinder_radius, 0.13), size_max=(cylinder_radius, 0.13)
+            size_min=(cylinder_radius, cylinder_length),
+            size_max=(cylinder_radius, cylinder_length),
         )
 
         self.mujoco_objects = OrderedDict()
@@ -175,16 +178,16 @@ class BaxterPegInHole(BaxterEnv):
         # World frame
         peg_pos_in_world = self.sim.data.get_body_xpos("cylinder")
         peg_rot_in_world = self.sim.data.get_body_xmat("cylinder").reshape((3, 3))
-        peg_pose_in_world = U.make_pose(peg_pos_in_world, peg_rot_in_world)
+        peg_pose_in_world = T.make_pose(peg_pos_in_world, peg_rot_in_world)
 
         # World frame
         hole_pos_in_world = self.sim.data.get_body_xpos("hole")
         hole_rot_in_world = self.sim.data.get_body_xmat("hole").reshape((3, 3))
-        hole_pose_in_world = U.make_pose(hole_pos_in_world, hole_rot_in_world)
+        hole_pose_in_world = T.make_pose(hole_pos_in_world, hole_rot_in_world)
 
-        world_pose_in_hole = U.pose_inv(hole_pose_in_world)
+        world_pose_in_hole = T.pose_inv(hole_pose_in_world)
 
-        peg_pose_in_hole = U.pose_in_A_to_pose_in_B(
+        peg_pose_in_hole = T.pose_in_A_to_pose_in_B(
             peg_pose_in_world, world_pose_in_hole
         )
         return peg_pose_in_hole
@@ -221,14 +224,14 @@ class BaxterPegInHole(BaxterEnv):
         if self.use_object_obs:
             # position and rotation of cylinder and hole
             hole_pos = self.sim.data.body_xpos[self.hole_body_id]
-            hole_quat = U.convert_quat(
+            hole_quat = T.convert_quat(
                 self.sim.data.body_xquat[self.hole_body_id], to="xyzw"
             )
             di["hole_pos"] = hole_pos
             di["hole_quat"] = hole_quat
 
             cyl_pos = self.sim.data.body_xpos[self.cyl_body_id]
-            cyl_quat = U.convert_quat(
+            cyl_quat = T.convert_quat(
                 self.sim.data.body_xquat[self.cyl_body_id], to="xyzw"
             )
             di["cyl_to_hole"] = cyl_pos - hole_pos
@@ -258,7 +261,6 @@ class BaxterPegInHole(BaxterEnv):
         """
         Returns True if gripper is in contact with an object.
         """
-        return False
         collision = False
         contact_geoms = (
             self.gripper_right.contact_geoms() + self.gripper_left.contact_geoms()
@@ -274,7 +276,7 @@ class BaxterPegInHole(BaxterEnv):
 
     def _check_success(self):
         """
-        Returns True if task is successfully completed
+        Returns True if task is successfully completed.
         """
         t, d, cos = self._compute_orientation()
 

@@ -2,8 +2,9 @@
 Gripper with 11-DoF controlling three fingers and its open/close variant.
 """
 import numpy as np
-from RoboticsSuite.models.grippers.gripper import Gripper
-import RoboticsSuite.utils as U
+
+from RoboticsSuite.models.grippers import Gripper
+from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 
 
 class RobotiqThreeFingerGripperBase(Gripper):
@@ -12,7 +13,7 @@ class RobotiqThreeFingerGripperBase(Gripper):
     """
 
     def __init__(self):
-        super().__init__(U.xml_path_completion("grippers/robotiq_gripper_s.xml"))
+        super().__init__(xml_path_completion("grippers/robotiq_gripper_s.xml"))
 
     def format_action(self, action):
         return action

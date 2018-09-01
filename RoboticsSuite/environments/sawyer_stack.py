@@ -1,14 +1,13 @@
-import pickle
-import random
-import numpy as np
 from collections import OrderedDict
+import numpy as np
 
-import RoboticsSuite.utils as U
-from RoboticsSuite.utils import RandomizationError
+from RoboticsSuite.utils.transform_utils import convert_quat
 from RoboticsSuite.environments.sawyer import SawyerEnv
-from RoboticsSuite.models import *
+
 from RoboticsSuite.models.arenas.table_arena import TableArena
-from RoboticsSuite.models.tasks.placement_sampler import UniformRandomSampler
+from RoboticsSuite.models.objects import BoxObject
+from RoboticsSuite.models.robots import Sawyer
+from RoboticsSuite.models.tasks import TableTopTask, UniformRandomSampler
 
 
 class SawyerStack(SawyerEnv):
@@ -47,10 +46,10 @@ class SawyerStack(SawyerEnv):
 
             table_full_size (3-tuple): x, y, and z dimensions of the table.
 
-            table_friction (3-tuple): the three mujoco friction parameters for 
+            table_friction (3-tuple): the three mujoco friction parameters for
                 the table.
 
-            use_camera_obs (bool): if True, every observation includes a 
+            use_camera_obs (bool): if True, every observation includes a
                 rendered image.
 
             use_object_obs (bool): if True, include object (cube) information in
@@ -65,29 +64,29 @@ class SawyerStack(SawyerEnv):
             gripper_visualization (bool): True if using gripper visualization.
                 Useful for teleoperation.
 
-            use_indicator_object (bool): if True, sets up an indicator object that 
+            use_indicator_object (bool): if True, sets up an indicator object that
                 is useful for debugging.
 
-            has_renderer (bool): If true, render the simulation state in 
+            has_renderer (bool): If true, render the simulation state in
                 a viewer instead of headless mode.
 
             has_offscreen_renderer (bool): True if using off-screen rendering.
 
-            render_collision_mesh (bool): True if rendering collision meshes 
+            render_collision_mesh (bool): True if rendering collision meshes
                 in camera. False otherwise.
 
-            render_visual_mesh (bool): True if rendering visual meshes 
+            render_visual_mesh (bool): True if rendering visual meshes
                 in camera. False otherwise.
 
-            control_freq (float): how many control signals to receive 
-                in every second. This sets the amount of simulation time 
+            control_freq (float): how many control signals to receive
+                in every second. This sets the amount of simulation time
                 that passes between every action input.
 
             horizon (int): Every episode lasts for exactly @horizon timesteps.
 
             ignore_done (bool): True if never terminating the environment (ignore @horizon).
 
-            camera_name (str): name of camera to be rendered. Must be 
+            camera_name (str): name of camera to be rendered. Must be
                 set if @use_camera_obs is True.
 
             camera_height (int): height of camera frame.
@@ -225,7 +224,7 @@ class SawyerStack(SawyerEnv):
 
     def reward(self, action):
         """
-        Reward function for the task. 
+        Reward function for the task.
 
         The dense reward has five components.
 
@@ -239,7 +238,7 @@ class SawyerStack(SawyerEnv):
         However, the sparse reward is either 0 or 1.
 
         Args:
-            action (np array): unused for this task 
+            action (np array): unused for this task
 
         Returns:
             reward (float): the reward
@@ -319,7 +318,7 @@ class SawyerStack(SawyerEnv):
     def _get_observation(self):
         """
         Returns an OrderedDict containing observations [(name_string, np.array), ...].
-        
+
         Important keys:
             robot-state: contains robot-centric information.
             object-state: requires @self.use_object_obs to be True.
@@ -346,7 +345,7 @@ class SawyerStack(SawyerEnv):
         if self.use_object_obs:
             # position and rotation of the first cube
             cubeA_pos = np.array(self.sim.data.body_xpos[self.cubeA_body_id])
-            cubeA_quat = U.convert_quat(
+            cubeA_quat = convert_quat(
                 np.array(self.sim.data.body_xquat[self.cubeA_body_id]), to="xyzw"
             )
             di["cubeA_pos"] = cubeA_pos
@@ -354,7 +353,7 @@ class SawyerStack(SawyerEnv):
 
             # position and rotation of the second cube
             cubeB_pos = np.array(self.sim.data.body_xpos[self.cubeB_body_id])
-            cubeB_quat = U.convert_quat(
+            cubeB_quat = convert_quat(
                 np.array(self.sim.data.body_xquat[self.cubeB_body_id]), to="xyzw"
             )
             di["cubeB_pos"] = cubeB_pos
@@ -398,7 +397,7 @@ class SawyerStack(SawyerEnv):
         """
         Returns True if task has been completed.
         """
-        r_reach, r_lift, r_stack = self.staged_rewards()
+        _, _, r_stack = self.staged_rewards()
         return r_stack > 0
 
     def _gripper_visualization(self):
@@ -419,8 +418,6 @@ class SawyerStack(SawyerEnv):
                 self.object_site_ids
             ]  # filter out object sites we care about
             min_dist = np.min(ob_dists)
-            ob_id = np.argmin(ob_dists)
-            ob_name = self.object_names[ob_id]
 
             # set RGBA for the EEF site here
             max_dist = 0.1
