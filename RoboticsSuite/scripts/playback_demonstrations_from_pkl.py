@@ -37,8 +37,6 @@ if __name__ == "__main__":
         else:
             big = None
 
-    from IPython import embed
-    embed()
     while True:
 
         # select an episode randomly

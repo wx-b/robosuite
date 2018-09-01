@@ -119,3 +119,12 @@ class DataCollectionWrapper(Wrapper):
               Need to find out why.
         """
         return self.env.reset_from_xml_string(xml_string)
+
+    def close(self):
+        """
+        Override close method in order to flush left over data
+        """
+        self._start_new_episode()
+        self.env.close()
+
+

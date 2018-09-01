@@ -23,6 +23,7 @@ import numpy as np
 import hid
 
 from RoboticsSuite.utils.transform_utils import rotation_matrix
+from RoboticsSuite.devices import Device
 
 AxisSpec = namedtuple("AxisSpec", ["channel", "byte1", "byte2", "scale"])
 
@@ -56,7 +57,7 @@ def convert(b1, b2):
     return scale_to_control(to_int16(b1, b2))
 
 
-class SpaceMouse:
+class SpaceMouse(Device):
     """A minimalistic driver class for SpaceMouse with HID library."""
 
     def __init__(self, vendor_id=9583, product_id=50735):
@@ -79,7 +80,6 @@ class SpaceMouse:
         print("Manufacturer: %s" % self.device.get_manufacturer_string())
         print("Product: %s" % self.device.get_product_string())
 
-        self.double_click_and_hold = False
         self.single_click_and_hold = False
 
         self._control = [0., 0., 0., 0., 0., 0.]
@@ -95,8 +95,6 @@ class SpaceMouse:
     def _reset_internal_state(self):
         """
         Resets internal state of controller, except for the reset signal.
-        The reset signal must be refreshed externally, to acknowledge the
-        receipt of the reset signal.
         """
         self.rotation = np.array([[-1., 0., 0.], [0., 1., 0.], [0., 0., -1.]])
 

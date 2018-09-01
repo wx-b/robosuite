@@ -14,20 +14,19 @@ import numpy as np
 from glob import glob
 
 import RoboticsSuite
-from RoboticsSuite.controllers.spacemouse import SpaceMouse
 from RoboticsSuite.controllers.sawyer_ik_controller import SawyerIKController
 from RoboticsSuite import DataCollectionWrapper
 from RoboticsSuite.utils.mjcf_utils import postprocess_model_xml
 
-def collect_human_trajectory(env, space_mouse, ik_controller):
+def collect_human_trajectory(env, device, ik_controller):
     """
-    Use the SpaceNav 3D mouse to collect a demonstration.
+    Use the device (keyboard or SpaceNav 3D mouse) to collect a demonstration.
     The rollout trajectory is saved to files in npz format.
     Modify the DataCollectionWrapper wrapper to add new fields or change data formats.
 
     Args:
         env: environment to control
-        space_mouse (instance of SpaceMouse class): to receive controls from the SpaceNav
+        device (instance of Device class): to receive controls from the device
     """
 
     obs = env.reset()
@@ -41,9 +40,9 @@ def collect_human_trajectory(env, space_mouse, ik_controller):
 
     # episode terminates on a spacenav reset input or if task is completed
     reset = False
-    space_mouse.start_control()
+    device.start_control()
     while not (reset or env._check_success()):
-        state = space_mouse.get_controller_state()
+        state = device.get_controller_state()
         dpos, rotation, grasp, reset = state["dpos"], state["rotation"], state["grasp"], state["reset"]
         velocities = ik_controller.get_control(dpos=dpos, rotation=rotation)
         grasp = grasp - 1. # map 0 -> -1, 1 -> 0 so that 0 is open, 1 is closed (halfway)
@@ -51,6 +50,9 @@ def collect_human_trajectory(env, space_mouse, ik_controller):
 
         obs, reward, done, info = env.step(action)
         env.render()
+
+    # cleanup for end of data collection episodes
+    env.close()
 
 
 def gather_demonstrations_as_pkl(directory, large=False):
@@ -84,6 +86,8 @@ def gather_demonstrations_as_pkl(directory, large=False):
             for s in dic['states']:
                 states.append(s)
         ep_data['states'] = states
+        if len(states) == 0:
+            continue
 
         if large:
             # write episode to large pickle file as serialized string
@@ -111,6 +115,7 @@ if __name__ == "__main__":
     parser.add_argument("--directory", type=str, 
         default="/tmp/{}".format(str(time.time()).replace(".", "_")))
     parser.add_argument("--large", type=bool, default=False)
+    parser.add_argument("--device", type=str, default="keyboard")
     args = parser.parse_args()
 
     # create original environment
@@ -120,6 +125,7 @@ if __name__ == "__main__":
         use_camera_obs=False,
         has_renderer=True,
         control_freq=100,
+        gripper_visualization=True,
     )
     data_directory = args.directory
 
@@ -130,8 +136,15 @@ if __name__ == "__main__":
     def _robot_jpos_getter():
         return np.array(env._joint_positions)
 
-    # initialize space_mouse controller
-    space_mouse = SpaceMouse()
+    # initialize device 
+    if args.device == "keyboard":
+        from RoboticsSuite.devices import Keyboard
+        device = Keyboard()
+    elif args.device == "spacemouse":
+        from RoboticsSuite.devices import SpaceMouse
+        device = SpaceMouse()
+    else:
+        raise Exception("Invalid device choice: choose either 'keyboard' or 'spacemouse'.")
 
     # initialize IK controller
     ik_controller = SawyerIKController(
@@ -141,9 +154,9 @@ if __name__ == "__main__":
 
     # collect demonstrations
     while True:
-        collect_human_trajectory(env, space_mouse, ik_controller)
-        c = input('continue? [y/n] ')
-        if c != 'y':
+        collect_human_trajectory(env, device, ik_controller)
+        c = input('\n\ncontinue? [yes/no] \n\n')
+        if 'yes' not in c:
             break
 
     # turn them into a pkl file
