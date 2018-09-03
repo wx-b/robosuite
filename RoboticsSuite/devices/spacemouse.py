@@ -80,6 +80,8 @@ class SpaceMouse(Device):
         print("Manufacturer: %s" % self.device.get_manufacturer_string())
         print("Product: %s" % self.device.get_product_string())
 
+        self._display_controls()
+
         self.single_click_and_hold = False
 
         self._control = [0., 0., 0., 0., 0., 0.]
@@ -91,6 +93,23 @@ class SpaceMouse(Device):
         self.thread = threading.Thread(target=self.run)
         self.thread.daemon = True
         self.thread.start()
+
+    def _display_controls(self):
+        """
+        Method to pretty print controls.
+        """
+        def print_command(char, info):
+            char += " " * (30 - len(char))
+            print("{}\t{}".format(char, info))
+        print("")
+        print_command("Control", "Command")
+        print_command("Right button", "reset simulation")
+        print_command("Left button (hold)", "close gripper")
+        print_command("Move mouse laterally", "move arm horizontally in x-y plane")
+        print_command("Move mouse vertically", "move arm vertically")
+        print_command("Twist mouse about an axis", "rotate arm about a corresponding axis")
+        print_command("ESC", "quit")
+        print("")
 
     def _reset_internal_state(self):
         """

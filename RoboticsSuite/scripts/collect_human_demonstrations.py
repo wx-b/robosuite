@@ -57,7 +57,7 @@ def collect_human_trajectory(env, device, ik_controller):
 
 def gather_demonstrations_as_pkl(directory, out_dir, large=False):
     """
-    Gathers the demonstrations saved in the current directory into a 
+    Gathers the demonstrations saved in @directory into a 
     single pkl file.
 
     Args:
@@ -114,8 +114,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--directory", type=str, default=os.path.join(RoboticsSuite.models.assets_root, "demonstrations"))
     parser.add_argument("--environment", type=str, default="SawyerLift")
-    parser.add_argument("--large", type=bool, default=False)
     parser.add_argument("--device", type=str, default="keyboard")
+    parser.add_argument("--large", type=bool, default=False)
     args = parser.parse_args()
 
     # create original environment
@@ -159,13 +159,3 @@ if __name__ == "__main__":
     while True:
         collect_human_trajectory(env, device, ik_controller)
         gather_demonstrations_as_pkl(tmp_directory, args.directory, args.large)
-        # c = input('\n\ncontinue? [yes/no] \n\n')
-        # if 'yes' not in c:
-        #     break
-
-    # turn them into a pkl file
-    # gather_demonstrations_as_pkl(args.directory, args.large)
-
-
-
-
