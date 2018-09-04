@@ -41,7 +41,8 @@ import os
 import numpy as np
 
 import RoboticsSuite
-from RoboticsSuite.controllers.sawyer_ik_controller import SawyerIKController
+import RoboticsSuite.utils.transform_utils as T
+from RoboticsSuite.wrappers import IKWrapper
 
 
 if __name__ == "__main__":
@@ -61,9 +62,8 @@ if __name__ == "__main__":
         control_freq=100,
     )
 
-    # function to return robot joint angles
-    def robot_jpos_getter():
-        return np.array(env._joint_positions)
+    # enable controlling the end effector directly instead of using joint velocities
+    env = IKWrapper(env)
 
     # initialize device 
     if args.device == "keyboard":
@@ -78,12 +78,6 @@ if __name__ == "__main__":
     else:
         raise Exception("Invalid device choice: choose either 'keyboard' or 'spacemouse'.")
 
-    # initialize IK controller
-    ik_controller = SawyerIKController(
-        bullet_data_path=os.path.join(RoboticsSuite.models.assets_root, "bullet_data"),
-        robot_jpos_getter=robot_jpos_getter,
-    )
-
     while True:
         obs = env.reset()
         env.viewer.set_camera(camera_id=2)
@@ -91,7 +85,6 @@ if __name__ == "__main__":
 
         # rotate the gripper so we can see it easily
         env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
-        ik_controller.sync_state()
 
         device.start_control()
         while True:
@@ -99,10 +92,13 @@ if __name__ == "__main__":
             dpos, rotation, grasp, reset = state["dpos"], state["rotation"], state["grasp"], state["reset"]
             if reset:
                 break
-            velocities = ik_controller.get_control(dpos=dpos, rotation=rotation)
-            grasp = grasp - 1. # map 0 to -1 (open), 1 to 0 (closed halfway)
-            action = np.concatenate([velocities, [grasp]])
-
+                
+            # convert into a suitable end effector action for the environment
+            current = env._right_hand_orn
+            drotation = current.T.dot(rotation)  # relative rotation of desired from current
+            dquat = T.mat2quat(drotation)
+            grasp = grasp - 1.  # map 0 to -1 (open) and 1 to 0 (closed halfway)
+            action = np.concatenate([dpos, dquat, [grasp]])
             obs, reward, done, info = env.step(action)
             env.render()
             # print("reward: {0:.2f}".format(reward))

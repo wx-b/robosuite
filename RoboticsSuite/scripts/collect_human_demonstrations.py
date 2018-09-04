@@ -14,11 +14,12 @@ import numpy as np
 from glob import glob
 
 import RoboticsSuite
-from RoboticsSuite.controllers.sawyer_ik_controller import SawyerIKController
-from RoboticsSuite import DataCollectionWrapper
+import RoboticsSuite.utils.transform_utils as T
+from RoboticsSuite.wrappers import IKWrapper
+from RoboticsSuite.wrappers import DataCollectionWrapper
 from RoboticsSuite.utils.mjcf_utils import postprocess_model_xml
 
-def collect_human_trajectory(env, device, ik_controller):
+def collect_human_trajectory(env, device):
     """
     Use the device (keyboard or SpaceNav 3D mouse) to collect a demonstration.
     The rollout trajectory is saved to files in npz format.
@@ -33,7 +34,6 @@ def collect_human_trajectory(env, device, ik_controller):
 
     # rotate the gripper so we can see it easily
     env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])
-    ik_controller.sync_state()
 
     env.viewer.set_camera(camera_id=2)
     env.render()
@@ -44,9 +44,13 @@ def collect_human_trajectory(env, device, ik_controller):
     while not (reset or env._check_success()):
         state = device.get_controller_state()
         dpos, rotation, grasp, reset = state["dpos"], state["rotation"], state["grasp"], state["reset"]
-        velocities = ik_controller.get_control(dpos=dpos, rotation=rotation)
-        grasp = grasp - 1. # map 0 -> -1, 1 -> 0 so that 0 is open, 1 is closed (halfway)
-        action = np.concatenate([velocities, [grasp]])
+        
+        # convert into a suitable end effector action for the environment
+        current = env._right_hand_orn
+        drotation = current.T.dot(rotation)  # relative rotation of desired from current
+        dquat = T.mat2quat(drotation)
+        grasp = grasp - 1.  # map 0 to -1 (open) and 1 to 0 (closed halfway)
+        action = np.concatenate([dpos, dquat, [grasp]])
 
         obs, reward, done, info = env.step(action)
         env.render()
@@ -128,13 +132,12 @@ if __name__ == "__main__":
         gripper_visualization=True,
     )
 
+    # enable controlling the end effector directly instead of using joint velocities
+    env = IKWrapper(env)
+
     # wrap the environment with data collection wrapper
     tmp_directory = "/tmp/{}".format(str(time.time()).replace(".", "_"))
     env = DataCollectionWrapper(env, tmp_directory)
-
-    # function to return robot joint angles
-    def _robot_jpos_getter():
-        return np.array(env._joint_positions)
 
     # initialize device 
     if args.device == "keyboard":
@@ -149,13 +152,7 @@ if __name__ == "__main__":
     else:
         raise Exception("Invalid device choice: choose either 'keyboard' or 'spacemouse'.")
 
-    # initialize IK controller
-    ik_controller = SawyerIKController(
-        bullet_data_path=os.path.join(RoboticsSuite.models.assets_root, "bullet_data"),
-        robot_jpos_getter=_robot_jpos_getter,
-    )
-
     # collect demonstrations
     while True:
-        collect_human_trajectory(env, device, ik_controller)
+        collect_human_trajectory(env, device)
         gather_demonstrations_as_pkl(tmp_directory, args.directory, args.large)
