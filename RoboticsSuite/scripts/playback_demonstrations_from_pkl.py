@@ -14,8 +14,13 @@ from RoboticsSuite.utils.mjcf_utils import postprocess_model_xml
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--environment", type=str, default="SawyerLift")
-    parser.add_argument("--file", type=str, 
-        default=os.path.join(RoboticsSuite.models.assets_root, "demonstrations/sawyer-lift.pkl"))
+    parser.add_argument(
+        "--file",
+        type=str,
+        default=os.path.join(
+            RoboticsSuite.models.assets_root, "demonstrations/sawyer-lift.pkl"
+        ),
+    )
     args = parser.parse_args()
 
     env = RoboticsSuite.make(
@@ -28,12 +33,12 @@ if __name__ == "__main__":
         control_freq=100,
     )
 
-    with open(args.file,'rb') as f:
+    with open(args.file, "rb") as f:
         d = pickle.load(f)
-        # a hacky way to tell if this is a small pickle files with indices into 
+        # a hacky way to tell if this is a small pickle files with indices into
         # a bigger one, or if this is a pickle file with demos in it.
         if d[0] == 0:
-            big = open(sys.argv[1].replace('.pkl','.bkl'), 'rb')
+            big = open(sys.argv[1].replace(".pkl", ".bkl"), "rb")
         else:
             big = None
 
@@ -46,14 +51,12 @@ if __name__ == "__main__":
             t = pickle.load(big)
 
         env.reset()
-        xml = postprocess_model_xml(t['model.xml'])
+        xml = postprocess_model_xml(t["model.xml"])
         env.reset_from_xml_string(xml)
         env.viewer.set_camera(0)
-        for state in t['states']:
+        for state in t["states"]:
             if isinstance(state, tuple):
                 state = state[0]
             env.sim.set_state_from_flattened(state)
             env.sim.forward()
             env.render()
-        
-

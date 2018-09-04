@@ -55,7 +55,7 @@ class Wrapper:
     def __getattr__(self, attr):
         # using getattr ensures that both __getattribute__ and __getattr__ (fallback) get called
         # (see https://stackoverflow.com/questions/3278077/difference-between-getattr-vs-getattribute)
-        orig_attr = getattr(self.env, attr) 
+        orig_attr = getattr(self.env, attr)
         if callable(orig_attr):
 
             def hooked(*args, **kwargs):

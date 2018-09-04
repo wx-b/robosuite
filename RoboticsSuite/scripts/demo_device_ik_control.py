@@ -2,8 +2,8 @@
 
 Keyboard:
     We use the keyboard to control the end-effector of the robot.
-    The keyboard provides 6-DoF control commands through various keys. 
-    The commands are mapped to joint velocities through an inverse kinematics 
+    The keyboard provides 6-DoF control commands through various keys.
+    The commands are mapped to joint velocities through an inverse kinematics
     solver from Bullet physics.
 
     Note:
@@ -37,7 +37,6 @@ Example:
 """
 
 import argparse
-import os
 import numpy as np
 
 import RoboticsSuite
@@ -65,18 +64,22 @@ if __name__ == "__main__":
     # enable controlling the end effector directly instead of using joint velocities
     env = IKWrapper(env)
 
-    # initialize device 
+    # initialize device
     if args.device == "keyboard":
         from RoboticsSuite.devices import Keyboard
+
         device = Keyboard()
         env.viewer.add_keypress_callback("any", device.on_press)
         env.viewer.add_keyup_callback("any", device.on_release)
         env.viewer.add_keyrepeat_callback("any", device.on_press)
     elif args.device == "spacemouse":
         from RoboticsSuite.devices import SpaceMouse
+
         device = SpaceMouse()
     else:
-        raise Exception("Invalid device choice: choose either 'keyboard' or 'spacemouse'.")
+        raise Exception(
+            "Invalid device choice: choose either 'keyboard' or 'spacemouse'."
+        )
 
     while True:
         obs = env.reset()
@@ -89,16 +92,25 @@ if __name__ == "__main__":
         device.start_control()
         while True:
             state = device.get_controller_state()
-            dpos, rotation, grasp, reset = state["dpos"], state["rotation"], state["grasp"], state["reset"]
+            dpos, rotation, grasp, reset = (
+                state["dpos"],
+                state["rotation"],
+                state["grasp"],
+                state["reset"],
+            )
             if reset:
                 break
-                
+
             # convert into a suitable end effector action for the environment
             current = env._right_hand_orn
-            drotation = current.T.dot(rotation)  # relative rotation of desired from current
+
+            # relative rotation of desired from current
+            drotation = current.T.dot(rotation)
             dquat = T.mat2quat(drotation)
-            grasp = grasp - 1.  # map 0 to -1 (open) and 1 to 0 (closed halfway)
+
+            # map 0 to -1 (open) and 1 to 0 (closed halfway)
+            grasp = grasp - 1.
+
             action = np.concatenate([dpos, dquat, [grasp]])
             obs, reward, done, info = env.step(action)
             env.render()
-            # print("reward: {0:.2f}".format(reward))
