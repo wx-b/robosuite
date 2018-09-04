@@ -26,8 +26,6 @@ TODO(Anchit): A demo of how to import the framework and run the environment.
 TODO(Jiren): A short example of how to create a new environment.
 
 ## Human Demonstrations
-TODO(Ajay): Talk about how to collect, download, and replay human demonstrations.
-
 #### Collecting human demonstrations
 
 Demonstrations can be collected by either using a keyboard or using a [SpaceNavigator 3D Mouse](https://www.3dconnexion.com/spacemouse_compact/en/) with the [collect_human_demonstrations](RoboticsSuite/scripts/collect_human_demonstrations.py) script. It takes the following arguments.
@@ -67,7 +65,19 @@ Note that the rendering window must be active for these commands to work.
 
 #### Structure of collected demonstrations
 
-Every set of demonstrations is collected as a `demo.pkl` file, and possibly with a corresponding`demo.bkl`.
+Every set of demonstrations is collected as a `demo.pkl` file, and possibly with a corresponding`demo.bkl`. The reason for collecting both a `demo.pkl` and a `demo.bkl` file is that it allows us to avoid loading an entire set of demonstrations into memory all at once by storing a series of pickled demonstrations in the `demo.bkl` and their corresponding indices in the `demo.pkl`. This is useful if the set of demonstrations is large (for example, on the order of gigabytes) since we can operate on the indices in `demo.pkl` until we wish to load a demonstration, and then the demonstration can be loaded using the offset.
+
+
+
+If no `demo.bkl` file is used, the `demo.pkl` file, once unpickled, will be a list of dictionaries. Each dictionary corresponds to a single demonstration. The contained keys are `model` and `states`. The `model` key stores the entire mujoco model as an xml string. This is useful for storing scene information necessary to reconstruct the demonstration state. The `states` key stores a list of mujoco states, ordered by time. 
+
+
+
+If a `demo.bkl` file is used, the `demo.pkl` file, once unpickled, will be a list of indices. Each index corresponds to a single demonstration that is stored at that offset in the `demo.bkl` file. To read a demonstration, simply seek to its offset in the `demo.bkl` file and unpickle the file. As before, each demonstration is a dictionary with the keys `model` and `states`.
+
+
+
+To see a simple example of how to read demonstrations, please see [demo_playback_demonstrations](RoboticsSuite/scripts/demo_playback_demonstrations.py).
 
 #### Download CRIMSON dataset
 
