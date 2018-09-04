@@ -131,8 +131,7 @@ class BaxterLift(BaxterEnv):
         """
         reward = 0
 
-        # (TODO) remove hardcoded pot dimension
-        cube_height = self.sim.data.site_xpos[self.pot_center_id][2] - 0.07
+        cube_height = self.sim.data.site_xpos[self.pot_center_id][2] - self.pot.get_top_offset()[2]
         table_height = self.sim.data.site_xpos[self.table_top_id][2]
 
         # check if the pot is tilted more than 30 degrees
