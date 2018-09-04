@@ -38,7 +38,7 @@ if __name__ == "__main__":
             big = None
 
     while True:
-
+        print("Playing back random episode... (press ESC to quit)")
         # select an episode randomly
         t = random.choice(d)
         if type(t) == int:
