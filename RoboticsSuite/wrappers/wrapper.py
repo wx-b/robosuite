@@ -53,7 +53,9 @@ class Wrapper:
 
     # this method is a fallback option on any methods the original env might support
     def __getattr__(self, attr):
-        orig_attr = self.env.__getattribute__(attr)
+        # using getattr ensures that both __getattribute__ and __getattr__ (fallback) get called
+        # (see https://stackoverflow.com/questions/3278077/difference-between-getattr-vs-getattribute)
+        orig_attr = getattr(self.env, attr) 
         if callable(orig_attr):
 
             def hooked(*args, **kwargs):
