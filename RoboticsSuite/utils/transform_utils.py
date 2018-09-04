@@ -63,6 +63,114 @@ def convert_quat(q, to="xyzw"):
     raise Exception("convert_quat: choose a valid `to` argument (xyzw or wxyz)")
 
 
+def quat_multiply(quaternion1, quaternion0):
+    """Return multiplication of two quaternions.
+    >>> q = quat_multiply([1, -2, 3, 4], [-5, 6, 7, 8])
+    >>> np.allclose(q, [-44, -14, 48, 28])
+    True
+    """
+    x0, y0, z0, w0 = quaternion0
+    x1, y1, z1, w1 = quaternion1
+    return np.array(
+        (
+            x1 * w0 + y1 * z0 - z1 * y0 + w1 * x0,
+            -x1 * z0 + y1 * w0 + z1 * x0 + w1 * y0,
+            x1 * y0 - y1 * x0 + z1 * w0 + w1 * z0,
+            -x1 * x0 - y1 * y0 - z1 * z0 + w1 * w0,
+        ),
+        dtype=np.float32,
+    )
+
+
+def quat_conjugate(quaternion):
+    """Return conjugate of quaternion.
+    >>> q0 = random_quaternion()
+    >>> q1 = quat_conjugate(q0)
+    >>> q1[3] == q0[3] and all(q1[:3] == -q0[:3])
+    True
+    """
+    return np.array(
+        (-quaternion[0], -quaternion[1], -quaternion[2], quaternion[3]),
+        dtype=np.float32,
+    )
+
+
+def quat_inverse(quaternion):
+    """Return inverse of quaternion.
+    >>> q0 = random_quaternion()
+    >>> q1 = quat_inverse(q0)
+    >>> np.allclose(quat_multiply(q0, q1), [0, 0, 0, 1])
+    True
+    """
+    return quat_conjugate(quaternion) / np.dot(quaternion, quaternion)
+
+
+def quat_slerp(quat0, quat1, fraction, spin=0, shortestpath=True):
+    """Return spherical linear interpolation between two quaternions.
+    >>> q0 = random_quat()
+    >>> q1 = random_quat()
+    >>> q = quat_slerp(q0, q1, 0.0)
+    >>> np.allclose(q, q0)
+    True
+    >>> q = quat_slerp(q0, q1, 1.0, 1)
+    >>> np.allclose(q, q1)
+    True
+    >>> q = quat_slerp(q0, q1, 0.5)
+    >>> angle = math.acos(np.dot(q0, q))
+    >>> np.allclose(2.0, math.acos(np.dot(q0, q1)) / angle) or \
+        np.allclose(2.0, math.acos(-np.dot(q0, q1)) / angle)
+    True
+    """
+    q0 = unit_vector(quat0[:4])
+    q1 = unit_vector(quat1[:4])
+    if fraction == 0.0:
+        return q0
+    elif fraction == 1.0:
+        return q1
+    d = np.dot(q0, q1)
+    if abs(abs(d) - 1.0) < _EPS:
+        return q0
+    if shortestpath and d < 0.0:
+        # invert rotation
+        d = -d
+        q1 *= -1.0
+    angle = math.acos(d) + spin * math.pi
+    if abs(angle) < _EPS:
+        return q0
+    isin = 1.0 / math.sin(angle)
+    q0 *= math.sin((1.0 - fraction) * angle) * isin
+    q1 *= math.sin(fraction * angle) * isin
+    q0 += q1
+    return q0
+
+
+def random_quat(rand=None):
+    """Return uniform random unit quaternion.
+    rand: array like or None
+        Three independent random variables that are uniformly distributed
+        between 0 and 1.
+    >>> q = random_quat()
+    >>> np.allclose(1.0, vector_norm(q))
+    True
+    >>> q = random_quat(np.random.random(3))
+    >>> q.shape
+    (4,)
+    """
+    if rand is None:
+        rand = np.random.rand(3)
+    else:
+        assert len(rand) == 3
+    r1 = np.sqrt(1.0 - rand[0])
+    r2 = np.sqrt(rand[0])
+    pi2 = math.pi * 2.0
+    t1 = pi2 * rand[1]
+    t2 = pi2 * rand[2]
+    return np.array(
+        (np.sin(t1) * r1, np.cos(t1) * r1, np.sin(t2) * r2, np.cos(t2) * r2),
+        dtype=np.float32,
+    )
+
+
 def vec(values):
     """
     Converts value tuple into a numpy vector.
@@ -386,7 +494,7 @@ def rotation_matrix(angle, direction, point=None):
         >>> R1 = rotation_matrix(-angle, -direc, point)
         >>> is_same_transform(R0, R1)
         True
-        >>> I = numpy.identity(4, numpy.float64)
+        >>> I = numpy.identity(4, numpy.float32)
         >>> numpy.allclose(I, rotation_matrix(math.pi*2, direc))
         True
         >>> numpy.allclose(2., numpy.trace(rotation_matrix(math.pi/2,
@@ -399,7 +507,7 @@ def rotation_matrix(angle, direction, point=None):
     direction = unit_vector(direction[:3])
     # rotation matrix around unit vector
     R = np.array(
-        ((cosa, 0.0, 0.0), (0.0, cosa, 0.0), (0.0, 0.0, cosa)), dtype=np.float64
+        ((cosa, 0.0, 0.0), (0.0, cosa, 0.0), (0.0, 0.0, cosa)), dtype=np.float32
     )
     R += np.outer(direction, direction) * (1.0 - cosa)
     direction *= sina
@@ -409,13 +517,13 @@ def rotation_matrix(angle, direction, point=None):
             (direction[2], 0.0, -direction[0]),
             (-direction[1], direction[0], 0.0),
         ),
-        dtype=np.float64,
+        dtype=np.float32,
     )
     M = np.identity(4)
     M[:3, :3] = R
     if point is not None:
         # rotation not around origin
-        point = np.array(point[:3], dtype=np.float64, copy=False)
+        point = np.array(point[:3], dtype=np.float32, copy=False)
         M[:3, 3] = point - np.dot(R, point)
     return M
 
@@ -457,7 +565,7 @@ def unit_vector(data, axis=None, out=None):
         >>> v2 = v0 / numpy.expand_dims(numpy.sqrt(numpy.sum(v0*v0, axis=1)), 1)
         >>> numpy.allclose(v1, v2)
         True
-        >>> v1 = numpy.empty((5, 4, 3), dtype=numpy.float64)
+        >>> v1 = numpy.empty((5, 4, 3), dtype=numpy.float32)
         >>> unit_vector(v0, axis=1, out=v1)
         >>> numpy.allclose(v1, v2)
         True
@@ -468,7 +576,7 @@ def unit_vector(data, axis=None, out=None):
 
     """
     if out is None:
-        data = np.array(data, dtype=np.float64, copy=True)
+        data = np.array(data, dtype=np.float32, copy=True)
         if data.ndim == 1:
             data /= math.sqrt(np.dot(data, data))
             return data

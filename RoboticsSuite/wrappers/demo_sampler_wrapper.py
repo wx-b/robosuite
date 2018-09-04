@@ -84,7 +84,7 @@ class DemoSamplerWrapper(Wrapper):
                 This number is in terms of number of demonstration time steps.
         """
 
-        self.env = env
+        super().__init__(env)
 
         """ Load the demo file...
             If it's a .pkl file with a list of objects, then proceed as usual.

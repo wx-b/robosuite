@@ -18,7 +18,6 @@ class SawyerStack(SawyerEnv):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",
-        use_eef_ctrl=False,
         table_full_size=(0.8, 0.8, 0.8),
         table_friction=(1., 5e-3, 1e-4),
         use_camera_obs=True,
@@ -44,9 +43,6 @@ class SawyerStack(SawyerEnv):
 
             gripper_type (str): type of gripper, used to instantiate
                 gripper models from gripper factory.
-
-            use_eef_ctrl (bool): True if using end-effector control. Using joint
-                velocities otherwise.
 
             table_full_size (3-tuple): x, y, and z dimensions of the table.
 
@@ -123,7 +119,6 @@ class SawyerStack(SawyerEnv):
 
         super().__init__(
             gripper_type=gripper_type,
-            use_eef_ctrl=use_eef_ctrl,
             gripper_visualization=gripper_visualization,
             use_indicator_object=use_indicator_object,
             has_renderer=has_renderer,
