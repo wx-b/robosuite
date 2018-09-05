@@ -25,8 +25,9 @@ class DataCollectionWrapper(Wrapper):
         # the base directory for all logging
         self.directory = directory
 
-        # in-memory cache for simulation states
+        # in-memory cache for simulation states and action info
         self.states = []
+        self.actions = [] # stores joint velocities
 
         # how often to save simulation state, in terms of environment steps
         self.collect_freq = collect_freq
@@ -84,8 +85,9 @@ class DataCollectionWrapper(Wrapper):
         """
         t1, t2 = str(time.time()).split(".")
         state_path = os.path.join(self.ep_directory, "state_{}_{}.npz".format(t1, t2))
-        np.savez(state_path, states=np.array(self.states))
+        np.savez(state_path, states=np.array(self.states), actions=self.actions)
         self.states = []
+        self.actions = []
 
     def reset(self):
         ret = super().reset()
@@ -106,19 +108,15 @@ class DataCollectionWrapper(Wrapper):
             state = self.env.sim.get_state().flatten()
             self.states.append(state)
 
+            if hasattr(self.env, "controller"):
+                action = self.env._last_action # get joint vel action instead of eef action
+            self.actions.append(np.array(action)) # copy the action when storing it
+
         # flush collected data to disk if necessary
         if self.t % self.flush_freq == 0:
             self._flush()
 
         return ret
-
-    def reset_from_xml_string(self, xml_string):
-        """
-        TODO: for some reason we need this definition here and can't fall back
-              on the __getattr__ in wrapper.py. Same for reset function.
-              Need to find out why.
-        """
-        return self.env.reset_from_xml_string(xml_string)
 
     def close(self):
         """

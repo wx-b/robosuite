@@ -21,6 +21,7 @@ if __name__ == "__main__":
             RoboticsSuite.models.assets_root, "demonstrations/sawyer-lift.pkl"
         ),
     )
+    parser.add_argument("--with-actions", dest='actions', action='store_true')
     args = parser.parse_args()
 
     env = RoboticsSuite.make(
@@ -54,9 +55,22 @@ if __name__ == "__main__":
         xml = postprocess_model_xml(t["model.xml"])
         env.reset_from_xml_string(xml)
         env.viewer.set_camera(0)
-        for state in t["states"]:
-            if isinstance(state, tuple):
-                state = state[0]
-            env.sim.set_state_from_flattened(state)
+
+        if args.actions:
+            # reset to the first state we recorded
+            env.sim.set_state_from_flattened(t["states"][0])
             env.sim.forward()
-            env.render()
+
+            # replay stored actions in open loop - this runs through actual mujoco simulation.
+            # there might be observed drift due to differences in simulation.
+            for a in t["actions"]:
+                env.step(a)
+                env.render()
+        else:
+            # force the sequence of internal mujoco states one by one
+            for state in t["states"]:
+                if isinstance(state, tuple):
+                    state = state[0]
+                env.sim.set_state_from_flattened(state)
+                env.sim.forward()
+                env.render()

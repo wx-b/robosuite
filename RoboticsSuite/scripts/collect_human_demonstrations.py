@@ -91,11 +91,14 @@ def gather_demonstrations_as_pkl(directory, out_dir, large=False):
             ep_data["model.xml"] = f.read()
         state_paths = os.path.join(directory, ep_directory, "state_*.npz")
         states = []
+        actions = []
         for state_file in sorted(glob(state_paths)):
             dic = np.load(state_file)
-            for s in dic["states"]:
+            for s, a in zip(dic["states"], dic["actions"]):
                 states.append(s)
+                actions.append(a)
         ep_data["states"] = states
+        ep_data["actions"] = actions
         if len(states) == 0:
             continue
 
