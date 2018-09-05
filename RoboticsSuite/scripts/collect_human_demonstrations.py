@@ -10,14 +10,14 @@ import os
 import time
 import argparse
 import pickle
-import numpy as np
 from glob import glob
+import numpy as np
 
 import RoboticsSuite
 import RoboticsSuite.utils.transform_utils as T
 from RoboticsSuite.wrappers import IKWrapper
 from RoboticsSuite.wrappers import DataCollectionWrapper
-from RoboticsSuite.utils.mjcf_utils import postprocess_model_xml
+
 
 def collect_human_trajectory(env, device):
     """
@@ -43,8 +43,13 @@ def collect_human_trajectory(env, device):
     device.start_control()
     while not (reset or env._check_success()):
         state = device.get_controller_state()
-        dpos, rotation, grasp, reset = state["dpos"], state["rotation"], state["grasp"], state["reset"]
-        
+        dpos, rotation, grasp, reset = (
+            state["dpos"],
+            state["rotation"],
+            state["grasp"],
+            state["reset"],
+        )
+
         # convert into a suitable end effector action for the environment
         current = env._right_hand_orn
         drotation = current.T.dot(rotation)  # relative rotation of desired from current
@@ -61,36 +66,36 @@ def collect_human_trajectory(env, device):
 
 def gather_demonstrations_as_pkl(directory, out_dir, large=False):
     """
-    Gathers the demonstrations saved in @directory into a 
+    Gathers the demonstrations saved in @directory into a
     single pkl file.
 
     Args:
         directory (str): Path to the directory containing raw demonstrations.
         out_dir (str): Path to where to store the pkl file.
-        large (bool): If true, generates both a .pkl and a .bkl file. The 
-            .pkl file is for indexing into the .bkl file that contains 
+        large (bool): If true, generates both a .pkl and a .bkl file. The
+            .pkl file is for indexing into the .bkl file that contains
             all of the demonstrations. This allows for lazy loading of
-            demonstrations, which is useful if there are a lot of them. 
+            demonstrations, which is useful if there are a lot of them.
     """
-    pickle_path = os.path.join(out_dir, 'demo.pkl')
+    pickle_path = os.path.join(out_dir, "demo.pkl")
     if large:
-        big = open(pickle_path.replace(".pkl",".bkl"), "wb")
+        big = open(pickle_path.replace(".pkl", ".bkl"), "wb")
         ofs = [0]
 
     all_data = []
     for ep_directory in os.listdir(directory):
         # collect episode data into dictionary
         ep_data = {}
-        xml_path = os.path.join(directory, ep_directory, 'model.xml')
+        xml_path = os.path.join(directory, ep_directory, "model.xml")
         with open(xml_path, "r") as f:
-            ep_data['model.xml'] = f.read()
+            ep_data["model.xml"] = f.read()
         state_paths = os.path.join(directory, ep_directory, "state_*.npz")
         states = []
         for state_file in sorted(glob(state_paths)):
             dic = np.load(state_file)
-            for s in dic['states']:
+            for s in dic["states"]:
                 states.append(s)
-        ep_data['states'] = states
+        ep_data["states"] = states
         if len(states) == 0:
             continue
 
@@ -107,16 +112,21 @@ def gather_demonstrations_as_pkl(directory, out_dir, large=False):
     small = open(pickle_path, "wb")
     if large:
         # dump offsets to pickle
-        pickle.dump(ofs[:-1], small) 
+        pickle.dump(ofs[:-1], small)
         big.close()
     else:
         # dump actual data to pickle
         pickle.dump(all_data, small)
-    small.close() 
+    small.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--directory", type=str, default=os.path.join(RoboticsSuite.models.assets_root, "demonstrations"))
+    parser.add_argument(
+        "--directory",
+        type=str,
+        default=os.path.join(RoboticsSuite.models.assets_root, "demonstrations"),
+    )
     parser.add_argument("--environment", type=str, default="SawyerLift")
     parser.add_argument("--device", type=str, default="keyboard")
     parser.add_argument("--large", type=bool, default=False)
@@ -139,18 +149,22 @@ if __name__ == "__main__":
     tmp_directory = "/tmp/{}".format(str(time.time()).replace(".", "_"))
     env = DataCollectionWrapper(env, tmp_directory)
 
-    # initialize device 
+    # initialize device
     if args.device == "keyboard":
         from RoboticsSuite.devices import Keyboard
+
         device = Keyboard()
         env.viewer.add_keypress_callback("any", device.on_press)
         env.viewer.add_keyup_callback("any", device.on_release)
         env.viewer.add_keyrepeat_callback("any", device.on_press)
     elif args.device == "spacemouse":
         from RoboticsSuite.devices import SpaceMouse
+
         device = SpaceMouse()
     else:
-        raise Exception("Invalid device choice: choose either 'keyboard' or 'spacemouse'.")
+        raise Exception(
+            "Invalid device choice: choose either 'keyboard' or 'spacemouse'."
+        )
 
     # collect demonstrations
     while True:

@@ -98,16 +98,20 @@ class SpaceMouse(Device):
         """
         Method to pretty print controls.
         """
+
         def print_command(char, info):
             char += " " * (30 - len(char))
             print("{}\t{}".format(char, info))
+
         print("")
         print_command("Control", "Command")
         print_command("Right button", "reset simulation")
         print_command("Left button (hold)", "close gripper")
         print_command("Move mouse laterally", "move arm horizontally in x-y plane")
         print_command("Move mouse vertically", "move arm vertically")
-        print_command("Twist mouse about an axis", "rotate arm about a corresponding axis")
+        print_command(
+            "Twist mouse about an axis", "rotate arm about a corresponding axis"
+        )
         print_command("ESC", "quit")
         print("")
 
@@ -119,8 +123,8 @@ class SpaceMouse(Device):
 
     def start_control(self):
         """
-        Method that should be called externally before controller can 
-        start receiving commands. 
+        Method that should be called externally before controller can
+        start receiving commands.
         """
         self._reset_internal_state()
         self._reset_state = 0
@@ -139,7 +143,9 @@ class SpaceMouse(Device):
 
         self.rotation = self.rotation.dot(drot1.dot(drot2.dot(drot3)))
 
-        return dict(dpos=dpos, rotation=self.rotation, grasp=self.grasp, reset=self._reset_state)
+        return dict(
+            dpos=dpos, rotation=self.rotation, grasp=self.grasp, reset=self._reset_state
+        )
 
     def run(self):
         """Listener method that keeps pulling new messages."""

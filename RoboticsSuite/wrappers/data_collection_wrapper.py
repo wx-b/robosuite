@@ -2,11 +2,11 @@
 This file implements a wrapper for saving simulation states to disk.
 This data collection wrapper is useful for collecting demonstrations.
 """
-
-from RoboticsSuite.wrappers import Wrapper
 import os
 import time
 import numpy as np
+
+from RoboticsSuite.wrappers import Wrapper
 
 
 class DataCollectionWrapper(Wrapper):
@@ -115,7 +115,7 @@ class DataCollectionWrapper(Wrapper):
     def reset_from_xml_string(self, xml_string):
         """
         TODO: for some reason we need this definition here and can't fall back
-              on the __getattr__ in wrapper.py. Same for reset function. 
+              on the __getattr__ in wrapper.py. Same for reset function.
               Need to find out why.
         """
         return self.env.reset_from_xml_string(xml_string)
@@ -126,5 +126,3 @@ class DataCollectionWrapper(Wrapper):
         """
         self._start_new_episode()
         self.env.close()
-
-
