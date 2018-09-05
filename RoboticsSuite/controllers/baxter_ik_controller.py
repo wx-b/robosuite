@@ -85,7 +85,8 @@ class BaxterIKController(Controller):
         for i, delta in enumerate(deltas):
             velocities[i] = -2 * delta
         velocities = self.clip_joint_velocities(velocities)
-
+        
+        self.commanded_joint_velocities = velocities
         return velocities
 
         # For debugging purposes: set joint positions directly

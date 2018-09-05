@@ -92,10 +92,6 @@ class IKWrapper(Wrapper):
                 "Only Sawyer and Baxter robot environments are supported for IK "
                 "control currently."
             )
-
-        # remember the last action computed by bullet
-        self._last_action = np.array(action)
-
         return self.env.step(action)
 
     def _make_input(self, action, old_quat):

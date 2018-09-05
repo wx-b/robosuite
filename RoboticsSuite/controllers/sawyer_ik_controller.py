@@ -76,6 +76,8 @@ class SawyerIKController(Controller):
         for i, delta in enumerate(deltas):
             velocities[i] = -2. * delta  # -2. * delta
         velocities = self.clip_joint_velocities(velocities)
+        
+        self.commanded_joint_velocities = velocities
         return velocities
 
     def sync_state(self):

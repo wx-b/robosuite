@@ -7,6 +7,7 @@ import os
 import pickle
 import argparse
 import random
+import numpy as np
 
 import RoboticsSuite
 from RoboticsSuite.utils.mjcf_utils import postprocess_model_xml
@@ -65,9 +66,9 @@ if __name__ == "__main__":
             env.sim.forward()
 
             # Replay stored actions in open loop - this runs through actual mujoco simulation.
-            # Note how we index the actions here. This is because when the DataCollector wrapper
-            # recorded the states and actions, the states were recorded AFTER playing that action.
-            for a in t["actions"][1:]:
+            for ai in t["action_infos"]:
+                velocities, gripper_acts = ai["joint_velocities"], ai["gripper_actuation"]
+                a = np.concatenate([velocities, gripper_acts])
                 env.step(a)
                 env.render()
         else:

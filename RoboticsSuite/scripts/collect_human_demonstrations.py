@@ -91,14 +91,16 @@ def gather_demonstrations_as_pkl(directory, out_dir, large=False):
             ep_data["model.xml"] = f.read()
         state_paths = os.path.join(directory, ep_directory, "state_*.npz")
         states = []
-        actions = []
+        action_infos = []
         for state_file in sorted(glob(state_paths)):
             dic = np.load(state_file)
-            for s, a in zip(dic["states"], dic["actions"]):
+            # Note how we index the actions here. This is because when the DataCollector wrapper
+            # recorded the states and actions, the states were recorded AFTER playing that action.
+            for s, ai in zip(dic["states"][:-1], dic["action_infos"][1:]):
                 states.append(s)
-                actions.append(a)
+                action_infos.append(ai)
         ep_data["states"] = states
-        ep_data["actions"] = actions
+        ep_data["action_infos"] = action_infos
         if len(states) == 0:
             continue
 

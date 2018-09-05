@@ -7,6 +7,7 @@ import time
 import numpy as np
 
 from RoboticsSuite.wrappers import Wrapper
+from RoboticsSuite.wrappers import IKWrapper
 
 
 class DataCollectionWrapper(Wrapper):
@@ -27,7 +28,7 @@ class DataCollectionWrapper(Wrapper):
 
         # in-memory cache for simulation states and action info
         self.states = []
-        self.actions = [] # stores joint velocities
+        self.action_infos = []  # stores information about actions taken
 
         # how often to save simulation state, in terms of environment steps
         self.collect_freq = collect_freq
@@ -85,9 +86,11 @@ class DataCollectionWrapper(Wrapper):
         """
         t1, t2 = str(time.time()).split(".")
         state_path = os.path.join(self.ep_directory, "state_{}_{}.npz".format(t1, t2))
-        np.savez(state_path, states=np.array(self.states), actions=self.actions)
+        np.savez(
+            state_path, states=np.array(self.states), action_infos=self.action_infos
+        )
         self.states = []
-        self.actions = []
+        self.action_infos = []
 
     def reset(self):
         ret = super().reset()
@@ -108,9 +111,27 @@ class DataCollectionWrapper(Wrapper):
             state = self.env.sim.get_state().flatten()
             self.states.append(state)
 
-            if hasattr(self.env, "controller"):
-                action = self.env._last_action # get joint vel action instead of eef action
-            self.actions.append(np.array(action)) # copy the action when storing it
+            if isinstance(self.env, IKWrapper):
+                # add end effector actions in addition to the low-level joint actions
+                info = {}
+                info["joint_velocities"] = np.array(
+                    self.controller.commanded_joint_velocities
+                )
+                info["right_dpos"] = np.array(action[:3])
+                info["right_dquat"] = np.array(action[3:7])
+                if self.env.mujoco_robot.name == "sawyer":
+                    info["gripper_actuation"] = np.array(action[7:])
+                elif self.env.mujoco_robot.name == "baxter":
+                    info["gripper_actuation"] = np.array(action[14:])
+                    info["left_dpos"] = np.array(action[7:10])  # add in second arm info
+                    info["left_dquat"] = np.array(action[10:14])
+            else:
+                info = {}
+                info["joint_velocities"] = np.array(action[: self.env.mujoco_robot.dof])
+                info["gripper_actuation"] = np.array(
+                    action[self.env.mujoco_robot.dof :]
+                )
+            self.action_infos.append(info)  # copy the action when storing it
 
         # flush collected data to disk if necessary
         if self.t % self.flush_freq == 0:
