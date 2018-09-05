@@ -6,7 +6,10 @@ Run `pip install pybullet==1.9.5`.
 
 import os
 import numpy as np
-import pybullet as p
+try:
+    import pybullet as p
+except ImportError:
+    raise Exception("Please make sure pybullet is installed. Run `pip install pybullet==1.9.5`")
 
 import RoboticsSuite.utils.transform_utils as T
 from RoboticsSuite.controllers import Controller
