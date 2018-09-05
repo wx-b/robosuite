@@ -58,12 +58,16 @@ if __name__ == "__main__":
 
         if args.actions:
             # reset to the first state we recorded
-            env.sim.set_state_from_flattened(t["states"][0])
+            state = t["states"][0]
+            if isinstance(state, tuple):
+                state = state[0]
+            env.sim.set_state_from_flattened(state)
             env.sim.forward()
 
-            # replay stored actions in open loop - this runs through actual mujoco simulation.
-            # there might be observed drift due to differences in simulation.
-            for a in t["actions"]:
+            # Replay stored actions in open loop - this runs through actual mujoco simulation.
+            # Note how we index the actions here. This is because when the DataCollector wrapper
+            # recorded the states and actions, the states were recorded AFTER playing that action.
+            for a in t["actions"][1:]:
                 env.step(a)
                 env.render()
         else:
