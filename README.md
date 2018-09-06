@@ -19,10 +19,10 @@ This release of Stanford Robotics Suite contains a set of benchmarking manipulat
 ## Installation
 The Stanford Robotics Suite officially supports Mac OS X and Linux, on Python 3.5+. It can easily be run on a headless mode, with or without a GPU, and has been extensively used both as a desktop library and on servers to generate RL experiences for distributed learning.
 
-The base installation without inverse kinematics requires Mujoco (with [mujoco-py](https://github.com/openai/mujoco-py), refer to link for troubleshooting the installation and further instructions) and NumPy.
+The base installation without inverse kinematics requires MuJoCo (with [mujoco-py](https://github.com/openai/mujoco-py), refer to link for troubleshooting the installation and further instructions) and NumPy.
 
-1. First install Mujoco by downloading it from its website ([Linux](https://www.roboti.us/download/mjpro150_linux.zip), [OS X](https://www.roboti.us/download/mjpro150_osx.zip)) and placing the `mjpro150` and your key `mjkey.txt` in `~/.mujoco`.
-   - For Linux, you will need to install some packages to build mujoco-py (sourced from [here](https://github.com/openai/mujoco-py/blob/master/Dockerfile), with a couple missing packages added). If using APT,
+1. First install MuJoCo by downloading it from its website ([Linux](https://www.roboti.us/download/mjpro150_linux.zip), [OS X](https://www.roboti.us/download/mjpro150_osx.zip)) and placing the `mjpro150` directory and your key `mjkey.txt` in `~/.mujoco`. You can obtain a key from [the MuJoCo website](https://www.roboti.us/license.html).
+   - For Linux, you will need to install some packages to build mujoco-py (sourced from [here](https://github.com/openai/mujoco-py/blob/master/Dockerfile), with a couple missing packages added). If using APT, the required complete command is:
      ```
      sudo apt install curl git libgl1-mesa-dev libgl1-mesa-glx libglew-dev \
              libosmesa6-dev software-properties-common net-tools unzip vim \
@@ -34,6 +34,7 @@ The base installation without inverse kinematics requires Mujoco (with [mujoco-p
    ```
    pip3 install -r requirements.txt
    ```
+   This will also install itself (RoboticsSuite) as an editable package, such that changes to this path get reflected elsewhere without having to reinstall the package.
 
 Optional support is also provided for inverse kinematics, using the Bullet engine, as well as SpaceMouse for 6 DOF control. This can be installed by running
 
