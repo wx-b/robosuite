@@ -19,7 +19,7 @@ This release of Stanford Robotics Suite contains a set of benchmarking manipulat
 ## Installation
 The Stanford Robotics Suite officially supports Mac OS X and Linux, on Python 3.5+. It can easily be run on a headless mode, with or without a GPU, and has been extensively used both as a desktop library and on servers to generate RL experiences for distributed learning.
 
-The base installation without inverse kinematics requires MuJoCo (with [mujoco-py](https://github.com/openai/mujoco-py), refer to link for troubleshooting the installation and further instructions) and NumPy. To avoid interfering with system packages, it is possible to optionally install it under a virtual environment, by first running `virtualenv . && source bin/activate`.
+The base installation without inverse kinematics requires MuJoCo (with [mujoco-py](https://github.com/openai/mujoco-py), refer to link for troubleshooting the installation and further instructions) and NumPy. To avoid interfering with system packages, it is possible to optionally install it under a virtual environment, by first running `virtualenv -p python3 . && source bin/activate`.
 
 1. First install MuJoCo by downloading it from its website ([Linux](https://www.roboti.us/download/mjpro150_linux.zip), [OS X](https://www.roboti.us/download/mjpro150_osx.zip)) and placing the `mjpro150` directory and your key `mjkey.txt` in `~/.mujoco`. You can obtain a key from [the MuJoCo website](https://www.roboti.us/license.html).
    - For Linux, you will need to install some packages to build mujoco-py (sourced from [here](https://github.com/openai/mujoco-py/blob/master/Dockerfile), with a couple missing packages added). If using APT, the required complete command is:
