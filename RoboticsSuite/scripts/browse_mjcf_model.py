@@ -19,7 +19,7 @@ import RoboticsSuite
 
 if __name__ == "__main__":
 
-    arena_file = os.path.join(RoboticsSuite.assets_path, "arenas/pegs_arena.xml")
+    arena_file = os.path.join(RoboticsSuite.models.assets_root, "arenas/pegs_arena.xml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--filepath", type=str, default=arena_file)

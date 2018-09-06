@@ -17,7 +17,11 @@ This release of Stanford Robotics Suite contains a set of benchmarking manipulat
 * **human demonstrations**: utilities for collecting human demonstrations, replaying demonstration datasets, and leveraging demonstration data for learning.
 
 ## Installation
-TODO(Joan): Talk about system requirement, library dependencies, installation commands on Linux and Mac OS X.
+The Stanford Robotics Suite officially supports Mac OS X and Linux, on Python 3.5+. It can easily be run on a headless mode, with or without a GPU, and has been extensively used both as a desktop library and on servers to generate RL experiences for distributed learning [1].
+
+A barebones installation
+
+Optional support is also provided for inverse kinematics, using the Bullet engine, as well as SpaceMouse for 6 DOF control.
 
 ## Quick Start
 TODO(Anchit): A demo of how to import the framework and run the environment.

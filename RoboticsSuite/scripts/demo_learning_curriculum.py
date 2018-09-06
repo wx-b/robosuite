@@ -51,7 +51,7 @@ if __name__ == "__main__":
     env = DemoSamplerWrapper(
         env,
         file_path=os.path.join(
-            RoboticsSuite.assets_path, "demonstrations/sawyer-lift.pkl"
+            RoboticsSuite.models.assets_root, "demonstrations/sawyer-lift.pkl"
         ),
         need_xml=True,
         preload=True,
