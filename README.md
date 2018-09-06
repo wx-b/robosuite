@@ -17,23 +17,28 @@ This release of Stanford Robotics Suite contains a set of benchmarking manipulat
 * **human demonstrations**: utilities for collecting human demonstrations, replaying demonstration datasets, and leveraging demonstration data for learning.
 
 ## Installation
-The Stanford Robotics Suite officially supports Mac OS X and Linux, on Python 3.5+. It can easily be run on a headless mode, with or without a GPU, and has been extensively used both as a desktop library and on servers to generate RL experiences for distributed learning [1].
+The Stanford Robotics Suite officially supports Mac OS X and Linux, on Python 3.5+. It can easily be run on a headless mode, with or without a GPU, and has been extensively used both as a desktop library and on servers to generate RL experiences for distributed learning.
 
 The base installation without inverse kinematics requires Mujoco (with [mujoco-py](https://github.com/openai/mujoco-py), refer to link for troubleshooting the installation and further instructions) and NumPy.
 
 1. First install Mujoco by downloading it from its website ([Linux](https://www.roboti.us/download/mjpro150_linux.zip), [OS X](https://www.roboti.us/download/mjpro150_osx.zip)) and placing the `mjpro150` and your key `mjkey.txt` in `~/.mujoco`.
    - For Linux, you will need to install some packages to build mujoco-py (sourced from [here](https://github.com/openai/mujoco-py/blob/master/Dockerfile), with a couple missing packages added). If using APT,
-```
-sudo apt install curl git libgl1-mesa-dev libgl1-mesa-glx libglew-dev libosmesa6-dev software-properties-common net-tools unzip vim virtualenv wget xpra xserver-xorg-dev libglfw3-dev patchelf
-```
-Note that for older versions of Ubuntu there's no libglfw3 package, in which case you need to `export LD_LIBRARY_PATH=$HOME/.mujoco/mjpro150/bin` before proceeding to the next step.
+     ```
+     sudo apt install curl git libgl1-mesa-dev libgl1-mesa-glx libglew-dev \
+             libosmesa6-dev software-properties-common net-tools unzip vim \
+             virtualenv wget xpra xserver-xorg-dev libglfw3-dev patchelf
+     ```
+     Note that for older versions of Ubuntu there's no libglfw3 package, in which case you need to `export LD_LIBRARY_PATH=$HOME/.mujoco/mjpro150/bin` before proceeding to the next step.
+
 2. Install the requirements with
-```
-pip3 install -r requirements.txt
-```
+   ```
+   pip3 install -r requirements.txt
+   ```
 
 Optional support is also provided for inverse kinematics, using the Bullet engine, as well as SpaceMouse for 6 DOF control. This can be installed by running
+
 ```pip3 install -r requirements-ik.txt```
+
 Note that SpaceMouse has only been tested on Mac OS X.
 
 ## Quick Start
