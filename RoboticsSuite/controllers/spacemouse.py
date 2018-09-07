@@ -20,7 +20,12 @@ import time
 import threading
 from collections import namedtuple
 import numpy as np
-import hid
+try:
+    import hid
+except ModuleNotFoundError as exc:
+    raise ImportError("Unable to load module hid, required to interface with SpaceMouse. "
+                      "Only Mac OS X is officially supported. Install the additional "
+                      "requirements with `pip install -r requirements-ik.txt`") from exc
 
 from RoboticsSuite.utils.transform_utils import rotation_matrix
 

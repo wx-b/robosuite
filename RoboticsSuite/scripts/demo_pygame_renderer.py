@@ -37,7 +37,6 @@ if __name__ == "__main__":
         show_gripper_visualization=True,
         use_camera_obs=True,
         use_object_obs=False,
-        use_eef_ctrl=False,
     )
 
     for i in range(args.timesteps):

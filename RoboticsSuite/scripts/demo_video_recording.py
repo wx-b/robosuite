@@ -29,12 +29,10 @@ if __name__ == "__main__":
         args.environment,
         has_renderer=False,
         ignore_done=True,
-        show_gripper_visualization=True,
         use_camera_obs=True,
         use_object_obs=False,
         camera_height=args.height,
         camera_width=args.width,
-        use_eef_ctrl=False,
     )
 
     obs = env.reset()
