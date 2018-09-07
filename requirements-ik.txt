@@ -1,2 +1,0 @@
-hid
-pybullet>=2.1.0

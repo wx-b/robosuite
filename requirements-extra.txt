@@ -1,0 +1,3 @@
+hid
+pybullet==1.9.5
+gym  ## required for GymWrapper

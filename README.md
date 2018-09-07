@@ -17,30 +17,29 @@ This release of Stanford Robotics Suite contains a set of benchmarking manipulat
 * **human demonstrations**: utilities for collecting human demonstrations, replaying demonstration datasets, and leveraging demonstration data for learning.
 
 ## Installation
-The Stanford Robotics Suite officially supports Mac OS X and Linux, on Python 3.5+. It can easily be run on a headless mode, with or without a GPU, and has been extensively used both as a desktop library and on servers to generate RL experiences for distributed learning.
+The Stanford Robotics Suite officially supports Mac OS X and Linux on Python 3.5+. It can be run with an on-screen display for visualization or in a headless mode for model training, with or without a GPU.
 
-The base installation without inverse kinematics requires MuJoCo (with [mujoco-py](https://github.com/openai/mujoco-py), refer to link for troubleshooting the installation and further instructions) and NumPy. To avoid interfering with system packages, it is possible to optionally install it under a virtual environment, by first running `virtualenv -p python3 . && source bin/activate`.
+The base installation requires the MuJoCo physics engine (with [mujoco-py](https://github.com/openai/mujoco-py), refer to link for troubleshooting the installation and further instructions) and [numpy](http://www.numpy.org/). To avoid interfering with system packages, it is recommended to install it under a virtual environment by first running `virtualenv -p python3 . && source bin/activate`.
 
-1. First install MuJoCo by downloading it from its website ([Linux](https://www.roboti.us/download/mjpro150_linux.zip), [OS X](https://www.roboti.us/download/mjpro150_osx.zip)) and placing the `mjpro150` directory and your key `mjkey.txt` in `~/.mujoco`. You can obtain a key from [the MuJoCo website](https://www.roboti.us/license.html).
-   - For Linux, you will need to install some packages to build mujoco-py (sourced from [here](https://github.com/openai/mujoco-py/blob/master/Dockerfile), with a couple missing packages added). If using APT, the required complete command is:
-     ```
+1. First download MuJoCo 1.5.0 from the [MuJoCo page](https://www.roboti.us/download/) and placing the `mjpro150` directory and your license key `mjkey.txt` in `~/.mujoco`. You can obtain a key from [here](https://www.roboti.us/license.html).
+   - For Linux, you will need to install some packages to build `mujoco-py` (sourced from [here](https://github.com/openai/mujoco-py/blob/master/Dockerfile), with a couple missing packages added). If using APT, the required installation command is:
+     ```bash
      sudo apt install curl git libgl1-mesa-dev libgl1-mesa-glx libglew-dev \
              libosmesa6-dev software-properties-common net-tools unzip vim \
              virtualenv wget xpra xserver-xorg-dev libglfw3-dev patchelf
      ```
-     Note that for older versions of Ubuntu there's no libglfw3 package, in which case you need to `export LD_LIBRARY_PATH=$HOME/.mujoco/mjpro150/bin` before proceeding to the next step.
+     Note that for older versions of Ubuntu (e.g., 14.04) there's no libglfw3 package, in which case you need to `export LD_LIBRARY_PATH=$HOME/.mujoco/mjpro150/bin` before proceeding to the next step.
 
 2. Install the requirements with
-   ```
+   ```bash
    pip3 install -r requirements.txt
    ```
-   This will also install itself (RoboticsSuite) as an editable package, such that changes to this path get reflected elsewhere without having to reinstall the package.
+   This will also install our library (RoboticsSuite) as an editable package, such that local changes will be reflected elsewhere without having to reinstall the package.
 
-Optional support is also provided for inverse kinematics, using the Bullet engine, as well as SpaceMouse for 6 DOF control. This can be installed by running
-
-```pip3 install -r requirements-ik.txt```
-
-Note that SpaceMouse has only been tested on Mac OS X.
+3. (Optional) We also provide add-on functionalities, such as [OpenAI Gym](https://github.com/openai/gym) interfaces, inverse kinematics controllers powered by [PyBullet](http://bulletphysics.org), and teleoperation with [SpaceMouse devices](https://www.3dconnexion.com/products/spacemouse.html) (Mac OS X only). To enable these additional features, please install the extra dependencies by running
+  ```bash
+  pip3 install -r requirements-extra.txt
+  ```
 
 ## Quick Start
 TODO(Anchit): A demo of how to import the framework and run the environment.
