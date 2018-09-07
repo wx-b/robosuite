@@ -21,25 +21,25 @@ The Stanford Robotics Suite officially supports Mac OS X and Linux on Python 3.5
 
 The base installation requires the MuJoCo physics engine (with [mujoco-py](https://github.com/openai/mujoco-py), refer to link for troubleshooting the installation and further instructions) and [numpy](http://www.numpy.org/). To avoid interfering with system packages, it is recommended to install it under a virtual environment by first running `virtualenv -p python3 . && source bin/activate`.
 
-1. First download MuJoCo 1.5.0 from the [MuJoCo page](https://www.roboti.us/download/) and placing the `mjpro150` directory and your license key `mjkey.txt` in `~/.mujoco`. You can obtain a key from [here](https://www.roboti.us/license.html).
-   - For Linux, you will need to install some packages to build `mujoco-py` (sourced from [here](https://github.com/openai/mujoco-py/blob/master/Dockerfile), with a couple missing packages added). If using APT, the required installation command is:
-     ```bash
-     sudo apt install curl git libgl1-mesa-dev libgl1-mesa-glx libglew-dev \
+1. First download MuJoCo 1.5.0 ([Linux](https://www.roboti.us/download/mjpro150_linux.zip) and [Mac OS X](https://www.roboti.us/download/mjpro150_osx.zip)) and place the `mjpro150` folder and your license key `mjkey.txt` in `~/.mujoco`. You can obtain a license key from [here](https://www.roboti.us/license.html).
+   - For Linux, you will need to install some packages to build `mujoco-py` (sourced from [here](https://github.com/openai/mujoco-py/blob/master/Dockerfile), with a couple missing packages added). If using `apt`, the required installation command is:
+     ```sh
+     $ sudo apt install curl git libgl1-mesa-dev libgl1-mesa-glx libglew-dev \
              libosmesa6-dev software-properties-common net-tools unzip vim \
              virtualenv wget xpra xserver-xorg-dev libglfw3-dev patchelf
      ```
      Note that for older versions of Ubuntu (e.g., 14.04) there's no libglfw3 package, in which case you need to `export LD_LIBRARY_PATH=$HOME/.mujoco/mjpro150/bin` before proceeding to the next step.
 
-2. Install the requirements with
-   ```bash
-   pip3 install -r requirements.txt
+2. Install the base requirements with
+   ```sh
+   $ pip3 install -r requirements.txt
    ```
-   This will also install our library (RoboticsSuite) as an editable package, such that local changes will be reflected elsewhere without having to reinstall the package.
+   This will also install our library as an editable package, such that local changes will be reflected elsewhere without having to reinstall the package.
 
-3. (Optional) We also provide add-on functionalities, such as [OpenAI Gym](https://github.com/openai/gym) interfaces, inverse kinematics controllers powered by [PyBullet](http://bulletphysics.org), and teleoperation with [SpaceMouse devices](https://www.3dconnexion.com/products/spacemouse.html) (Mac OS X only). To enable these additional features, please install the extra dependencies by running
-  ```bash
-  pip3 install -r requirements-extra.txt
-  ```
+3. (Optional) We also provide add-on functionalities, such as [OpenAI Gym](https://github.com/openai/gym) [interfaces](RoboticsSuite/wrappers/gym_wrapper.py), [inverse kinematics controllers](RoboticsSuite/wrappers/ik_wrapper.py) powered by [PyBullet](http://bulletphysics.org), and [teleoperation](RoboticsSuite/scripts/demo_spacemouse_ik_control.py) with [SpaceMouse](https://www.3dconnexion.com/products/spacemouse.html) devices (Mac OS X only). To enable these additional features, please install the extra dependencies by running
+   ```sh
+   $ pip3 install -r requirements-extra.txt
+   ```
 
 ## Quick Start
 TODO(Anchit): A demo of how to import the framework and run the environment.
