@@ -11,7 +11,6 @@ import shutil
 import time
 import argparse
 import datetime
-import pickle
 import h5py
 from glob import glob
 import numpy as np
@@ -65,67 +64,6 @@ def collect_human_trajectory(env, device):
 
     # cleanup for end of data collection episodes
     env.close()
-
-
-def gather_demonstrations_as_pkl(directory, out_dir, large=False):
-    """
-    Gathers the demonstrations saved in @directory into a
-    single pkl file.
-
-    Args:
-        directory (str): Path to the directory containing raw demonstrations.
-        out_dir (str): Path to where to store the pkl file.
-        large (bool): If true, generates both a .pkl and a .bkl file. The
-            .pkl file is for indexing into the .bkl file that contains
-            all of the demonstrations. This allows for lazy loading of
-            demonstrations, which is useful if there are a lot of them.
-    """
-    pickle_path = os.path.join(out_dir, "demo.pkl")
-    if large:
-        big = open(pickle_path.replace(".pkl", ".bkl"), "wb")
-        ofs = [0]
-
-    all_data = []
-    for ep_directory in os.listdir(directory):
-        # collect episode data into dictionary
-        ep_data = {}
-        xml_path = os.path.join(directory, ep_directory, "model.xml")
-        with open(xml_path, "r") as f:
-            ep_data["model"] = f.read()
-        state_paths = os.path.join(directory, ep_directory, "state_*.npz")
-        states = []
-        action_infos = []
-        for state_file in sorted(glob(state_paths)):
-            dic = np.load(state_file)
-            # Note how we index the actions here. This is because when the DataCollector wrapper
-            # recorded the states and actions, the states were recorded AFTER playing that action.
-            for s, ai in zip(dic["states"][:-1], dic["action_infos"][1:]):
-                states.append(s)
-                action_infos.append(ai)
-        ep_data["states"] = states
-        ep_data["action_infos"] = action_infos
-        if len(states) == 0:
-            continue
-
-        if large:
-            # write episode to large pickle file as serialized string
-            # and remember its offset in the small pickle file
-            raw = pickle.dumps(ep_data)
-            delta_ofs = big.write(raw)
-            ofs.append(ofs[-1] + delta_ofs)
-        else:
-            # collect episode in global list
-            all_data.append(ep_data)
-
-    small = open(pickle_path, "wb")
-    if large:
-        # dump offsets to pickle
-        pickle.dump(ofs[:-1], small)
-        big.close()
-    else:
-        # dump actual data to pickle
-        pickle.dump(all_data, small)
-    small.close()
 
 def gather_demonstrations_as_hdf5(directory, out_dir):
     """
@@ -292,5 +230,4 @@ if __name__ == "__main__":
     # collect demonstrations
     while True:
         collect_human_trajectory(env, device)
-        # gather_demonstrations_as_pkl(tmp_directory, args.directory, args.large)
         gather_demonstrations_as_hdf5(tmp_directory, new_dir)
