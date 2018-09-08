@@ -279,6 +279,52 @@ DEFAULT_DENSITY_RANGE = [200, 500, 1000, 3000, 5000]
 DEFAULT_FRICTION_RANGE = [0.25, 0.5, 1, 1.5, 2]
 
 
+def _get_size(size,
+              size_max,
+              size_min,
+              default_max,
+              default_min):
+    """
+        Helper method for providing a size,
+        or a range to randomize from
+    """
+    if len(default_max) != len(default_min):
+        raise ValueError('default_max = {} and default_min = {}'
+                         .format(str(default_max), str(default_min)) +
+                         ' have different lengths')
+    if size is not None:
+        if (size_max is not None) or (size_min is not None):
+            raise ValueError('size = {} overrides size_max = {}, size_min = {}'
+                             .format(size, size_max, size_min))
+    else:
+        if size_max is None:
+            size_max = default_max
+        if size_min is None:
+            size_min = default_min
+        size = np.array([np.random.uniform(size_min[i], size_max[i])
+                         for i in range(len(default_max))])
+    return size
+
+
+def _get_randomized_range(val,
+                          provided_range,
+                          default_range):
+    """
+        Helper to initialize by either value or a range
+        Returns a range to randomize from
+    """
+    if val is None:
+        if provided_range is None:
+            return default_range
+        else:
+            return provided_range
+    else:
+        if provided_range is not None:
+            raise ValueError('Value {} overrides range {}'
+                             .format(str(val), str(provided_range)))
+        return [val]
+
+
 class BoxObject(MujocoGeneratedObject):
     """
     An object that is a box
@@ -286,21 +332,26 @@ class BoxObject(MujocoGeneratedObject):
 
     def __init__(
         self,
+        size=None,
         size_max=None,
         size_min=None,
+        density=None,
         density_range=None,
+        friction=None,
         friction_range=None,
         rgba="random",
     ):
-        if size_max is None:
-            size_max = [0.07, 0.07, 0.07]
-        if size_min is None:
-            size_min = [0.03, 0.03, 0.03]
-        size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(3)])
-        if density_range is None:
-            density_range = DEFAULT_DENSITY_RANGE
-        if friction_range is None:
-            friction_range = DEFAULT_FRICTION_RANGE
+        size = _get_size(size,
+                         size_max,
+                         size_min,
+                         [0.07, 0.07, 0.07],
+                         [0.03, 0.03, 0.03])
+        density_range = _get_randomized_range(density,
+                                              density_range,
+                                              DEFAULT_DENSITY_RANGE)
+        friction_range = _get_randomized_range(friction,
+                                               friction_range,
+                                               DEFAULT_FRICTION_RANGE)
         super().__init__(
             size=size,
             rgba=rgba,
@@ -336,21 +387,26 @@ class CylinderObject(MujocoGeneratedObject):
 
     def __init__(
         self,
+        size=None,
         size_max=None,
         size_min=None,
+        density=None,
         density_range=None,
+        friction=None,
         friction_range=None,
         rgba="random",
     ):
-        if size_max is None:
-            size_max = [0.07, 0.07]
-        if size_min is None:
-            size_min = [0.03, 0.03]
-        size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(2)])
-        if density_range is None:
-            density_range = DEFAULT_DENSITY_RANGE
-        if friction_range is None:
-            friction_range = DEFAULT_FRICTION_RANGE
+        size = _get_size(size,
+                         size_max,
+                         size_min,
+                         [0.07, 0.07],
+                         [0.03, 0.03])
+        density_range = _get_randomized_range(density,
+                                              density_range,
+                                              DEFAULT_DENSITY_RANGE)
+        friction_range = _get_randomized_range(friction,
+                                               friction_range,
+                                               DEFAULT_FRICTION_RANGE)
         super().__init__(
             size=size,
             rgba=rgba,
@@ -386,21 +442,26 @@ class BallObject(MujocoGeneratedObject):
 
     def __init__(
         self,
+        size=None,
         size_max=None,
         size_min=None,
+        density=None,
         density_range=None,
+        friction=None,
         friction_range=None,
         rgba="random",
     ):
-        if size_max is None:
-            size_max = [0.07]
-        if size_min is None:
-            size_min = [0.03]
-        size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(1)])
-        if density_range is None:
-            density_range = DEFAULT_DENSITY_RANGE
-        if friction_range is None:
-            friction_range = DEFAULT_FRICTION_RANGE
+        size = _get_size(size,
+                         size_max,
+                         size_min,
+                         [0.07],
+                         [0.03])
+        density_range = _get_randomized_range(density,
+                                              density_range,
+                                              DEFAULT_DENSITY_RANGE)
+        friction_range = _get_randomized_range(friction,
+                                               friction_range,
+                                               DEFAULT_FRICTION_RANGE)
         super().__init__(
             size=size,
             rgba=rgba,
@@ -436,21 +497,26 @@ class CapsuleObject(MujocoGeneratedObject):
 
     def __init__(
         self,
+        size=None,
         size_max=None,
         size_min=None,
+        density=None,
         density_range=None,
+        friction=None,
         friction_range=None,
         rgba="random",
     ):
-        if size_max is None:
-            size_max = [0.07, 0.07]
-        if size_min is None:
-            size_min = [0.03, 0.03]
-        size = np.array([np.random.uniform(size_min[i], size_max[i]) for i in range(2)])
-        if density_range is None:
-            density_range = DEFAULT_DENSITY_RANGE
-        if friction_range is None:
-            friction_range = DEFAULT_FRICTION_RANGE
+        size = _get_size(size,
+                         size_max,
+                         size_min,
+                         [0.07, 0.07],
+                         [0.03, 0.03])
+        density_range = _get_randomized_range(density,
+                                              density_range,
+                                              DEFAULT_DENSITY_RANGE)
+        friction_range = _get_randomized_range(friction,
+                                               friction_range,
+                                               DEFAULT_FRICTION_RANGE)
         super().__init__(
             size=size,
             rgba=rgba,

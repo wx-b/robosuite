@@ -1,12 +1,17 @@
 """
 Defines GripperTester that is used to test the physical properties of various grippers
 """
+import numpy as np
 import xml.etree.ElementTree as ET
 from mujoco_py import MjSim, MjViewer
 
 from RoboticsSuite.models.world import MujocoWorldBase
 from RoboticsSuite.models.arenas.table_arena import TableArena
-from RoboticsSuite.utils.mjcf_utils import new_actuator, new_joint
+from RoboticsSuite.utils.mjcf_utils import (
+    new_actuator,
+    new_joint,
+    array_to_string)
+from RoboticsSuite.models.objects.generated_objects import BoxObject
 
 
 class GripperTester:
@@ -15,7 +20,15 @@ class GripperTester:
     """
 
     def __init__(
-        self, gripper, pos, quat, gripper_low_pos, gripper_high_pos, render=True
+        self,
+        gripper,
+        pos,
+        quat,
+        gripper_low_pos,
+        gripper_high_pos,
+        box_size=None,
+        box_density=10000,
+        render=True
     ):
         """
         Initializes world and gripper positioning
@@ -31,7 +44,10 @@ class GripperTester:
             gripper_high_pos (float): controls the gipper y high position
                                       larger -> higher, must be larger
                                       than gripper_low_pos
-            render:
+            box_size list(int * 3): the size of the box to grasp,
+                                    default [0.02, 0.02, 0.02]
+            box_density (int): the density of the box to grasp,
+            render: show rendering
         """
         world = MujocoWorldBase()
         # Add a table
@@ -47,36 +63,51 @@ class GripperTester:
         gripper_body.set("pos", pos)
         gripper_body.set("quat", quat)  # flip z
         gripper_body.append(
-            new_joint(name="gripper_z_joint", type="slide", axis="0 0 -1", damping="50")
+            new_joint(name="gripper_z_joint",
+                      type="slide",
+                      axis="0 0 -1",
+                      damping="50")
         )
         world.merge(gripper, merge_body=False)
         world.worldbody.append(gripper_body)
         world.actuator.append(
             new_actuator(
-                joint="gripper_z_joint", act_type="position", name="gripper_z", kp="500"
+                joint="gripper_z_joint",
+                act_type="position",
+                name="gripper_z",
+                kp="500"
             )
         )
 
-        # TODO: add object
-        # # Add an object for grasping
-        # mujoco_object = BoxObject(size=[0.02, 0.02, 0.02], rgba=[1, 0, 0, 1], friction=1).get_collision()
-        # mujoco_object.append(joint(name='object_free_joint', type='free'))
-        # mujoco_object.set('pos', '0 0 0.11')
-        # geoms = mujoco_object.findall('./geom')
-        # for geom in geoms:
-        #     if geom.get('contype'):
-        #         pass
-        #     geom.set('name', 'object')
-        #     geom.set('density', '10000') # 1000 for water
-        # world.worldbody.append(mujoco_object)
+        # Add an object for grasping
+        # density is in units kg / m3
+        TABLE_TOP = [0, 0, 0.09]
+        if box_size is None:
+            box_size = [0.02, 0.02, 0.02]
+        box_size = np.array(box_size)
+        mujoco_object = BoxObject(size=box_size,
+                                  rgba=[1, 0, 0, 1],
+                                  friction=10,
+                                  density=box_density).get_collision()
+        mujoco_object.append(new_joint(name='object_free_joint', type='free'))
+        mujoco_object.set('name', "object")
+        object_pos = np.array(TABLE_TOP + box_size * [0, 0, 1])
+        mujoco_object.set('pos', array_to_string(object_pos))
+        geoms = mujoco_object.findall('./geom')
+        for geom in geoms:
+            if geom.get('contype'):
+                pass
+        world.worldbody.append(mujoco_object)
 
-        # TODO: add reference object
-        # x_ref = BoxObject(size=[0.01, 0.01, 0.01], rgba=[0, 1, 0, 1]).get_visual()
-        # x_ref.set('pos', '0.2 0 0.105')
-        # world.worldbody.append(x_ref)
-        # y_ref = BoxObject(size=[0.01, 0.01, 0.01], rgba=[0, 0, 1, 1]).get_visual()
-        # y_ref.set('pos', '0 0.2 0.105')
-        # world.worldbody.append(y_ref)
+        # Adding reference object for x and y axis
+        x_ref = BoxObject(size=[0.01, 0.01, 0.01],
+                          rgba=[0, 1, 0, 1]).get_visual()
+        x_ref.set('pos', '0.2 0 0.105')
+        world.worldbody.append(x_ref)
+        y_ref = BoxObject(size=[0.01, 0.01, 0.01],
+                          rgba=[0, 0, 1, 1]).get_visual()
+        y_ref.set('pos', '0 0.2 0.105')
+        world.worldbody.append(y_ref)
 
         self.world = world
         self.render = render
@@ -85,7 +116,8 @@ class GripperTester:
         if gripper_low_pos > gripper_high_pos:
             raise ValueError(
                 "gripper_low_pos {} is larger "
-                "than gripper_high_pos {}".format(gripper_low_pos, gripper_high_pos)
+                "than gripper_high_pos {}"
+                .format(gripper_low_pos, gripper_high_pos)
             )
         self.gripper_low_pos = gripper_low_pos
         self.gripper_high_pos = gripper_high_pos
@@ -94,7 +126,6 @@ class GripperTester:
         """
             Starts simulation of the test world
         """
-        # Start simulation
         model = self.world.get_model(mode="mujoco_py")
 
         self.sim = MjSim(model)
@@ -112,13 +143,19 @@ class GripperTester:
         self.gripper_z_is_low = False
 
         self.gripper_joint_ids = [
-            self.sim.model.actuator_name2id("gripper_" + x) for x in self.gripper.joints
+            self.sim.model.actuator_name2id("gripper_" + x)
+            for x in self.gripper.joints
         ]
-        self.gripper_open_action = self.gripper.format_action([1])  # [0.0115, -0.0115]
+        self.gripper_open_action = self.gripper.format_action([1])
         self.gripper_closed_action = self.gripper.format_action(
             [-1]
-        )  # [-0.020833, 0.020833]
+        )
         self.gripper_is_closed = True
+
+        self.object_id = self.sim.model.body_name2id("object")
+        object_default_pos = self.sim.data.body_xpos[self.object_id]
+        self.object_default_pos = np.array(object_default_pos,
+                                           copy=True)
 
         self.reset()
         self.simulation_ready = True
@@ -148,23 +185,29 @@ class GripperTester:
         else:
             self.sim.data.ctrl[self.gripper_joint_ids] = self.gripper_open_action
         self._apply_gravity_compensation()
-
-    def _apply_gravity_compensation(self):
-        self.sim.data.qfrc_applied[
-            self._gravity_corrected_qvels
-        ] = self.sim.data.qfrc_bias[self._gravity_corrected_qvels]
         self.sim.step()
         if self.render:
             self.viewer.render()
         self.cur_step += 1
 
-    def loop(self, T=300, total_iters=1):
+    def _apply_gravity_compensation(self):
+        self.sim.data.qfrc_applied[
+            self._gravity_corrected_qvels
+        ] = self.sim.data.qfrc_bias[self._gravity_corrected_qvels]
+
+    def loop(self,
+             T=300,
+             total_iters=1,
+             test_y=False,
+             y_baseline=0.01):
         """
         Performs lower, grip, raise and release actions of a gripper,
                 each separated with T timesteps
         Args:
-            T: The interfal between two gripper actions
-            total_iters: Iterations to perform before exiting
+            T (int): The interval between two gripper actions
+            total_iters (int): Iterations to perform before exiting
+            test_y (bool): test if object is lifted
+            y_baseline (float): threshold for determining that object is lifted
         """
         seq = [(False, False), (True, False), (True, True), (False, True)]
         step = 0
@@ -174,29 +217,17 @@ class GripperTester:
                 self.gripper_z_is_low, self.gripper_is_closed = cur_plan
                 for step in range(T):
                     self.step()
+            if test_y:
+                if not self.object_height > y_baseline:
+                    raise ValueError('object is lifed by {}, '
+                                     .format(self.object_height) +
+                                     'not reaching the requirement {}'
+                                     .format(y_baseline))
 
-        # These commented code are for contact testing
-        # while True:
-        #     # if step % 100 == 0:
-        #     #     pass
-        #     #     # print('step: {}'.format(step))
-        #     # if step % 100 == 0:
-        #     #     pass
-        #     #     # for contact in sim.data.contact[0:sim.data.ncon]:
-        #         #     if sim.model.geom_id2name(contact.geom1) == 'floor' \
-        #         #         and sim.model.geom_id2name(contact.geom2) == 'floor':
-        #         #         continue
-        #         # if not gripper_is_closed and sim.model.geom_id2name(contact.geom1) == 'r_finger_g0' and sim.model.geom_id2name(contact.geom2) == 'object':
-        #         # if sim.model.geom_id2name(contact.geom1) == 'r_finger_g0' and sim.model.geom_id2name(contact.geom2) == 'object':
-        #         # print("geom1: {}, geom2: {}".format(sim.model.geom_id2name(contact.geom1), sim.model.geom_id2name(contact.geom2)))
-        #         # print("contact id {}".format(id(contact)))
-        #         # print("friction: {}".format(contact.friction))
-        #         # print("normal: {}".format(contact.frame[0:3]))
-        #     if step % T == 0:
-        #         plan = seq[int(step / T) % len(seq)]
-        #         gripper_z_is_low, gripper_is_closed = plan
-        #         self.gripper_z_is_low = gripper_z_is_low
-        #         self.gripper_is_closed = gripper_is_closed
-        #         # print('changing plan: gripper low: {}, gripper closed {}'.format(gripper_z_is_low, gripper_is_closed))
-        #     self.step()
-        # step += 1
+    @property
+    def object_height(self):
+        """
+            Queries the height (z) of the object compared to on the ground
+        """
+        return self.sim.data.body_xpos[self.object_id][2]\
+            - self.object_default_pos[2]

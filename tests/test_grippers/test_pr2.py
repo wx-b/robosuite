@@ -5,7 +5,9 @@ def test_pr2():
     pr2_tester(False)
 
 
-def pr2_tester(render):
+def pr2_tester(render,
+               total_iters=1,
+               test_y=True):
     gripper = PR2Gripper()
     tester = GripperTester(
         gripper=gripper,
@@ -16,8 +18,9 @@ def pr2_tester(render):
         render=render,
     )
     tester.start_simulation()
-    tester.loop()
+    tester.loop(total_iters=total_iters,
+                test_y=test_y)
 
 
 if __name__ == "__main__":
-    pr2_tester(True)
+    pr2_tester(True, 20, False)

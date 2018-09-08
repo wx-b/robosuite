@@ -9,17 +9,17 @@
         <mesh name="link_3" file="meshes/robotiq_s_gripper/link_3.STL" />
     </asset>
     <actuator>
-        <position ctrllimited="true" ctrlrange="-0.16 0.25" joint="palm_finger_1_joint" kp="0.5" name="gripper_palm_finger_1_joint" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_1_joint_1" kp="0.5" name="gripper_finger_1_joint_1" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_1_joint_2" kp="0.5" name="gripper_finger_1_joint_2" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_1_joint_3" kp="0.5" name="gripper_finger_1_joint_3" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="-0.16 0.25" joint="palm_finger_2_joint" kp="0.5" name="gripper_palm_finger_2_joint" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_2_joint_1" kp="0.5" name="gripper_finger_2_joint_1" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_2_joint_2" kp="0.5" name="gripper_finger_2_joint_2" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_2_joint_3" kp="0.5" name="gripper_finger_2_joint_3" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_middle_joint_1" kp="0.5" name="gripper_finger_middle_joint_1" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_middle_joint_2" kp="0.5" name="gripper_finger_middle_joint_2" forcelimited="true" forcerange="-20 20"/>
-        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_middle_joint_3" kp="0.5" name="gripper_finger_middle_joint_3" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="-0.16 0.25" joint="palm_finger_1_joint" kp="20" name="gripper_palm_finger_1_joint" forcelimited="true" forcerange="-500 500"/>
+        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_1_joint_1" kp="2" name="gripper_finger_1_joint_1" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_1_joint_2" kp="2" name="gripper_finger_1_joint_2" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_1_joint_3" kp="2" name="gripper_finger_1_joint_3" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="-0.16 0.25" joint="palm_finger_2_joint" kp="20" name="gripper_palm_finger_2_joint" forcelimited="true" forcerange="-500 500"/>
+        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_2_joint_1" kp="2" name="gripper_finger_2_joint_1" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_2_joint_2" kp="2" name="gripper_finger_2_joint_2" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_2_joint_3" kp="2" name="gripper_finger_2_joint_3" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_middle_joint_1" kp="2" name="gripper_finger_middle_joint_1" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_middle_joint_2" kp="2" name="gripper_finger_middle_joint_2" forcelimited="true" forcerange="-20 20"/>
+        <position ctrllimited="true" ctrlrange="0 3.1416" joint="finger_middle_joint_3" kp="2" name="gripper_finger_middle_joint_3" forcelimited="true" forcerange="-20 20"/>
     </actuator>
     <worldbody>
         <inertial pos="0 0 0" mass="1e-6" diaginertia="1e-6 1e-6 1e-6" />

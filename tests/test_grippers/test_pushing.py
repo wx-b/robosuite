@@ -5,7 +5,9 @@ def test_pushing():
     pushing_tester(False)
 
 
-def pushing_tester(render):
+def pushing_tester(render,
+                   total_iters=1,
+                   test_y=False):
     gripper = PushingGripper()
     tester = GripperTester(
         gripper=gripper,
@@ -16,8 +18,8 @@ def pushing_tester(render):
         render=render,
     )
     tester.start_simulation()
-    tester.loop()
+    tester.loop(total_iters=total_iters, test_y=test_y)
 
 
 if __name__ == "__main__":
-    pushing_tester(True)
+    pushing_tester(True, 20, False)

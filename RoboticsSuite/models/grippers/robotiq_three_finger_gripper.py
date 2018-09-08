@@ -73,4 +73,5 @@ class RobotiqThreeFingerGripper(RobotiqThreeFingerGripperBase):
         Args:
             action: 1 => open, -1 => closed
         """
-        return -1 * np.ones(11) * action
+        movement = np.array([0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1])
+        return -1 * movement * action
