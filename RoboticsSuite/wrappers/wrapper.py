@@ -49,7 +49,10 @@ class Wrapper:
 
     @property
     def unwrapped(self):
-        return self.env.unwrapped
+        if hasattr(self.env, "unwrapped"):
+            return self.env.unwrapped
+        else:
+            return self.env
 
     # this method is a fallback option on any methods the original env might support
     def __getattr__(self, attr):
