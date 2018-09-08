@@ -68,14 +68,18 @@ class MujocoObject:
         raise NotImplementedError
         # return 2
 
-    def get_collision(self):
+    def get_collision(self, name=None, site=False):
         """
         Returns a ET.Element
-        It is a <body/> subtree that defines all collision related stuff of this object
+        It is a <body/> subtree that defines all collision related fields
+        of this object.
+
         Return is a copy
 
         Args:
             name (None, optional): Assign name to body
+            site (False, optional): Add a site (with name @name
+                 when applicable) to the returned body
 
         Returns:
             ET.Element: body
@@ -85,14 +89,18 @@ class MujocoObject:
         """
         raise NotImplementedError
 
-    def get_visual(self, name=None):
+    def get_visual(self, name=None, site=False):
         """
         Returns a ET.Element
-        It is a <body/> subtree that defines all visual related stuff of this object
+        It is a <body/> subtree that defines all visualization related fields
+        of this object.
+
         Return is a copy
 
         Args:
             name (None, optional): Assign name to body
+            site (False, optional): Add a site (with name @name
+                 when applicable) to the returned body
 
         Returns:
             ET.Element: body

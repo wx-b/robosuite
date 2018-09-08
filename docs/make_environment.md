@@ -43,7 +43,7 @@ world.merge(mujoco_arena)
 ```
 
 ## Adding the object
-For details of mujoco object, refer to [TODO](), we can create a ball and add it to the world. It is a bit more complicated than before because we are adding a free joint to the object (so it can move) and we want to place the object properly
+For details of mujoco object, refer to [the introduction about MujocoObject](objects.md), we can create a ball and add it to the world. It is a bit more complicated than before because we are adding a free joint to the object (so it can move) and we want to place the object properly
 ```python
 from RoboticsSuite.models.objects import BoxObject
 from RoboticsSuite.utils.mjcf_utils import new_joint
