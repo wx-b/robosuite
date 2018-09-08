@@ -6,7 +6,7 @@ import numpy as np
 import RoboticsSuite as suite
 
 
-if __name__ == "__main__":
+def test_all_environments():
 
     envs = sorted(suite.environments.ALL_ENVS)
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         obs = env.reset()
 
         # get action range
-        action_min, action_max = env.action_space
+        action_min, action_max = env.action_spec
         assert action_min.shape == action_max.shape
 
         # run 10 random actions
@@ -45,3 +45,8 @@ if __name__ == "__main__":
 
             action = np.random.uniform(action_min, action_max)
             obs, reward, done, info = env.step(action)
+
+
+if __name__ == "__main__":
+
+    test_all_environments()

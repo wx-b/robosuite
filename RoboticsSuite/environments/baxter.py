@@ -347,7 +347,7 @@ class BaxterEnv(MujocoEnv):
         self.sim.forward()
 
     @property
-    def action_space(self):
+    def action_spec(self):
         low = np.ones(self.dof) * -1.
         high = np.ones(self.dof) * 1.
         return low, high

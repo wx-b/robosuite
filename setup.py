@@ -7,9 +7,8 @@ setup(
         package for package in find_packages() if package.startswith("RoboticsSuite")
     ],
     install_requires=[
-        "glfw",
-        # 'mujoco-py==1.50.1',
-        "numpy",
+        "numpy>=1.13.3",
+        "mujoco-py<1.50.2,>=1.50.1",
     ],
     description="Stanford Robotics Suite: Extensive Simulated Benchmarks for Robot Manipulation",
     author="Yuke Zhu, Jiren Zhu, Ajay Mandlekar, Joan Creus-Costa, Anchit Gupta",
