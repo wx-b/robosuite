@@ -130,9 +130,9 @@ class DataCollectionWrapper(Wrapper):
                     info["left_dquat"] = np.array(action[10:14])
             else:
                 info = {}
-                info["joint_velocities"] = np.array(action[: self.env.mujoco_robot.dof])
+                info["joint_velocities"] = np.array(action[:self.env.mujoco_robot.dof])
                 info["gripper_actuation"] = np.array(
-                    action[self.env.mujoco_robot.dof :]
+                    action[self.env.mujoco_robot.dof:]
                 )
             self.action_infos.append(info)  # copy the action when storing it
 
