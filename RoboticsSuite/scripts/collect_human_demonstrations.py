@@ -146,7 +146,7 @@ def gather_demonstrations_as_hdf5(directory, out_dir):
             continue
 
         num_eps += 1
-        ep_data_grp = grp.create_group("demo{}".format(num_eps))
+        ep_data_grp = grp.create_group("demo_{}".format(num_eps))
 
         # store model file name as an attribute
         ep_data_grp.attrs["model_file"] = "model{}.xml".format(num_eps)
@@ -164,7 +164,7 @@ def gather_demonstrations_as_hdf5(directory, out_dir):
         xml_path = os.path.join(directory, ep_directory, "model.xml")
         shutil.copy(xml_path, model_dir)
         os.rename(os.path.join(model_dir, "model.xml"), 
-                  os.path.join(model_dir, "model{}.xml".format(num_eps)))
+                  os.path.join(model_dir, "model_{}.xml".format(num_eps)))
 
 
     # write dataset attributes (metadata)
