@@ -64,7 +64,7 @@ The `step()` function takes an `action` as input and returns a tuple of `(obs, r
 There are other parameters which can be configured for each environment. They provide functionalities such as headless rendering, getting pixel observations, changing camera settings, using reward shaping, and adding extra low-level observations. Please refer to [this page](RoboticsSuite/environments/README.md) and the [environment classes](RoboticsSuite/environments) for further details.
 
 ## Building Your Own Environments
-TODO(Jiren): A short example of how to create a new environment.
+A manipulation `task` typically involves the participation of a `robot` with `gripper`s as its end-effectors, an `arena` (workspace), and `object`s that the robot interacts with. Our APIs in [Models](RoboticsSuite/models) provide a toolkit of composing these modularized elements into a scene, which can be loaded in MuJoCo for simulation. To build your own environments, you are recommended to take a look at the [environment classes](RoboticsSuite/environments) which have used these APIs to define a set of standardized manipulation tasks. You can also find detailed documentations about [creating a custom object](docs/creating_object.md) and [creating a custom environment](docs/creating_environment.md).
 
 ## Human Demonstrations
 TODO(Ajay): Talk about how to collect, download, and replay human demonstrations.

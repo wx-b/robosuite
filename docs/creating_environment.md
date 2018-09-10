@@ -1,8 +1,9 @@
-# How to build a custom environment in Mujoco
-We provide a variety of templating tools to build an environment in a modular way. Here we break down the creation of `SawyerLift` to demonstrate these functionalities. The code cited can be found in `_load_model` methods of classes `SawyerEnv` (creates the robot) and `SawyerLift` (creates the table) plus the code of `TableTopTask`.
+# How to build a custom environment
+We provide a variety of templating tools to build an environment in a modular way. Here we break down the creation of `SawyerLift` to demonstrate these functionalities. The code cited ([here](RoboticsSuite/environments/sawyer_lift.py#L138)) can be found in `_load_model` methods of classes `SawyerEnv` (creates the robot) and `SawyerLift` (creates the table) plus the code of `TableTopTask`.
 
 # Modeling
-Here we use RoboticsSuite's mujoco xml builders to create a robotics task
+Here we explain step-by-step how to create a model of a manipulation task using our APIs.
+
 ## Creating the world
 All mujoco object definitions are housed in an xml. We create a `MujocoWorldBase` class to do it.
 ```python
@@ -43,7 +44,7 @@ world.merge(mujoco_arena)
 ```
 
 ## Adding the object
-For details of mujoco object, refer to [the introduction about MujocoObject](objects.md), we can create a ball and add it to the world. It is a bit more complicated than before because we are adding a free joint to the object (so it can move) and we want to place the object properly
+For details of `MujocoObject`, refer to the [documentation about MujocoObject](objects.md), we can create a ball and add it to the world. It is a bit more complicated than before because we are adding a free joint to the object (so it can move) and we want to place the object properly
 ```python
 from RoboticsSuite.models.objects import BoxObject
 from RoboticsSuite.utils.mjcf_utils import new_joint
