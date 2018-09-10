@@ -42,7 +42,26 @@ The base installation requires the MuJoCo physics engine (with [mujoco-py](https
    ```
 
 ## Quick Start
-TODO(Anchit): A demo of how to import the framework and run the environment.
+The APIs we provide to interact with our environments are simple and similar to the ones used by [OpenAI Gym](https://github.com/openai/gym/). Below is a minimalistic example of how to interact with an environment.
+
+```python
+import numpy as np
+import RoboticsSuite as suite
+
+# create environment instance
+env = suite.make("SawyerLift", has_renderer=True)
+
+# reset the environment
+env.reset()
+
+for i in range(1000):
+    action = np.random.randn(env.dof)  # sample random action
+    obs, reward, done, info = env.step(action)  # take action in the environment
+    env.render()  # render on display
+````
+The `step()` function takes an `action` as input and returns a tuple of `(obs, reward, done, info)` where `obs` is an `OrderedDict` containing observations `[(name_string, np.array), ...]`, `reward` is the immediate reward obtained per step, `done` is a Boolean flag indicating if the episode has terminated and `info` is a dictionary which contains additional metadata.
+
+There are other parameters which can be configured for each environment. They provide functionalities such as headless rendering, getting pixel observations, changing camera settings, using reward shaping, and adding extra low-level observations. Please refer to [this page](RoboticsSuite/environments/README.md) and the [environment classes](RoboticsSuite/environments) for further details.
 
 ## Building Your Own Environments
 TODO(Jiren): A short example of how to create a new environment.
