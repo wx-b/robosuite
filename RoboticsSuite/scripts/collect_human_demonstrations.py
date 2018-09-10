@@ -149,7 +149,7 @@ def gather_demonstrations_as_hdf5(directory, out_dir):
         ep_data_grp = grp.create_group("demo_{}".format(num_eps))
 
         # store model file name as an attribute
-        ep_data_grp.attrs["model_file"] = "model{}.xml".format(num_eps)
+        ep_data_grp.attrs["model_file"] = "model_{}.xml".format(num_eps)
 
         # write datasets for states and actions
         ep_data_grp.create_dataset("states", data=np.array(states))
