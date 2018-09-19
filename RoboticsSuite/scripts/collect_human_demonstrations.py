@@ -121,6 +121,7 @@ def gather_demonstrations_as_hdf5(directory, out_dir):
 
         state_paths = os.path.join(directory, ep_directory, "state_*.npz")
         states = []
+        actions = []
         joint_velocities = []
         gripper_actuations = []
         right_dpos = []
@@ -135,6 +136,7 @@ def gather_demonstrations_as_hdf5(directory, out_dir):
             # recorded the states and actions, the states were recorded AFTER playing that action.
             for s, ai in zip(dic["states"][:-1], dic["action_infos"][1:]):
                 states.append(s)
+                actions.append(ai["action"])
                 joint_velocities.append(ai["joint_velocities"])
                 gripper_actuations.append(ai["gripper_actuation"])
                 right_dpos.append(ai.get("right_dpos", []))
@@ -153,6 +155,7 @@ def gather_demonstrations_as_hdf5(directory, out_dir):
 
         # write datasets for states and actions
         ep_data_grp.create_dataset("states", data=np.array(states))
+        ep_data_grp.create_dataset("actions", data=np.array(actions))
         ep_data_grp.create_dataset("joint_velocities", data=np.array(joint_velocities))
         ep_data_grp.create_dataset("gripper_actuations", data=np.array(gripper_actuations))
         ep_data_grp.create_dataset("right_dpos", data=np.array(right_dpos))

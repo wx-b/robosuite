@@ -92,6 +92,7 @@ class IKWrapper(Wrapper):
                 "Only Sawyer and Baxter robot environments are supported for IK "
                 "control currently."
             )
+        self.ik_action = action
         return self.env.step(action)
 
     def _make_input(self, action, old_quat):

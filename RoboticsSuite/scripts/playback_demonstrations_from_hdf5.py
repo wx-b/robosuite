@@ -17,7 +17,7 @@ if __name__ == "__main__":
         "--folder",
         type=str,
         default=os.path.join(
-            RoboticsSuite.models.assets_root, "demonstrations/1536363110_812535"
+            RoboticsSuite.models.assets_root, "demonstrations/Test"
         ),
     )
     parser.add_argument("--with-actions", dest='actions', action='store_true')
@@ -45,8 +45,9 @@ if __name__ == "__main__":
     while True:
         print("Playing back random episode... (press ESC to quit)")
         
-        # select an episode randomly
-        ep = random.choice(demos)
+        # # select an episode randomly
+        # ep = random.choice(demos)
+        ep = demos[0]
 
         # read the model xml, using the metadata stored in the attribute for this episode
         model_file = f["data/{}".format(ep)].attrs["model_file"]
@@ -71,19 +72,36 @@ if __name__ == "__main__":
             env.sim.forward()
 
             # load actions
+            actions = f["data/{}/actions".format(ep)].value
             joint_velocities = f["data/{}/joint_velocities".format(ep)].value
             gripper_actuations = f["data/{}/gripper_actuations".format(ep)].value
 
             # Replay stored actions in open loop - this runs through actual mujoco simulation.
-            for velocities, gripper_acts in zip(joint_velocities, gripper_actuations):
-                a = np.concatenate([velocities, gripper_acts])
+            # for velocities, gripper_acts in zip(joint_velocities, gripper_actuations):
+            #     a = np.concatenate([velocities, gripper_acts])
+            #     env.step(a)
+            #     env.render()
+
+            for a in actions:
                 env.step(a)
                 env.render()
+
+
+            # print some environment info for consistency's sake
+            ob = env._get_observation()
+            print("robot-state: {}".format(ob["robot-state"]))
+            print("object-state: {}".format(ob["object-state"]))
+
         else:
             # force the sequence of internal mujoco states one by one
             for state in states:
                 env.sim.set_state_from_flattened(state)
                 env.sim.forward()
                 env.render()
+
+            # print some environment info for consistency's sake
+            ob = env._get_observation()
+            print("robot-state: {}".format(ob["robot-state"]))
+            print("object-state: {}".format(ob["object-state"]))
 
     f.close()

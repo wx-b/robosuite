@@ -9,9 +9,8 @@ import numpy as np
 from RoboticsSuite.wrappers import Wrapper
 from RoboticsSuite.wrappers import IKWrapper
 
-
 class DataCollectionWrapper(Wrapper):
-    def __init__(self, env, directory, collect_freq=1, flush_freq=1000):
+    def __init__(self, env, directory, collect_freq=1, flush_freq=100):
         """
         Initializes the data collection wrapper.
 
@@ -101,7 +100,6 @@ class DataCollectionWrapper(Wrapper):
         return ret
 
     def step(self, action):
-
         ret = super().step(action)
         self.t += 1
 
@@ -128,13 +126,14 @@ class DataCollectionWrapper(Wrapper):
                     info["gripper_actuation"] = np.array(action[14:])
                     info["left_dpos"] = np.array(action[7:10])  # add in second arm info
                     info["left_dquat"] = np.array(action[10:14])
+                info["action"] = np.array(self.env.ik_action)
             else:
                 info = {}
                 info["joint_velocities"] = np.array(action[:self.env.mujoco_robot.dof])
                 info["gripper_actuation"] = np.array(
                     action[self.env.mujoco_robot.dof:]
                 )
-            self.action_infos.append(info)  # copy the action when storing it
+            self.action_infos.append(info) 
 
         # flush collected data to disk if necessary
         if self.t % self.flush_freq == 0:
