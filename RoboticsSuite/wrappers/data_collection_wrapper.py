@@ -100,6 +100,7 @@ class DataCollectionWrapper(Wrapper):
         return ret
 
     def step(self, action):
+        # print("should be calling step for the first time...")
         ret = super().step(action)
         self.t += 1
 
@@ -127,6 +128,9 @@ class DataCollectionWrapper(Wrapper):
                     info["left_dpos"] = np.array(action[7:10])  # add in second arm info
                     info["left_dquat"] = np.array(action[10:14])
                 info["action"] = np.array(self.env.ik_action)
+                info["start"] = np.array(self.env.cur_state)
+                # print("got cur state")
+                # print(info["start"])
             else:
                 info = {}
                 info["joint_velocities"] = np.array(action[:self.env.mujoco_robot.dof])

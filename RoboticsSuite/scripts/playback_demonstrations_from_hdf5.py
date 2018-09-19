@@ -64,15 +64,20 @@ if __name__ == "__main__":
         states = f["data/{}/states".format(ep)].value
 
         if args.actions:
-            # reset to the first state we recorded
-            state = states[0]
-            if isinstance(state, tuple):
-                state = state[0]
-            env.sim.set_state_from_flattened(state)
+            # # reset to the first state we recorded
+            # state = states[2]
+            # if isinstance(state, tuple):
+            #     state = state[0]
+            # env.sim.set_state_from_flattened(state)
+            # env.sim.forward()
+
+            starts = f["data/{}/starts".format(ep)].value
+            env.sim.set_state_from_flattened(starts[0])
             env.sim.forward()
 
             # load actions
             actions = f["data/{}/actions".format(ep)].value
+            # actions = np.load("/tmp/actions.npz")["actions"]
             joint_velocities = f["data/{}/joint_velocities".format(ep)].value
             gripper_actuations = f["data/{}/gripper_actuations".format(ep)].value
 
@@ -82,15 +87,21 @@ if __name__ == "__main__":
             #     env.step(a)
             #     env.render()
 
-            for a in actions:
+            for a in actions[0:2]:
                 env.step(a)
                 env.render()
 
+            print("current state: {}".format(env.sim.get_state().flatten()))
+            print("should be: {}".format(starts[2]))
 
             # print some environment info for consistency's sake
             ob = env._get_observation()
             print("robot-state: {}".format(ob["robot-state"]))
             print("object-state: {}".format(ob["object-state"]))
+
+            print(env.sim.get_state().flatten())
+
+            break
 
         else:
             # force the sequence of internal mujoco states one by one
@@ -103,5 +114,7 @@ if __name__ == "__main__":
             ob = env._get_observation()
             print("robot-state: {}".format(ob["robot-state"]))
             print("object-state: {}".format(ob["object-state"]))
+
+            print(states[-1])
 
     f.close()

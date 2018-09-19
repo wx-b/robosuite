@@ -46,6 +46,8 @@ class IKWrapper(Wrapper):
                 "control currently."
             )
 
+        self.ik_actions = []
+
     def set_robot_joint_positions(self, positions):
         """
         Overrides the function to set the joint positions directly, since we need to notify
@@ -60,6 +62,14 @@ class IKWrapper(Wrapper):
         current robot joint positions.
         """
         return np.array(self.env._joint_positions)
+
+    def reset(self):
+        if len(self.ik_actions):
+            np.savez('/tmp/actions.npz', actions=self.ik_actions)
+        ob = self.env.reset()
+        self.ik_actions = []
+        self.init_state = None
+        return ob
 
     def step(self, action):
         """
@@ -92,7 +102,14 @@ class IKWrapper(Wrapper):
                 "Only Sawyer and Baxter robot environments are supported for IK "
                 "control currently."
             )
+        # print("called step at t={}".format(self.timestep))
+        if self.init_state is None:
+            print("init state recorded at t={}".format(self.timestep))
+            self.init_state = np.array(self.env.sim.get_state().flatten())
+            print(self.init_state)
+        self.cur_state = np.array(self.env.sim.get_state().flatten())
         self.ik_action = action
+        self.ik_actions.append(np.array(action))
         return self.env.step(action)
 
     def _make_input(self, action, old_quat):
