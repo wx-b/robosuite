@@ -33,7 +33,6 @@ Demonstrations can be collected by either using a keyboard or using a [SpaceNavi
 - `directory:` path to a folder for where to store the pickle file of collected demonstrations
 - `environment:` name of the environment you would like to collect the demonstrations for
 - `device:` either "keyboard" or "spacemouse"
-- `large:` if True, store both a demo.bkl file with the entire set of demonstrations and a demo.pkl file with indices into the demo.bkl file. This allows for on-demand loading of demonstrations, in case the set of demonstrations is too large to load into memory all at once.
 
 **Keyboard controls**
 
@@ -65,50 +64,82 @@ Note that the rendering window must be active for these commands to work.
 
 #### Structure of collected demonstrations
 
-Every set of demonstrations is collected as a `demo.pkl` file, and possibly with a corresponding`demo.bkl`. The reason for collecting both a `demo.pkl` and a `demo.bkl` file is that it allows us to avoid loading an entire set of demonstrations into memory all at once by storing a series of pickled demonstrations in the `demo.bkl` and their corresponding indices in the `demo.pkl`. This is useful if the set of demonstrations is large (for example, on the order of gigabytes) since we can operate on the indices in `demo.pkl` until we wish to load a demonstration, and then the demonstration can be loaded using the offset.
+Every set of demonstrations is collected as a directory. Every directory contains a `models` subdirectory and a `demo.hdf5` file. The `models` subdirectory contains an xml file per demonstration, where the xml corresponds to the MuJoCo simulation model that was used during that demonstration. 
+
+The `demo.hdf5` file is structured as follows.
+
+- data (group)
+
+  - date (attribute) - date of collection
+
+  - time (attribute) - time of collection
+
+  - repository_version (attribute) - repository version used during collection
+
+  - env (attribute) - environment name on which demos were collected
+
+    
+
+  - demo1 (group) - group for the first demonstration (every demonstration has a group)
+
+    - model_file (attribute) - name of corresponding model xml in `models` directory
+
+    - states (dataset) - flattened mujoco states, ordered by time
+
+    - joint_velocities (dataset) - joint velocities applied during the demonstration
+
+    - gripper_actuations (dataset) - gripper controls applied during demonstration
+
+    - right_dpos (dataset) - end effector delta position command for single arm robot or right arm
+
+    - right_dquat (dataset) - end effector delta rotation command for single arm robot or right arm
+
+    - left_dpos (dataset) - end effector delta position command for left arm (bimanual robot only)
+
+    - left_dquat (dataset) - end effector delta rotation command for left arm (bimanual robot only)
+
+      
+
+  - demo2 (group) - group for the second demonstration
+
+    ... 
+
+    (and so on)
 
 
 
-If no `demo.bkl` file is used, the `demo.pkl` file, once unpickled, will be a list of dictionaries. Each dictionary corresponds to a single demonstration. The contained keys are `model` and `states`. The `model` key stores the entire mujoco model as an xml string. This is useful for storing scene information necessary to reconstruct the demonstration state. The `states` key stores a list of mujoco states, ordered by time. 
+To see a simple example of how to read demonstrations, please see [playback_demonstrations_from_hdf5](RoboticsSuite/scripts/playback_demonstrations_from_hdf5.py).
 
+#### Download RoboTurk dataset
 
-
-If a `demo.bkl` file is used, the `demo.pkl` file, once unpickled, will be a list of indices. Each index corresponds to a single demonstration that is stored at that offset in the `demo.bkl` file. To read a demonstration, simply seek to its offset in the `demo.bkl` file and unpickle the file. As before, each demonstration is a dictionary with the keys `model` and `states`.
-
-
-
-To see a simple example of how to read demonstrations, please see [demo_playback_demonstrations](RoboticsSuite/scripts/demo_playback_demonstrations.py).
-
-#### Download CRIMSON dataset
-
-We collected a large-scale dataset on the `SawyerPickPlace` and `SawyerNutAssembly` tasks using the [CRIMSON](https://crowdncloud.ai/) platform. Crowdsourced workers collected these task demonstrations remotely. It consists of **1070** successful `SawyerPickPlace` demonstrations and **1147** successful `SawyerNutAssembly` demonstrations.
+We collected a large-scale dataset on the `SawyerPickPlace` and `SawyerNutAssembly` tasks using the [RoboTurk](https://crowdncloud.ai/) platform. Crowdsourced workers collected these task demonstrations remotely. It consists of **1070** successful `SawyerPickPlace` demonstrations and **1147** successful `SawyerNutAssembly` demonstrations.
 
 We are providing the dataset in the hopes that it will be beneficial to researchers working on imitation learning. Large-scale imitation learning has not been explored much in the community; it will be exciting to see how this data is used.  
 
 You can download the dataset [here](https://drive.google.com/open?id=1iZSXTQZfBVcIBC3dRF5xUqMmWCmW64PD).
 
-Due to its large size, the dataset has `*.pkl` pickle files containing indices into the corresponding `*.bkl` pickle files, allowing for on-demand loading of demonstrations (instead of loading them all into memory at once). When running any code involving demonstrations, you should still use `*.pkl` file paths, and ensure that the corresponding `*.bkl` file is in the same directory. The dataset consists of the following pickle files:
+After unzipping the dataset, the following subdirectories can be found within the `RoboTurkPilot` directory. Every directory has the same structure as the demonstrations explained above. 
 
-- **pickplace-full.pkl, pickplace-full.bkl**
+- **bins-full**
   - The set of complete demonstrations on the full `SawyerPickPlace` task. Every demonstration consists of the Sawyer arm placing one of each object into its corresponding bin.
-- **pickplace-milk.pkl, pickplace-milk.bkl**
+- **bins-Milk**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceMilk` task. Every demonstration consists of the Sawyer arm placing a can into its corresponding bin. 
-- **pickplace-bread.pkl, pickplace-bread.bkl**
+- **bins-Bread**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceBread` task. Every demonstration consists of the Sawyer arm placing a loaf of bread into its corresponding bin. 
-- **pickplace-cereal.pkl, pickplace-cereal.bkl**
+- **bins-Cereal**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceCereal` task. Every demonstration consists of the Sawyer arm placing a cereal box into its corresponding bin. 
-- **pickplace-can.pkl, pickplace-can.bkl**
+- **bins-Can**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceCan` task. Every demonstration consists of the Sawyer arm placing a can into its corresponding bin. 
-- **nutassembly-full.pkl, nutassembly-full.bkl**
+- **pegs-full**
   - The set of complete demonstrations on the full `SawyerNutAssembly` task. Every demonstration consists of the Sawyer arm fitting a square nut and a round nut onto their corresponding pegs. 
-- **nutassembly-square.pkl, nutassembly-square.bkl**
+- **pegs-SquareNut**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerNutAssemblySquare` task. Every demonstration consists of the Sawyer arm fitting a square nut onto its corresponding peg. 
-- **nutassembly-round.pkl, nutassembly-round.bkl**
+- **pegs-RoundNut**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerNutAssemblyRound` task. Every demonstration consists of the Sawyer arm fitting a round nut onto its corresponding peg. 
 
 #### Replay human demonstrations
 
-We have included a generic utility script that shows how demonstrations can be played back. Our [demo_playback_demonstrations](RoboticsSuite/scripts/demo_playback_demonstrations.py) script selects demonstration episodes at random from a demonstration pickle file and replays them. We have included some sample demonstrations at `models/assets/demonstrations`.
+We have included a generic utility script that shows how demonstrations can be played back. Our [playback_demonstrations_from_hdf5](RoboticsSuite/scripts/playback_demonstrations_from_hdf5.py) script selects demonstration episodes at random from a demonstration pickle file and replays them. We have included some sample demonstrations at `models/assets/demonstrations`.
 
 #### Control start state distribution of environment with demonstration states
 
