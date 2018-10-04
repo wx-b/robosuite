@@ -85,7 +85,7 @@ def gather_demonstrations_as_hdf5(directory, out_dir):
             joint_velocities (dataset) - joint velocities applied during demonstration
             gripper_actuations (dataset) - gripper controls applied during demonstration
             right_dpos (dataset) - end effector delta position command for
-                single arm or right arm
+                single arm robot or right arm
             right_dquat (dataset) - end effector delta rotation command for
                 single arm robot or right arm
             left_dpos (dataset) - end effector delta position command for
@@ -192,7 +192,6 @@ if __name__ == "__main__":
     )
     parser.add_argument("--environment", type=str, default="SawyerLift")
     parser.add_argument("--device", type=str, default="keyboard")
-    parser.add_argument("--large", type=bool, default=False)
     args = parser.parse_args()
 
     # create original environment
