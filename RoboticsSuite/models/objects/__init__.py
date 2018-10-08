@@ -18,6 +18,8 @@ from .xml_objects import (
 
 from .generated_objects import (
     PotWithHandlesObject,
+    HoleObject,
+    GridObject,
     BoxObject,
     CylinderObject,
     BallObject,

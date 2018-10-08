@@ -303,7 +303,7 @@ def _get_size(size,
             size_min = default_min
         size = np.array([np.random.uniform(size_min[i], size_max[i])
                          for i in range(len(default_max))])
-    return size
+    return size_max
 
 
 def _get_randomized_range(val,
@@ -324,6 +324,87 @@ def _get_randomized_range(val,
                              .format(str(val), str(provided_range)))
         return [val]
 
+class HoleObject(MujocoGeneratedObject):
+    """
+    Generates the Pot object with side handles (used in BaxterLift)
+    """
+
+    def __init__(
+        self,
+        size=0.01,
+        tolerance = 0.98,
+    ):
+        super().__init__()
+        self.size = tolerance*size
+    def get_bottom_offset(self):
+        return np.array([0, 0, -1 * self.size])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.size])
+
+    def get_horizontal_radius(self):
+        return np.sqrt(2) * (self.size)
+
+    def get_collision(self, name=None, site=None):
+        main_body = new_body()
+        if name is not None:
+            main_body.set("name", name)
+
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.size, 3*self.size, self.size], pos=[0, 0, 0], rgba=[1, 0, 0,1], group=1, name = 'cube-0'
+            )
+        )
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.size,self.size, self.size], pos=[2*self.size, 2*self.size, 0], rgba=[1, 0, 0,1], group=1
+            )
+        )
+
+        return main_body
+
+    def get_visual(self, name=None, site=None):
+        return self.get_collision(name, site)
+
+class GridObject(MujocoGeneratedObject):
+    """
+    Generates the Pot object with side handles (used in BaxterLift)
+    """
+
+    def __init__(
+        self,
+        size=0.01,
+    ):
+        super().__init__()
+        self.size = size
+
+    def get_bottom_offset(self):
+        return np.array([0, 0, -1 * self.size])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.size])
+
+    def get_horizontal_radius(self):
+        return np.sqrt(2) * (4*self.size)
+
+    def get_collision(self, name=None, site=None):
+        main_body = new_body()
+        if name is not None:
+            main_body.set("name", name)
+        pattern = [[1,1,1,1],[1,0,0,0],[1,0,1,1],[1,1,1,1]]
+        for i in range(len(pattern)):
+            for j in range(len(pattern[0])):
+                if(pattern[i][j]):
+                    main_body.append(
+                    new_geom(
+                        geom_type="box", size=[self.size, self.size, self.size], pos=[2*i*self.size, 2*j*self.size, 0.41], rgba=[1, 0, 0,1], group=1,
+                        )
+                    )
+
+        return main_body
+
+    def get_visual(self, name=None, site=None):
+        return self.get_collision(name, site)
 
 class BoxObject(MujocoGeneratedObject):
     """

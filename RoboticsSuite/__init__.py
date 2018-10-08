@@ -2,6 +2,7 @@ import os
 
 from RoboticsSuite.environments.base import make
 from RoboticsSuite.environments.sawyer_lift import SawyerLift
+from RoboticsSuite.environments.sawyer_lego import SawyerLego
 from RoboticsSuite.environments.sawyer_stack import SawyerStack
 from RoboticsSuite.environments.sawyer_pick_place import SawyerPickPlace
 from RoboticsSuite.environments.sawyer_nut_assembly import SawyerNutAssembly
