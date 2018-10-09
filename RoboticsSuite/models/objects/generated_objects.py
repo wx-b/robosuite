@@ -3,7 +3,7 @@ import numpy as np
 from RoboticsSuite.models.objects import MujocoGeneratedObject
 from RoboticsSuite.utils.mjcf_utils import new_body, new_geom, new_site
 from RoboticsSuite.utils.mjcf_utils import RED, GREEN, BLUE
-
+import xml.etree.ElementTree as ET
 
 class PotWithHandlesObject(MujocoGeneratedObject):
     """
@@ -360,7 +360,12 @@ class HoleObject(MujocoGeneratedObject):
             geom_type="box", size=[self.size,self.size, self.size], pos=[2*self.size, 2*self.size, 0], rgba=[1, 0, 0,1], group=1
             )
         )
-
+        if site:
+            # add a site as well
+            template = self.get_site_attrib_template()
+            if name is not None:
+                template["name"] = name
+            main_body.append(ET.Element("site", attrib=template))
         return main_body
 
     def get_visual(self, name=None, site=None):
@@ -391,7 +396,7 @@ class GridObject(MujocoGeneratedObject):
         main_body = new_body()
         if name is not None:
             main_body.set("name", name)
-        pattern = [[1,1,1,1],[1,0,0,0],[1,0,1,1],[1,1,1,1]]
+        pattern = [[1,0,1,1],[1,0,0,0],[1,1,1,1],[1,1,1,1]]
         for i in range(len(pattern)):
             for j in range(len(pattern[0])):
                 if(pattern[i][j]):

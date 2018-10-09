@@ -2,15 +2,15 @@
 This file implements a wrapper for saving simulation states to disk.
 This data collection wrapper is useful for collecting demonstrations.
 """
-
-from RoboticsSuite.wrappers import Wrapper
 import os
 import time
 import numpy as np
 
+from RoboticsSuite.wrappers import Wrapper
+from RoboticsSuite.wrappers import IKWrapper
 
 class DataCollectionWrapper(Wrapper):
-    def __init__(self, env, directory, collect_freq=1, flush_freq=1000):
+    def __init__(self, env, directory, collect_freq=1, flush_freq=100):
         """
         Initializes the data collection wrapper.
 
@@ -25,8 +25,9 @@ class DataCollectionWrapper(Wrapper):
         # the base directory for all logging
         self.directory = directory
 
-        # in-memory cache for simulation states
+        # in-memory cache for simulation states and action info
         self.states = []
+        self.action_infos = []  # stores information about actions taken
 
         # how often to save simulation state, in terms of environment steps
         self.collect_freq = collect_freq
@@ -84,8 +85,14 @@ class DataCollectionWrapper(Wrapper):
         """
         t1, t2 = str(time.time()).split(".")
         state_path = os.path.join(self.ep_directory, "state_{}_{}.npz".format(t1, t2))
-        np.savez(state_path, states=np.array(self.states))
+        np.savez(
+            state_path, 
+            states=np.array(self.states), 
+            action_infos=self.action_infos, 
+            env=self.env.unwrapped.__class__.__name__,
+        )
         self.states = []
+        self.action_infos = []
 
     def reset(self):
         ret = super().reset()
@@ -93,7 +100,7 @@ class DataCollectionWrapper(Wrapper):
         return ret
 
     def step(self, action):
-
+        # print("should be calling step for the first time...")
         ret = super().step(action)
         self.t += 1
 
@@ -106,16 +113,41 @@ class DataCollectionWrapper(Wrapper):
             state = self.env.sim.get_state().flatten()
             self.states.append(state)
 
+            if isinstance(self.env, IKWrapper):
+                # add end effector actions in addition to the low-level joint actions
+                info = {}
+                info["joint_velocities"] = np.array(
+                    self.controller.commanded_joint_velocities
+                )
+                info["right_dpos"] = np.array(action[:3])
+                info["right_dquat"] = np.array(action[3:7])
+                if self.env.mujoco_robot.name == "sawyer":
+                    info["gripper_actuation"] = np.array(action[7:])
+                elif self.env.mujoco_robot.name == "baxter":
+                    info["gripper_actuation"] = np.array(action[14:])
+                    info["left_dpos"] = np.array(action[7:10])  # add in second arm info
+                    info["left_dquat"] = np.array(action[10:14])
+                info["action"] = np.array(self.env.ik_action)
+                info["start"] = np.array(self.env.cur_state)
+                # print("got cur state")
+                # print(info["start"])
+            else:
+                info = {}
+                info["joint_velocities"] = np.array(action[:self.env.mujoco_robot.dof])
+                info["gripper_actuation"] = np.array(
+                    action[self.env.mujoco_robot.dof:]
+                )
+            self.action_infos.append(info) 
+
         # flush collected data to disk if necessary
         if self.t % self.flush_freq == 0:
             self._flush()
 
         return ret
 
-    def reset_from_xml_string(self, xml_string):
+    def close(self):
         """
-        TODO: for some reason we need this definition here and can't fall back
-              on the __getattr__ in wrapper.py. Same for reset function. 
-              Need to find out why.
+        Override close method in order to flush left over data
         """
-        return self.env.reset_from_xml_string(xml_string)
+        self._start_new_episode()
+        self.env.close()

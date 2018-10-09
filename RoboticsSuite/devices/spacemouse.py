@@ -28,6 +28,7 @@ except ModuleNotFoundError as exc:
                       "requirements with `pip install -r requirements-ik.txt`") from exc
 
 from RoboticsSuite.utils.transform_utils import rotation_matrix
+from RoboticsSuite.devices import Device
 
 AxisSpec = namedtuple("AxisSpec", ["channel", "byte1", "byte2", "scale"])
 
@@ -61,7 +62,7 @@ def convert(b1, b2):
     return scale_to_control(to_int16(b1, b2))
 
 
-class SpaceMouse:
+class SpaceMouse(Device):
     """A minimalistic driver class for SpaceMouse with HID library."""
 
     def __init__(self, vendor_id=9583, product_id=50735):
@@ -84,20 +85,58 @@ class SpaceMouse:
         print("Manufacturer: %s" % self.device.get_manufacturer_string())
         print("Product: %s" % self.device.get_product_string())
 
-        self.double_click_and_hold = False
+        self._display_controls()
+
         self.single_click_and_hold = False
+
+        self._control = [0., 0., 0., 0., 0., 0.]
+        self._reset_state = 0
+        self.rotation = np.array([[-1., 0., 0.], [0., 1., 0.], [0., 0., -1.]])
+        self._enabled = False
 
         # launch a new listener thread to listen to SpaceMouse
         self.thread = threading.Thread(target=self.run)
         self.thread.daemon = True
         self.thread.start()
 
-        self._control = [0, 0, 0, 0, 0, 0]
+    def _display_controls(self):
+        """
+        Method to pretty print controls.
+        """
 
+        def print_command(char, info):
+            char += " " * (30 - len(char))
+            print("{}\t{}".format(char, info))
+
+        print("")
+        print_command("Control", "Command")
+        print_command("Right button", "reset simulation")
+        print_command("Left button (hold)", "close gripper")
+        print_command("Move mouse laterally", "move arm horizontally in x-y plane")
+        print_command("Move mouse vertically", "move arm vertically")
+        print_command(
+            "Twist mouse about an axis", "rotate arm about a corresponding axis"
+        )
+        print_command("ESC", "quit")
+        print("")
+
+    def _reset_internal_state(self):
+        """
+        Resets internal state of controller, except for the reset signal.
+        """
         self.rotation = np.array([[-1., 0., 0.], [0., 1., 0.], [0., 0., -1.]])
 
+    def start_control(self):
+        """
+        Method that should be called externally before controller can
+        start receiving commands.
+        """
+        self._reset_internal_state()
+        self._reset_state = 0
+        self._enabled = True
+
     def get_controller_state(self):
-        """Returns the current state of the 3d mouse, a dictionary of pos, orn, and grasp."""
+        """Returns the current state of the 3d mouse, a dictionary of pos, orn, grasp, and reset."""
         dpos = self.control[:3] * 0.005
         roll, pitch, yaw = self.control[3:] * 0.005
         self.grasp = self.control_gripper
@@ -109,7 +148,9 @@ class SpaceMouse:
 
         self.rotation = self.rotation.dot(drot1.dot(drot2.dot(drot3)))
 
-        return dict(dpos=dpos, rotation=self.rotation, grasp=self.grasp)
+        return dict(
+            dpos=dpos, rotation=self.rotation, grasp=self.grasp, reset=self._reset_state
+        )
 
     def run(self):
         """Listener method that keeps pulling new messages."""
@@ -118,7 +159,7 @@ class SpaceMouse:
 
         while True:
             d = self.device.read(13)
-            if d is not None:
+            if d is not None and self._enabled:
 
                 if d[0] == 1:  ## readings from 6-DoF sensor
                     self.y = convert(d[1], d[2])
@@ -142,22 +183,20 @@ class SpaceMouse:
 
                     # press left button
                     if d[1] == 1:
-
                         t_click = time.time()
                         elapsed_time = t_click - t_last_click
                         t_last_click = t_click
                         self.single_click_and_hold = True
-                        if elapsed_time < 0.3:
-                            self.double_click_and_hold = True
 
                     # release left button
                     if d[1] == 0:
                         self.single_click_and_hold = False
-                        self.double_click_and_hold = False
 
-                    # save right button for future purpose
+                    # right button is for reset
                     if d[1] == 2:
-                        pass
+                        self._reset_state = 1
+                        self._enabled = False
+                        self._reset_internal_state()
 
     @property
     def control(self):
@@ -167,8 +206,6 @@ class SpaceMouse:
     @property
     def control_gripper(self):
         """Maps internal states into gripper commands."""
-        if self.double_click_and_hold:
-            return -1.0
         if self.single_click_and_hold:
             return 1.0
         return 0

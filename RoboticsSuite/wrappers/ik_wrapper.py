@@ -17,25 +17,27 @@ class IKWrapper(Wrapper):
     def __init__(self, env):
         """
         Initializes the inverse kinematics wrapper.
-        This wrapper allows for controlling the robot through end effector 
+        This wrapper allows for controlling the robot through end effector
         movements instead of joint velocities.
 
         Args:
             env (MujocoEnv instance): The environment to wrap.
         """
         super().__init__(env)
+        bullet_data_path = os.path.join(RoboticsSuite.models.assets_root, "bullet_data")
+
         if self.env.mujoco_robot.name == "sawyer":
             from RoboticsSuite.controllers import SawyerIKController
 
             self.controller = SawyerIKController(
-                bullet_data_path=os.path.join(RoboticsSuite.models.assets_root, "bullet_data"),
+                bullet_data_path=bullet_data_path,
                 robot_jpos_getter=self._robot_jpos_getter,
             )
         elif self.env.mujoco_robot.name == "baxter":
             from RoboticsSuite.controllers import BaxterIKController
 
             self.controller = BaxterIKController(
-                bullet_data_path=os.path.join(RoboticsSuite.models.assets_root, "bullet_data"),
+                bullet_data_path=bullet_data_path,
                 robot_jpos_getter=self._robot_jpos_getter,
             )
         else:
@@ -43,6 +45,8 @@ class IKWrapper(Wrapper):
                 "Only Sawyer and Baxter robot environments are supported for IK "
                 "control currently."
             )
+
+        self.ik_actions = []
 
     def set_robot_joint_positions(self, positions):
         """
@@ -59,6 +63,14 @@ class IKWrapper(Wrapper):
         """
         return np.array(self.env._joint_positions)
 
+    def reset(self):
+        if len(self.ik_actions):
+            np.savez('/tmp/actions.npz', actions=self.ik_actions)
+        ob = self.env.reset()
+        self.ik_actions = []
+        self.init_state = None
+        return ob
+
     def step(self, action):
         """
         Move the end effector(s) according to the input control.
@@ -69,13 +81,12 @@ class IKWrapper(Wrapper):
                 3-6: The desired change in orientation, expressed as a (x, y, z, w) quaternion.
                     Note that this quaternion encodes a relative rotation with respect to the
                     current gripper orientation. If the current rotation is r, this corresponds
-                    to a quaternion d such that r * d will be the new rotation. 
+                    to a quaternion d such that r * d will be the new rotation.
                 *: Controls for gripper actuation.
 
                 Note: When wrapping around a Baxter environment, the indices 0-6 inidicate the
                 right hand. Indices 7-13 indicate the left hand, and the rest (*) are the gripper
                 inputs (first right, then left).
-            
         """
 
         input_1 = self._make_input(action[:7], self.env._right_hand_quat)
@@ -91,7 +102,14 @@ class IKWrapper(Wrapper):
                 "Only Sawyer and Baxter robot environments are supported for IK "
                 "control currently."
             )
-
+        # print("called step at t={}".format(self.timestep))
+        if self.init_state is None:
+            print("init state recorded at t={}".format(self.timestep))
+            self.init_state = np.array(self.env.sim.get_state().flatten())
+            print(self.init_state)
+        self.cur_state = np.array(self.env.sim.get_state().flatten())
+        self.ik_action = action
+        self.ik_actions.append(np.array(action))
         return self.env.step(action)
 
     def _make_input(self, action, old_quat):

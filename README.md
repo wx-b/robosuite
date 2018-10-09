@@ -67,46 +67,120 @@ There are other parameters which can be configured for each environment. They pr
 A manipulation `task` typically involves the participation of a `robot` with `gripper`s as its end-effectors, an `arena` (workspace), and `object`s that the robot interacts with. Our APIs in [Models](RoboticsSuite/models) provide a toolkit of composing these modularized elements into a scene, which can be loaded in MuJoCo for simulation. To build your own environments, you are recommended to take a look at the [environment classes](RoboticsSuite/environments) which have used these APIs to define a set of standardized manipulation tasks. You can also find detailed documentations about [creating a custom object](docs/creating_object.md) and [creating a custom environment](docs/creating_environment.md).
 
 ## Human Demonstrations
-TODO(Ajay): Talk about how to collect, download, and replay human demonstrations.
-
 #### Collecting human demonstrations
 
-Demonstrations can be collected by using a SpaceNavigator 3D Mouse. 
+Demonstrations can be collected by either using a keyboard or using a [SpaceNavigator 3D Mouse](https://www.3dconnexion.com/spacemouse_compact/en/) with the [collect_human_demonstrations](RoboticsSuite/scripts/collect_human_demonstrations.py) script. It takes the following arguments.
 
-TODO: Support for collecting demonstration PKLs.
+- `directory:` path to a folder for where to store the pickle file of collected demonstrations
+- `environment:` name of the environment you would like to collect the demonstrations for
+- `device:` either "keyboard" or "spacemouse"
 
-TODO: Explain structure of PKLs.
+**Keyboard controls**
 
-#### Download CRIMSON dataset
+Note that the rendering window must be active for these commands to work.
 
-We collected a large-scale dataset on the `SawyerPickPlace` and `SawyerNutAssembly` tasks using the [CRIMSON](https://crowdncloud.ai/) platform. Crowdsourced workers collected these task demonstrations remotely. It consists of **1071** successful `SawyerPickPlace` demonstrations and **1147** successful `SawyerNutAssembly` demonstrations.
+|   Keys   |              Command               |
+| :------: | :--------------------------------: |
+|    q     |          reset simulation          |
+| spacebar |    toggle gripper (open/close)     |
+| w-a-s-d  | move arm horizontally in x-y plane |
+|   r-f    |        move arm vertically         |
+|   z-x    |      rotate arm about x-axis       |
+|   t-g    |      rotate arm about y-axis       |
+|   c-v    |      rotate arm about z-axis       |
+|   ESC    |                quit                |
+
+**SpaceNavigator 3D Mouse controls**
+
+|          Control          |                Command                |
+| :-----------------------: | :-----------------------------------: |
+|       Right button        |           reset simulation            |
+|    Left button (hold)     |             close gripper             |
+|   Move mouse laterally    |  move arm horizontally in x-y plane   |
+|   Move mouse vertically   |          move arm vertically          |
+| Twist mouse about an axis | rotate arm about a corresponding axis |
+|      ESC (keyboard)       |                 quit                  |
+
+ 
+
+#### Structure of collected demonstrations
+
+Every set of demonstrations is collected as a directory. Every directory contains a `models` subdirectory and a `demo.hdf5` file. The `models` subdirectory contains an xml file per demonstration, where the xml corresponds to the MuJoCo simulation model that was used during that demonstration. 
+
+The `demo.hdf5` file is structured as follows.
+
+- data (group)
+
+  - date (attribute) - date of collection
+
+  - time (attribute) - time of collection
+
+  - repository_version (attribute) - repository version used during collection
+
+  - env (attribute) - environment name on which demos were collected
+
+    
+
+  - demo1 (group) - group for the first demonstration (every demonstration has a group)
+
+    - model_file (attribute) - name of corresponding model xml in `models` directory
+
+    - states (dataset) - flattened mujoco states, ordered by time
+
+    - joint_velocities (dataset) - joint velocities applied during the demonstration
+
+    - gripper_actuations (dataset) - gripper controls applied during demonstration
+
+    - right_dpos (dataset) - end effector delta position command for single arm robot or right arm
+
+    - right_dquat (dataset) - end effector delta rotation command for single arm robot or right arm
+
+    - left_dpos (dataset) - end effector delta position command for left arm (bimanual robot only)
+
+    - left_dquat (dataset) - end effector delta rotation command for left arm (bimanual robot only)
+
+      
+
+  - demo2 (group) - group for the second demonstration
+
+    ... 
+
+    (and so on)
+
+
+
+To see a simple example of how to read demonstrations, please see [playback_demonstrations_from_hdf5](RoboticsSuite/scripts/playback_demonstrations_from_hdf5.py).
+
+#### Download RoboTurk dataset
+
+We collected a large-scale dataset on the `SawyerPickPlace` and `SawyerNutAssembly` tasks using the [RoboTurk](https://crowdncloud.ai/) platform. Crowdsourced workers collected these task demonstrations remotely. It consists of **1070** successful `SawyerPickPlace` demonstrations and **1147** successful `SawyerNutAssembly` demonstrations.
 
 We are providing the dataset in the hopes that it will be beneficial to researchers working on imitation learning. Large-scale imitation learning has not been explored much in the community; it will be exciting to see how this data is used.  
 
-You can download the dataset [here](https://drive.google.com/open?id=1iZSXTQZfBVcIBC3dRF5xUqMmWCmW64PD).
+You can download the dataset [here](http://cvgl.stanford.edu/projects/roboturk/RoboTurkPilot.zip).
 
-Due to its large size, the dataset has `*.pkl` pickle files containing indices into the corresponding `*.bkl` pickle files, allowing for on-demand loading of demonstrations. When running any code involving demonstrations, you should still use `*.pkl` file paths, and ensure that the corresponding `*.bkl` file is in the same directory. The dataset consists of the following pickle files:
+After unzipping the dataset, the following subdirectories can be found within the `RoboTurkPilot` directory. Every directory has the same structure as the demonstrations explained above. 
 
-- **pickplace-full.pkl, pickplace-full.bkl**
+- **bins-full**
   - The set of complete demonstrations on the full `SawyerPickPlace` task. Every demonstration consists of the Sawyer arm placing one of each object into its corresponding bin.
-- **pickplace-milk.pkl, pickplace-milk.bkl**
+- **bins-Milk**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceMilk` task. Every demonstration consists of the Sawyer arm placing a can into its corresponding bin. 
-- **pickplace-bread.pkl, pickplace-bread.bkl**
+- **bins-Bread**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceBread` task. Every demonstration consists of the Sawyer arm placing a loaf of bread into its corresponding bin. 
-- **pickplace-cereal.pkl, pickplace-cereal.bkl**
+- **bins-Cereal**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceCereal` task. Every demonstration consists of the Sawyer arm placing a cereal box into its corresponding bin. 
-- **pickplace-can.pkl, pickplace-can.bkl**
+- **bins-Can**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceCan` task. Every demonstration consists of the Sawyer arm placing a can into its corresponding bin. 
-- **nutassembly-full.pkl, nutassembly-full.bkl**
+- **pegs-full**
   - The set of complete demonstrations on the full `SawyerNutAssembly` task. Every demonstration consists of the Sawyer arm fitting a square nut and a round nut onto their corresponding pegs. 
-- **nutassembly-square.pkl, nutassembly-square.bkl**
+- **pegs-SquareNut**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerNutAssemblySquare` task. Every demonstration consists of the Sawyer arm fitting a square nut onto its corresponding peg. 
-- **nutassembly-round.pkl, nutassembly-round.bkl**
+- **pegs-RoundNut**
   - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerNutAssemblyRound` task. Every demonstration consists of the Sawyer arm fitting a round nut onto its corresponding peg. 
 
 #### Replay human demonstrations
 
-We have included a generic utility script that shows how demonstrations can be played back. Our [demo_playback_demonstrations](RoboticsSuite/scripts/demo_playback_demonstrations.py) script selects demonstration episodes at random from a demonstration pickle file and replays them.
+We have included a generic utility script that shows how demonstrations can be played back. Our [playback_demonstrations_from_hdf5](RoboticsSuite/scripts/playback_demonstrations_from_hdf5.py) script selects demonstration episodes at random from a demonstration pickle file and replays them. We have included some sample demonstrations at `models/assets/demonstrations`.
 
 #### Control start state distribution of environment with demonstration states
 

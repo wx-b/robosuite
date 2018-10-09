@@ -143,7 +143,7 @@ class MujocoEnv(metaclass=EnvMeta):
         """Resets simulation."""
         # TODO(yukez): investigate black screen of death
         # if there is an active viewer window, destroy it
-        self.close()
+        self._destroy_viewer()
         self._reset_internal()
         self.sim.forward()
         return self._get_observation()
@@ -315,9 +315,12 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         return False
 
-    def close(self):
-        """Do any cleanup necessary here."""
+    def _destroy_viewer(self):
         # if there is an active viewer window, destroy it
         if self.viewer is not None:
             self.viewer.close()  # change this to viewer.finish()?
             self.viewer = None
+
+    def close(self):
+        """Do any cleanup necessary here."""
+        self._destroy_viewer()

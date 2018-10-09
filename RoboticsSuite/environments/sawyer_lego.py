@@ -148,8 +148,8 @@ class SawyerLego(SawyerEnv):
         )
 
         # initialize objects of interest
-        piece = HoleObject(size= 0.015)
-        grid = GridObject(size=0.015)
+        piece = HoleObject(size= 0.017, tolerance=0.9)
+        grid = GridObject(size=0.017)
         self.mujoco_arena.table_body.append(grid.get_collision(name='grid',site=True))
         self.mujoco_objects = OrderedDict([("cube", piece)])
 

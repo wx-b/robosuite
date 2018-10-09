@@ -7,7 +7,7 @@ learning RL policies.
 
 import random
 import os
-import pickle
+import h5py
 import time
 import numpy as np
 
@@ -21,9 +21,8 @@ class DemoSamplerWrapper(Wrapper):
     def __init__(
         self,
         env,
-        file_path,
+        demo_path,
         need_xml=False,
-        preload=False,
         num_traj=-1,
         sampling_schemes=["uniform", "random"],
         scheme_ratios=[0.9, 0.1],
@@ -40,11 +39,15 @@ class DemoSamplerWrapper(Wrapper):
         Args:
             env (MujocoEnv instance): The environment to wrap.
 
-            file_path (string): The path to the demonstrations, in pkl format.
+            demo_path (string): The path to the folder containing the demonstrations.
+                There should be a `demo.hdf5` file and a folder named `models` with 
+                all of the stored model xml files from the demonstrations.
             
             need_xml (bool): If True, the mujoco model needs to be reloaded when
                 sampling a state from a demonstration. This could be because every
                 demonstration was taken under varied object properties, for example.
+                In this case, every sampled state comes with a corresponding xml to
+                be used for the environment reset.
 
             preload (bool): If True, fetch all demonstrations into memory at the
                 beginning. Otherwise, load demonstrations as they are needed lazily.
@@ -86,37 +89,22 @@ class DemoSamplerWrapper(Wrapper):
 
         super().__init__(env)
 
-        """ Load the demo file...
-            If it's a .pkl file with a list of objects, then proceed as usual.
-            If it's a .pkl file with a list of numbers, open the corresponding file with all of them;
-                if we want to preload the samples, then read the big file onto a list, and
-                    then pretend that we just read a normal .pkl file
-                if we want to lazy load from the filesystem, simply keep self.demo_big_file pointing
-                    to the bigfile and self.demo_data as a list of numbers
-        """
-        with open(file_path, "rb") as f:
-            self.demo_data = pickle.load(f)
-            is_bkl = self.demo_data[0] == 0
-            if num_traj > 0:
-                random.seed(3141)
-                self.demo_data = random.sample(self.demo_data, num_traj)
-                random.seed(time.time() * 1000 * ord(os.urandom(1)))
-                print("Subsampled:", self.demo_data)
-            if is_bkl:
-                self.demo_big_file = open(file_path.replace(".pkl", ".bkl"), "rb")
-                if preload:
-                    print("Preloading...")
-                    data = []
-                    for ofs in self.demo_data:
-                        self.demo_big_file.seek(ofs)
-                        data.append(pickle.load(self.demo_big_file))
-                    self.demo_data = data
-                    self.demo_big_file.close()
-                    self.demo_big_file = None
-                    print("Preloaded!")
-            else:
-                print("Not a bkl!")
-                self.demo_big_file = None
+        self.demo_path = demo_path
+        hdf5_path = os.path.join(self.demo_path, "demo.hdf5")
+        self.demo_file = h5py.File(hdf5_path, "r")  
+
+        # ensure that wrapped env matches the env on which demonstrations were collected
+        env_name = self.demo_file["data"].attrs["env"]
+        assert env_name == self.unwrapped.__class__.__name__, \
+            "Wrapped env {} does not match env on which demos were collected ({})".format(env.__class__.__name__, env_name)
+
+        # list of all demonstrations episodes
+        self.demo_list = list(self.demo_file["data"].keys())
+
+        # subsample a selection of demonstrations if requested
+        if num_traj > 0:
+            random.seed(3141) # ensure that the same set is sampled every time
+            self.demo_list = random.sample(self.demo_list, num_traj)
 
         self.need_xml = need_xml
         self.demo_sampled = 0
@@ -206,14 +194,17 @@ class DemoSamplerWrapper(Wrapper):
         First uniformly sample a demonstration from the set of demonstrations.
         Then uniformly sample a state from the selected demonstration.
         """
-        episode = random.choice(self.demo_data)
-        if self.demo_big_file is not None:
-            self.demo_big_file.seek(episode)
-            episode = pickle.load(self.demo_big_file)
-        state = random.choice(episode["states"])
+
+        # get a random episode index
+        ep_ind = random.choice(self.demo_list)
+
+        # select a flattened mujoco state uniformly from this episode
+        states = self.demo_file["data/{}/states".format(ep_ind)].value
+        state = random.choice(states)
 
         if self.need_xml:
-            xml = postprocess_model_xml(episode["model.xml"])
+            model_xml = self._xml_for_episode_index(ep_ind)
+            xml = postprocess_model_xml(model_xml)
             return state, xml
         return state
 
@@ -227,16 +218,14 @@ class DemoSamplerWrapper(Wrapper):
         this sampling method increases at a fixed rate.
         """
 
-        # sample a random demonstration
-        episode = random.choice(self.demo_data)
-        if self.demo_big_file is not None:
-            self.demo_big_file.seek(episode)
-            episode = pickle.load(self.demo_big_file)
+        # get a random episode index
+        ep_ind = random.choice(self.demo_list)
 
         # sample uniformly in a window that grows backwards from the end of the demos
-        eps_len = len(episode["states"])
+        states = self.demo_file["data/{}/states".format(ep_ind)].value
+        eps_len = states.shape[0]
         index = np.random.randint(max(eps_len - self.open_loop_window_size, 0), eps_len)
-        state = episode["states"][index]
+        state = states[index]
 
         # increase window size at a fixed frequency (open loop)
         self.demo_sampled += 1
@@ -246,7 +235,8 @@ class DemoSamplerWrapper(Wrapper):
             self.demo_sampled = 0
 
         if self.need_xml:
-            xml = postprocess_model_xml(episode["model.xml"])
+            model_xml = self._xml_for_episode_index(ep_ind)
+            xml = postprocess_model_xml(model_xml)
             return state, xml
 
         return state
@@ -261,16 +251,14 @@ class DemoSamplerWrapper(Wrapper):
         this sampling method increases at a fixed rate.
         """
 
-        # sample a random demonstration
-        episode = random.choice(self.demo_data)
-        if self.demo_big_file is not None:
-            self.demo_big_file.seek(episode)
-            episode = pickle.load(self.demo_big_file)
+        # get a random episode index
+        ep_ind = random.choice(self.demo_list)
 
         # sample uniformly in a window that grows forwards from the beginning of the demos
-        eps_len = len(episode["states"])
+        states = self.demo_file["data/{}/states".format(ep_ind)].value
+        eps_len = states.shape[0]
         index = np.random.randint(0, min(self.open_loop_window_size, eps_len))
-        state = episode["states"][index]
+        state = states[index]
 
         # increase window size at a fixed frequency (open loop)
         self.demo_sampled += 1
@@ -280,7 +268,21 @@ class DemoSamplerWrapper(Wrapper):
             self.demo_sampled = 0
 
         if self.need_xml:
-            xml = postprocess_model_xml(episode["model.xml"])
+            model_xml = self._xml_for_episode_index(ep_ind)
+            xml = postprocess_model_xml(model_xml)
             return state, xml
 
         return state
+
+    def _xml_for_episode_index(self, ep_ind):
+        """
+        Helper method to retrieve the corresponding model xml string
+        for the passed episode index.
+        """
+
+        # read the model xml, using the metadata stored in the attribute for this episode
+        model_file = self.demo_file["data/{}".format(ep_ind)].attrs["model_file"]
+        model_path = os.path.join(self.demo_path, "models", model_file)
+        with open(model_path, "r") as model_f:
+            model_xml = model_f.read()
+        return model_xml

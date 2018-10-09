@@ -6,7 +6,10 @@ Run `pip install pybullet==1.9.5`.
 
 import os
 import numpy as np
-import pybullet as p
+try:
+    import pybullet as p
+except ImportError:
+    raise Exception("Please make sure pybullet is installed. Run `pip install pybullet==1.9.5`")
 
 import RoboticsSuite.utils.transform_utils as T
 from RoboticsSuite.controllers import Controller
@@ -82,7 +85,8 @@ class BaxterIKController(Controller):
         for i, delta in enumerate(deltas):
             velocities[i] = -2 * delta
         velocities = self.clip_joint_velocities(velocities)
-
+        
+        self.commanded_joint_velocities = velocities
         return velocities
 
         # For debugging purposes: set joint positions directly
