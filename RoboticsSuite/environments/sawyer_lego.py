@@ -163,6 +163,7 @@ class SawyerLego(SawyerEnv):
             self.mujoco_objects,
             initializer=self.placement_initializer,
         )
+        # print(self.model.get_xml())
         self.model.place_objects()
 
     def _get_reference(self):

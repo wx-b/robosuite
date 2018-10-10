@@ -43,7 +43,7 @@ class TableTopTask(Task):
         self.table_size = mujoco_arena.table_full_size
         self.merge(mujoco_arena)
 
-    def merge_objects(self, mujoco_objects, type='free'):
+    def merge_objects(self, mujoco_objects):
         """Adds physical objects to the MJCF model."""
         self.mujoco_objects = mujoco_objects
         self.objects = []  # xml manifestation
@@ -54,8 +54,7 @@ class TableTopTask(Task):
             self.merge_asset(obj_mjcf)
             # Load object
             obj = obj_mjcf.get_collision(name=obj_name, site=True)
-            if type == 'free':
-                obj.append(new_joint(name=obj_name, type="free"))
+            obj.append(new_joint(name=obj_name, type="free"))
             self.objects.append(obj)
             self.worldbody.append(obj)
 

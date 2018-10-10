@@ -352,13 +352,13 @@ class HoleObject(MujocoGeneratedObject):
 
         main_body.append(
         new_geom(
-            geom_type="box", size=[self.size, 3*self.size, self.size], pos=[0, 0, 0], rgba=[1, 0, 0,1], group=1, name = 'cube-0'
-            )
+            geom_type="box", size=[self.size, 3*self.size, self.size], pos=[0, 0, 0], group=1, name = 'cube-0'
+            ,material="lego", rgba=None)
         )
         main_body.append(
         new_geom(
-            geom_type="box", size=[self.size,self.size, self.size], pos=[2*self.size, 2*self.size, 0], rgba=[1, 0, 0,1], group=1
-            )
+            geom_type="box", size=[self.size,self.size, self.size], pos=[2*self.size, 2*self.size, 0], group=1
+            , material="lego", rgba=None)
         )
         if site:
             # add a site as well
@@ -402,8 +402,8 @@ class GridObject(MujocoGeneratedObject):
                 if(pattern[i][j]):
                     main_body.append(
                     new_geom(
-                        geom_type="box", size=[self.size, self.size, self.size], pos=[2*i*self.size, 2*j*self.size, 0.41], rgba=[1, 0, 0,1], group=1,
-                        )
+                        geom_type="box", size=[self.size, self.size, self.size], pos=[2*i*self.size, 2*j*self.size, 0.41], group=1,
+                        material="lego", rgba=None)
                     )
 
         return main_body
