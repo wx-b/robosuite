@@ -379,9 +379,11 @@ class GridObject(MujocoGeneratedObject):
     def __init__(
         self,
         size=0.01,
+        pattern=[[1,0,1,1],[1,0,0,0],[1,1,1,1],[1,1,1,1]]
     ):
         super().__init__()
         self.size = size
+        self.pattern = pattern
 
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size])
@@ -396,7 +398,7 @@ class GridObject(MujocoGeneratedObject):
         main_body = new_body()
         if name is not None:
             main_body.set("name", name)
-        pattern = [[1,0,1,1],[1,0,0,0],[1,1,1,1],[1,1,1,1]]
+        pattern = self.pattern
         for i in range(len(pattern)):
             for j in range(len(pattern[0])):
                 if(pattern[i][j]):
