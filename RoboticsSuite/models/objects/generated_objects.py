@@ -399,14 +399,15 @@ class GridObject(MujocoGeneratedObject):
         if name is not None:
             main_body.set("name", name)
         pattern = self.pattern
-        for i in range(len(pattern)):
-            for j in range(len(pattern[0])):
-                if(pattern[i][j]):
-                    main_body.append(
-                    new_geom(
-                        geom_type="box", size=[self.size, self.size, self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.41], group=1,
-                        material="lego", rgba=None)
-                    )
+        for k in range(len(pattern)):
+            for i in range(len(pattern[0])):
+                for j in range(len(pattern[0][0])):
+                    if(pattern[k][i][j]):
+                        main_body.append(
+                        new_geom(
+                            geom_type="box", size=[self.size, self.size, self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.41+2*k*self.size], group=1,
+                            material="lego", rgba=None)
+                        )
 
         return main_body
 

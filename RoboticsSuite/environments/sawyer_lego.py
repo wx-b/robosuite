@@ -111,8 +111,8 @@ class SawyerLego(SawyerEnv):
             self.placement_initializer = placement_initializer
         else:
             self.placement_initializer = UniformRandomSampler(
-                x_range=[-0.2, -0.05],
-                y_range=[-0.2, -0.05],
+                x_range=[-0.3, -0.1],
+                y_range=[-0.3, -0.1],
                 ensure_object_boundary_in_range=False,
                 z_rotation=True,
             )
@@ -148,8 +148,12 @@ class SawyerLego(SawyerEnv):
         )
 
         # initialize objects of interest
+        p =[[[1,1,1,1,1,1,1],[1,1,0,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
+            [[1,1,1,1,1,1,1],[1,1,0,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
+            [[1,1,1,1,1,1,1],[1,1,0,0,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]]]
+        complement = np.asarray(p)
         piece = HoleObject(size= 0.017, tolerance=0.9)
-        grid = GridObject(size=0.017)
+        grid = GridObject(size=0.017, pattern=p)
         self.mujoco_arena.table_body.append(grid.get_collision(name='grid',site=True))
         self.mujoco_objects = OrderedDict([("cube", piece)])
 
