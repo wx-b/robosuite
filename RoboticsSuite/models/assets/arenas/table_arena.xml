@@ -5,6 +5,8 @@
     <material name="floorplane" reflectance="0.7" texrepeat="1 1" texture="texplane" texuniform="true"/>
     <texture file="../textures/lego.png" type="2d" name="tex-lego"/>
     <material name="lego" reflectance="0.7" texrepeat="10 10" texture="tex-lego" texuniform="true"/>
+    <texture file="../textures/lego1.png" type="2d" name="tex-lego1"/>
+    <material name="lego1" reflectance="0.7" texrepeat="10 10" texture="tex-lego1" texuniform="true"/>
   </asset>
   <worldbody>
     <geom condim="3" material="floorplane" name="floor" pos="0 0 0" size="3 3 .125" type="plane"/>

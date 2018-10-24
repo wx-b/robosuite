@@ -333,9 +333,11 @@ class HoleObject(MujocoGeneratedObject):
         self,
         size=0.01,
         tolerance = 0.98,
+        pattern = [[1,1,1],[1,0,1]]
     ):
         super().__init__()
         self.size = tolerance*size
+        self.pattern = pattern
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size])
 
@@ -350,16 +352,31 @@ class HoleObject(MujocoGeneratedObject):
         if name is not None:
             main_body.set("name", name)
 
-        main_body.append(
-        new_geom(
-            geom_type="box", size=[self.size, 3*self.size, self.size], pos=[0, 0, 0], group=1, name = 'cube-0'
-            ,material="lego", rgba=None)
-        )
-        main_body.append(
-        new_geom(
-            geom_type="box", size=[self.size,self.size, self.size], pos=[2*self.size, 2*self.size, 0], group=1
-            , material="lego", rgba=None)
-        )
+        # main_body.append(
+        # new_geom(
+        #     geom_type="box", size=[self.size, 3*self.size, self.size], pos=[0, 0, 0], group=1, name = 'cube-0'
+        #     ,material="lego1", rgba=None)
+        # )
+        # main_body.append(
+        # new_geom(
+        #     geom_type="box", size=[self.size,self.size, self.size], pos=[2*self.size, 2*self.size, 0], group=1
+        #     , material="lego1", rgba=None)
+        # )
+        # main_body.append(
+        # new_geom(
+        #     geom_type="box", size=[self.size,self.size, self.size], pos=[2*self.size, -2*self.size, 0], group=1
+        #     , material="lego", rgba=None)
+        # )
+        pattern = self.pattern
+        for i in range(len(pattern)):
+            for j in range(len(pattern[0])):
+                if(pattern[i][j]):
+                    main_body.append(
+                    new_geom(
+                        geom_type="box", size=[self.size, self.size, self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.0], group=1,
+                        material="lego1", rgba=None)
+                    )
+        main_body[0].set('name','cube-0') #hack
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
@@ -402,10 +419,10 @@ class GridObject(MujocoGeneratedObject):
         for k in range(len(pattern)):
             for i in range(len(pattern[0])):
                 for j in range(len(pattern[0][0])):
-                    if(pattern[k][i][j]):
+                    if(pattern[k][i][j]>0):
                         main_body.append(
                         new_geom(
-                            geom_type="box", size=[self.size, self.size, self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.41+2*k*self.size], group=1,
+                            geom_type="box", size=[pattern[k][i][j]*self.size, pattern[k][i][j]*self.size, pattern[k][i][j]*self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.41+2*k*self.size], group=1,
                             material="lego", rgba=None)
                         )
 
