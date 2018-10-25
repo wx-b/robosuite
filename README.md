@@ -1,3 +1,8 @@
+## Note
+### This repository contains the SVL-internal version of robosuite, primary for new feature development and research purposes. For stable versions, please use our [public release](https://github.com/StanfordVL/robosuite).
+
+
+
 # Surreal Robotics Suite
 
 ![gallery of_environments](resources/gallery.png)
