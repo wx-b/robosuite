@@ -1,7 +1,7 @@
 """
 Tests two finger gripper and left two finger gripper on grabbing task
 """
-from RoboticsSuite.models.grippers import (
+from robosuite.models.grippers import (
     TwoFingerGripper,
     GripperTester,
     LeftTwoFingerGripper,

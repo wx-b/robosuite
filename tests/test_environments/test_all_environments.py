@@ -3,7 +3,7 @@ Test all environments with random policies.
 """
 import numpy as np
 
-import RoboticsSuite as suite
+import robosuite as suite
 
 
 def test_all_environments():

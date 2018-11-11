@@ -1,6 +1,5 @@
 import numpy as np
-import RoboticsSuite as suite
-
+import robosuite as suite
 
 if __name__ == "__main__":
 

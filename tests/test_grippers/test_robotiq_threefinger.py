@@ -1,4 +1,4 @@
-from RoboticsSuite.models.grippers import GripperTester, RobotiqThreeFingerGripper
+from robosuite.models.grippers import GripperTester, RobotiqThreeFingerGripper
 
 
 def test_robotiq_three_finger():

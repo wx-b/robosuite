@@ -1,7 +1,7 @@
 """
     Tests the basic interface of all grippers
 """
-from RoboticsSuite.models.grippers import (
+from robosuite.models.grippers import (
     TwoFingerGripper,
     LeftTwoFingerGripper,
     PR2Gripper,

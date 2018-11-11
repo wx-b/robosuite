@@ -1,5 +1,5 @@
 # How to create a custom object
-Objects, such as boxes and cans, are essential to building manipulation environments. We designed the [MujocoObject](../RoboticsSuite/models/objects/objects.py) interfaces to standardize and simplify the procedure for importing 3D models into the scene or procedurally generate new objects. MuJoCo defines models via the [MJCF](http://www.mujoco.org/book/modeling.html) xml format. These MJCF files can either be stored as XML files on disk and loaded into simulator, or be created on-the-fly by code prior to simulation. Based on these two mechanisms of how MJCF models are created, we offer two main ways of creating your own object:
+Objects, such as boxes and cans, are essential to building manipulation environments. We designed the [MujocoObject](../robosuite/models/objects/objects.py) interfaces to standardize and simplify the procedure for importing 3D models into the scene or procedurally generate new objects. MuJoCo defines models via the [MJCF](http://www.mujoco.org/book/modeling.html) xml format. These MJCF files can either be stored as XML files on disk and loaded into simulator, or be created on-the-fly by code prior to simulation. Based on these two mechanisms of how MJCF models are created, we offer two main ways of creating your own object:
 
 * Define an object in an MJCF XML file;
 * Use procedural generation APIs to dynamically create an MJCF model.
@@ -39,14 +39,14 @@ obj_xml = obj.get_visual().set("pos", array_to_string(pos))
 ```
 
 ## Creating a XMLObject
-One can use MuJoCo MJCF xml to generate an object, either as a composition of primitive [geoms](http://mujoco.org/book/modeling.html#geom) or imported from STL files of triangulated [meshes](http://www.mujoco.org/book/modeling.html#mesh). An example is `RoboticsSuite.models.objects.xml_objects.BreadObject`. Its [python definition](../RoboticsSuite/models/objects/xml_objects.py#L41) is short.
+One can use MuJoCo MJCF xml to generate an object, either as a composition of primitive [geoms](http://mujoco.org/book/modeling.html#geom) or imported from STL files of triangulated [meshes](http://www.mujoco.org/book/modeling.html#mesh). An example is `robosuite.models.objects.xml_objects.BreadObject`. Its [python definition](../robosuite/models/objects/xml_objects.py#L41) is short.
 ```python
 class BreadObject(MujocoXMLObject):
     def __init__(self):
         super().__init__(xml_path_completion("objects/bread.xml"))
 ```
 
-So all the important definitions are in the [bread.xml](../RoboticsSuite/models/assets/objects/bread.xml) file.
+So all the important definitions are in the [bread.xml](../robosuite/models/assets/objects/bread.xml) file.
 ```xml
 <mujoco model="bread">
   <asset>
@@ -78,4 +78,4 @@ So all the important definitions are in the [bread.xml](../RoboticsSuite/models/
 * These attributes will be parsed by the `MujocoXMLObject` class and conform to the `MujocoObject` interface.
 
 ## Creating a procedurally generated object
-Proceudally generated objects have been used in [several](https://arxiv.org/abs/1802.09564) [recent](https://arxiv.org/abs/1806.09266) [works](https://arxiv.org/abs/1709.07857) to train control policies with improved robustness and generalization. Here you can programmatically generate a MJCF xml of an object from scratch using `xml.etree.ElementTree`. The implementation is straightforward and interested readers should refer to `_get_collision` and `get_visual` method of `MujocoGeneratedObject`, defined [here](../RoboticsSuite/models/objects/generated_objects.py). For instance, the `BaxterLift` environment used a pot with two side handles. This object is created with the procedural generation APIs, see [here](../RoboticsSuite/models/objects/generated_objects.py#L8).
+Proceudally generated objects have been used in [several](https://arxiv.org/abs/1802.09564) [recent](https://arxiv.org/abs/1806.09266) [works](https://arxiv.org/abs/1709.07857) to train control policies with improved robustness and generalization. Here you can programmatically generate a MJCF xml of an object from scratch using `xml.etree.ElementTree`. The implementation is straightforward and interested readers should refer to `_get_collision` and `get_visual` method of `MujocoGeneratedObject`, defined [here](../robosuite/models/objects/generated_objects.py). For instance, the `BaxterLift` environment used a pot with two side handles. This object is created with the procedural generation APIs, see [here](../robosuite/models/objects/generated_objects.py#L8).

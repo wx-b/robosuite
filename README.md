@@ -1,3 +1,8 @@
+## Note
+### This repository contains the SVL-internal version of robosuite, primary for new feature development and research purposes. For stable versions, please use our [public release](https://github.com/StanfordVL/robosuite).
+
+
+
 # Surreal Robotics Suite
 
 ![gallery of_environments](resources/gallery.png)
@@ -8,16 +13,16 @@ Reinforcement learning has been a powerful and generic tool in robotics. Reinfor
 
 This framework was originally developed since late 2017 by researchers in [Stanford Vision and Learning Lab](http://svl.stanford.edu/) (SVL) as an internal tool for robot learning research. Today it is actively maintained and used for robotics research projects in SVL.
 
-This release of Stanford Robotics Suite contains a set of benchmarking manipulation tasks and a modularized design of APIs for building new environments. We highlight these primary features below:
+This release of Surreal Robotics Suite contains a set of benchmarking manipulation tasks and a modularized design of APIs for building new environments. We highlight these primary features below:
 
-* [**standardized tasks**](RoboticsSuite/environments): a set of single-arm and bimanual manipulation tasks of large diversity and varying complexity.
-* [**procedural generation**](RoboticsSuite/models): modularized APIs for programmatically creating new scenes and new tasks as a combinations of robot models, arenas, and parameterized 3D objects;
-* [**controller modes**](RoboticsSuite/controllers): a selection of controller types to command the robots, such as joint velocity control, inverse kinematics control, and 3D motion devices for teleoperation;
+* [**standardized tasks**](robosuite/environments): a set of single-arm and bimanual manipulation tasks of large diversity and varying complexity.
+* [**procedural generation**](robosuite/models): modularized APIs for programmatically creating new scenes and new tasks as a combinations of robot models, arenas, and parameterized 3D objects;
+* [**controller modes**](robosuite/controllers): a selection of controller types to command the robots, such as joint velocity control, inverse kinematics control, and 3D motion devices for teleoperation;
 * **multi-modal sensors**: heterogeneous types of sensory signals, including low-level physical states, RGB cameras, depth maps, and proprioception;
-* **human demonstrations**: utilities for collecting human demonstrations, replaying demonstration datasets, and leveraging demonstration data for learning.
+* [**human demonstrations**](docs/demonstrations.md): utilities for collecting human demonstrations, replaying demonstration datasets, and leveraging demonstration data for learning.
 
 ## Installation
-The Stanford Robotics Suite officially supports Mac OS X and Linux on Python 3.5+. It can be run with an on-screen display for visualization or in a headless mode for model training, with or without a GPU.
+Surreal Robotics Suite officially supports Mac OS X and Linux on Python 3.5+. It can be run with an on-screen display for visualization or in a headless mode for model training, with or without a GPU.
 
 The base installation requires the MuJoCo physics engine (with [mujoco-py](https://github.com/openai/mujoco-py), refer to link for troubleshooting the installation and further instructions) and [numpy](http://www.numpy.org/). To avoid interfering with system packages, it is recommended to install it under a virtual environment by first running `virtualenv -p python3 . && source bin/activate`.
 
@@ -36,7 +41,7 @@ The base installation requires the MuJoCo physics engine (with [mujoco-py](https
    ```
    This will also install our library as an editable package, such that local changes will be reflected elsewhere without having to reinstall the package.
 
-3. (Optional) We also provide add-on functionalities, such as [OpenAI Gym](https://github.com/openai/gym) [interfaces](RoboticsSuite/wrappers/gym_wrapper.py), [inverse kinematics controllers](RoboticsSuite/wrappers/ik_wrapper.py) powered by [PyBullet](http://bulletphysics.org), and [teleoperation](RoboticsSuite/scripts/demo_spacemouse_ik_control.py) with [SpaceMouse](https://www.3dconnexion.com/products/spacemouse.html) devices (Mac OS X only). To enable these additional features, please install the extra dependencies by running
+3. (Optional) We also provide add-on functionalities, such as [OpenAI Gym](https://github.com/openai/gym) [interfaces](robosuite/wrappers/gym_wrapper.py), [inverse kinematics controllers](robosuite/wrappers/ik_wrapper.py) powered by [PyBullet](http://bulletphysics.org), and [teleoperation](robosuite/scripts/demo_spacemouse_ik_control.py) with [SpaceMouse](https://www.3dconnexion.com/products/spacemouse.html) devices (Mac OS X only). To enable these additional features, please install the extra dependencies by running
    ```sh
    $ pip3 install -r requirements-extra.txt
    ```
@@ -46,7 +51,7 @@ The APIs we provide to interact with our environments are simple and similar to 
 
 ```python
 import numpy as np
-import RoboticsSuite as suite
+import robosuite as suite
 
 # create environment instance
 env = suite.make("SawyerLift", has_renderer=True)
@@ -61,132 +66,48 @@ for i in range(1000):
 ````
 The `step()` function takes an `action` as input and returns a tuple of `(obs, reward, done, info)` where `obs` is an `OrderedDict` containing observations `[(name_string, np.array), ...]`, `reward` is the immediate reward obtained per step, `done` is a Boolean flag indicating if the episode has terminated and `info` is a dictionary which contains additional metadata.
 
-There are other parameters which can be configured for each environment. They provide functionalities such as headless rendering, getting pixel observations, changing camera settings, using reward shaping, and adding extra low-level observations. Please refer to [this page](RoboticsSuite/environments/README.md) and the [environment classes](RoboticsSuite/environments) for further details.
+There are other parameters which can be configured for each environment. They provide functionalities such as headless rendering, getting pixel observations, changing camera settings, using reward shaping, and adding extra low-level observations. Please refer to [this page](robosuite/environments/README.md) and the [environment classes](robosuite/environments) for further details.
 
 ## Building Your Own Environments
-A manipulation `task` typically involves the participation of a `robot` with `gripper`s as its end-effectors, an `arena` (workspace), and `object`s that the robot interacts with. Our APIs in [Models](RoboticsSuite/models) provide a toolkit of composing these modularized elements into a scene, which can be loaded in MuJoCo for simulation. To build your own environments, you are recommended to take a look at the [environment classes](RoboticsSuite/environments) which have used these APIs to define a set of standardized manipulation tasks. You can also find detailed documentations about [creating a custom object](docs/creating_object.md) and [creating a custom environment](docs/creating_environment.md).
+A manipulation `task` typically involves the participation of a `robot` with `gripper`s as its end-effectors, an `arena` (workspace), and `object`s that the robot interacts with. Our APIs in [Models](robosuite/models) provide a toolkit of composing these modularized elements into a scene, which can be loaded in MuJoCo for simulation. To build your own environments, you are recommended to take a look at the [environment classes](robosuite/environments) which have used these APIs to define a set of standardized manipulation tasks. You can also find detailed documentations about [creating a custom object](docs/creating_object.md) and [creating a custom environment](docs/creating_environment.md).
 
 ## Human Demonstrations
-#### Collecting human demonstrations
 
-Demonstrations can be collected by either using a keyboard or using a [SpaceNavigator 3D Mouse](https://www.3dconnexion.com/spacemouse_compact/en/) with the [collect_human_demonstrations](RoboticsSuite/scripts/collect_human_demonstrations.py) script. It takes the following arguments.
+### Collecting Human Demonstrations
+
+We provide teleoperation utilities that allow users to control the robots with input devices, such as the keyboard and the [SpaceMouse](https://www.3dconnexion.com/spacemouse_compact/en/). Such functionality allows us to collect a dataset of human demonstrations for learning. We provide an example script to illustrate how to collect demonstrations. Our [collect_human_demonstrations](robosuite/scripts/collect_human_demonstrations.py) script takes the following arguments:
 
 - `directory:` path to a folder for where to store the pickle file of collected demonstrations
 - `environment:` name of the environment you would like to collect the demonstrations for
 - `device:` either "keyboard" or "spacemouse"
 
-**Keyboard controls**
+Our twin project [RoboTurk](http://roboturk.stanford.edu) has collected pilot datasets of more than a thousand demonstrations for two tasks in our Suite via crowdsourcing. You can find detailed information about the [RoboTurk datasets](docs/demonstrations.md#roboturk-dataset) and [demonstration collection](docs/demonstrations.md#collecting-your-own-demonstrations) here.
 
-Note that the rendering window must be active for these commands to work.
+### Replaying Human Demonstrations
 
-|   Keys   |              Command               |
-| :------: | :--------------------------------: |
-|    q     |          reset simulation          |
-| spacebar |    toggle gripper (open/close)     |
-| w-a-s-d  | move arm horizontally in x-y plane |
-|   r-f    |        move arm vertically         |
-|   z-x    |      rotate arm about x-axis       |
-|   t-g    |      rotate arm about y-axis       |
-|   c-v    |      rotate arm about z-axis       |
-|   ESC    |                quit                |
+We have included an example script that illustrates how demonstrations can be loaded and played back. Our [playback_demonstrations_from_hdf5](robosuite/scripts/playback_demonstrations_from_hdf5.py) script selects demonstration episodes at random from a demonstration pickle file and replays them. We have included some sample demonstrations for each task at `models/assets/demonstrations`.
 
-**SpaceNavigator 3D Mouse controls**
+### Using Demonstrations for Learning
 
-|          Control          |                Command                |
-| :-----------------------: | :-----------------------------------: |
-|       Right button        |           reset simulation            |
-|    Left button (hold)     |             close gripper             |
-|   Move mouse laterally    |  move arm horizontally in x-y plane   |
-|   Move mouse vertically   |          move arm vertically          |
-| Twist mouse about an axis | rotate arm about a corresponding axis |
-|      ESC (keyboard)       |                 quit                  |
-
- 
-
-#### Structure of collected demonstrations
-
-Every set of demonstrations is collected as a directory. Every directory contains a `models` subdirectory and a `demo.hdf5` file. The `models` subdirectory contains an xml file per demonstration, where the xml corresponds to the MuJoCo simulation model that was used during that demonstration. 
-
-The `demo.hdf5` file is structured as follows.
-
-- data (group)
-
-  - date (attribute) - date of collection
-
-  - time (attribute) - time of collection
-
-  - repository_version (attribute) - repository version used during collection
-
-  - env (attribute) - environment name on which demos were collected
-
-    
-
-  - demo1 (group) - group for the first demonstration (every demonstration has a group)
-
-    - model_file (attribute) - name of corresponding model xml in `models` directory
-
-    - states (dataset) - flattened mujoco states, ordered by time
-
-    - joint_velocities (dataset) - joint velocities applied during the demonstration
-
-    - gripper_actuations (dataset) - gripper controls applied during demonstration
-
-    - right_dpos (dataset) - end effector delta position command for single arm robot or right arm
-
-    - right_dquat (dataset) - end effector delta rotation command for single arm robot or right arm
-
-    - left_dpos (dataset) - end effector delta position command for left arm (bimanual robot only)
-
-    - left_dquat (dataset) - end effector delta rotation command for left arm (bimanual robot only)
-
-      
-
-  - demo2 (group) - group for the second demonstration
-
-    ... 
-
-    (and so on)
-
-
-
-To see a simple example of how to read demonstrations, please see [playback_demonstrations_from_hdf5](RoboticsSuite/scripts/playback_demonstrations_from_hdf5.py).
-
-#### Download RoboTurk dataset
-
-We collected a large-scale dataset on the `SawyerPickPlace` and `SawyerNutAssembly` tasks using the [RoboTurk](https://crowdncloud.ai/) platform. Crowdsourced workers collected these task demonstrations remotely. It consists of **1070** successful `SawyerPickPlace` demonstrations and **1147** successful `SawyerNutAssembly` demonstrations.
-
-We are providing the dataset in the hopes that it will be beneficial to researchers working on imitation learning. Large-scale imitation learning has not been explored much in the community; it will be exciting to see how this data is used.  
-
-You can download the dataset [here](http://cvgl.stanford.edu/projects/roboturk/RoboTurkPilot.zip).
-
-After unzipping the dataset, the following subdirectories can be found within the `RoboTurkPilot` directory. Every directory has the same structure as the demonstrations explained above. 
-
-- **bins-full**
-  - The set of complete demonstrations on the full `SawyerPickPlace` task. Every demonstration consists of the Sawyer arm placing one of each object into its corresponding bin.
-- **bins-Milk**
-  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceMilk` task. Every demonstration consists of the Sawyer arm placing a can into its corresponding bin. 
-- **bins-Bread**
-  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceBread` task. Every demonstration consists of the Sawyer arm placing a loaf of bread into its corresponding bin. 
-- **bins-Cereal**
-  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceCereal` task. Every demonstration consists of the Sawyer arm placing a cereal box into its corresponding bin. 
-- **bins-Can**
-  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerPickPlaceCan` task. Every demonstration consists of the Sawyer arm placing a can into its corresponding bin. 
-- **pegs-full**
-  - The set of complete demonstrations on the full `SawyerNutAssembly` task. Every demonstration consists of the Sawyer arm fitting a square nut and a round nut onto their corresponding pegs. 
-- **pegs-SquareNut**
-  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerNutAssemblySquare` task. Every demonstration consists of the Sawyer arm fitting a square nut onto its corresponding peg. 
-- **pegs-RoundNut**
-  - A postprocessed, segmented set of demonstrations that corresponds to the `SawyerNutAssemblyRound` task. Every demonstration consists of the Sawyer arm fitting a round nut onto its corresponding peg. 
-
-#### Replay human demonstrations
-
-We have included a generic utility script that shows how demonstrations can be played back. Our [playback_demonstrations_from_hdf5](RoboticsSuite/scripts/playback_demonstrations_from_hdf5.py) script selects demonstration episodes at random from a demonstration pickle file and replays them. We have included some sample demonstrations at `models/assets/demonstrations`.
-
-#### Control start state distribution of environment with demonstration states
-
-Several prior works have demonstrated the effectiveness of altering the start state distribution of training episodes for learning RL policies. We provide a generic utility for setting various types of learning curriculums which dictate how to sample from demonstration episodes when doing an environment reset. For more information see the `DemoSamplerWrapper` class. 
-
-We have provided an example of how to use this wrapper along with a demonstration pickle file in the [demo_learning_curriculum](RoboticsSuite/scripts/demo_learning_curriculum.py) script.
+[Several](https://arxiv.org/abs/1802.09564) [prior](https://arxiv.org/abs/1807.06919) [works](https://arxiv.org/abs/1804.02717) have demonstrated the effectiveness of altering the start state distribution of training episodes for learning RL policies. We provide a generic utility for setting various types of learning curriculums which dictate how to sample from demonstration episodes when doing an environment reset. For more information see the `DemoSamplerWrapper` class. We have provided an example of how to use this wrapper along with a demonstration pickle file in the [demo_learning_curriculum](robosuite/scripts/demo_learning_curriculum.py) script.
 
 ## Citations
-TODO(Yuke): Add bibtex for citing RoboticsSuite.
+Please cite [Surreal](http://surreal.stanford.edu) if you use this repository in your publications:
+```
+@inproceedings{corl2018surreal,
+  title={SURREAL: Open-Source Reinforcement Learning Framework and Robot Manipulation Benchmark},
+  author={Fan, Linxi and Zhu, Yuke and Zhu, Jiren and Liu, Zihua and Zeng, Orien and Gupta, Anchit and Creus-Costa, Joan and Savarese, Silvio and Fei-Fei, Li},
+  booktitle={Conference on Robot Learning},
+  year={2018}
+}
+```
+
+Please also cite [RoboTurk](http://roboturk.stanford.edu) if you use the demonstration datasets:
+```
+@inproceedings{corl2018roboturk,
+  title={RoboTurk: A Crowdsourcing Platform for Robotic Skill Learning through Imitation},
+  author={Mandlekar, Ajay and Zhu, Yuke and Garg, Animesh and Booher, Jonathan and Spero, Max and Tung, Albert and Gao, Julian and Emmons, John and Gupta, Anchit and Orbay, Emre and Savarese, Silvio and Fei-Fei, Li},
+  booktitle={Conference on Robot Learning},
+  year={2018}
+}
+```
