@@ -1,10 +1,10 @@
 from collections import OrderedDict
 import numpy as np
-
+import random
 from RoboticsSuite.utils.transform_utils import convert_quat
 from RoboticsSuite.environments.sawyer import SawyerEnv
 
-from RoboticsSuite.models.arenas import TableArena
+from RoboticsSuite.models.arenas import LegoArena
 from RoboticsSuite.models.objects import HoleObject, GridObject
 from RoboticsSuite.models.robots import Sawyer
 from RoboticsSuite.models.tasks import TableTopTask, UniformRandomSampler
@@ -135,6 +135,36 @@ class SawyerLego(SawyerEnv):
             camera_depth=camera_depth,
         )
 
+    def lego_sample(self):
+        """
+        Returns a randomly sampled block,hole
+        """
+        blocks = [[[1,1,1],[1,0,1]],[[1,1,1],[1,0,0]],[[1,1,0],[1,1,0]],[[1,1,0],[0,1,1]],[[1,1,1],[0,1,0]],[[1,1,1],[0,0,0]]]
+        holes = [
+                   [ [[[1,1,1],[1,1,1]],[[0,0.85,0],[1,1,1]],[[0,0,0],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[0,0.85,0]]] ],
+                   [ [[[1,1,1],[1,1,1]],[[0,1,1],[1,1,1]],[[0,0,0],[1,1,1]]], [[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]],[[0,0,1],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[0,1,1]]] ],
+                   [ [[[1,1,1],[1,1,1]],[[0,0,0],[1,1,1]],[[0,0,1],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,1],[0,0,1]]] ],
+                   [ [[[0,1,1],[1,1,1]],[[0,0,1],[1,1,1]],[[0,0,1],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,1],[1,0,0]]] ],
+                   [ [[[1,1,1],[1,1,1]],[[1,0,1],[1,1,1]],[[0,0,0],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[1,0,1]]] ],
+                   [ [[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[1,1,1]]] ],
+                ]
+        block = random.randint(0,len(blocks)-1)
+        # Generate hole
+        grid_x = 6
+        grid_z = 3
+        grid = np.ones((grid_z,grid_x,grid_x))
+
+        offset_x = random.randint(1,grid_x-4)
+        offset_y = random.randint(1,grid_x-3)
+        hole = random.choice(holes[block])
+
+        for z in range(len(hole)):
+            for y in range(len(hole[0])):
+                for x in range(len(hole[0][0])):
+                    grid[z][offset_y+y][offset_x+x] = hole[z][y][x]
+        grid = np.rot90(grid,random.randint(0,3),(1,2))
+        return blocks[block],grid
+
     def _load_model(self):
         """
         Loads an xml model, puts it in self.model
@@ -143,27 +173,13 @@ class SawyerLego(SawyerEnv):
         self.mujoco_robot.set_base_xpos([0, 0, 0])
 
         # load model for table top workspace
-        self.mujoco_arena = TableArena(
+        self.mujoco_arena = LegoArena(
             table_full_size=self.table_full_size, table_friction=self.table_friction
         )
 
         # initialize objects of interest
-        # pg =[[[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
-        #     [[1,1,1,1,1,1,1],[1,1,0,0.87,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
-        #     [[1,1,1,1,1,1,1],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]]]
-        # ph = pattern = [[1,1,1],[1,0,1]]
-        # pg =[[[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
-        #     [[1,1,1,1,1,1,1],[1,1,0,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
-        #     [[1,1,1,1,1,1,1],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]]]
-        # ph = pattern = [[1,1,1],[1,0,0]]
-        pg =[[[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
-            [[1,1,1,1,1,1,1],[1,1,1,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
-            [[1,1,1,1,1,1,1],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]]]
-        ph = pattern = [[1,1,0],[0,1,1]]
-        pg =[[[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
-            [[1,1,1,1,1,1,1],[1,1,1,0,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
-            [[1,1,1,1,1,1,1],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]]]
-        ph = pattern = [[1,1,1],[0,1,0]]
+        ph,pg = self.lego_sample()
+
         piece = HoleObject(size= 0.017, tolerance=0.90, pattern = ph)
         grid = GridObject(size=0.017, pattern=pg)
         self.mujoco_arena.table_body.append(grid.get_collision(name='grid',site=True))

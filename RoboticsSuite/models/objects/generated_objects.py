@@ -352,21 +352,6 @@ class HoleObject(MujocoGeneratedObject):
         if name is not None:
             main_body.set("name", name)
 
-        # main_body.append(
-        # new_geom(
-        #     geom_type="box", size=[self.size, 3*self.size, self.size], pos=[0, 0, 0], group=1, name = 'cube-0'
-        #     ,material="lego1", rgba=None)
-        # )
-        # main_body.append(
-        # new_geom(
-        #     geom_type="box", size=[self.size,self.size, self.size], pos=[2*self.size, 2*self.size, 0], group=1
-        #     , material="lego1", rgba=None)
-        # )
-        # main_body.append(
-        # new_geom(
-        #     geom_type="box", size=[self.size,self.size, self.size], pos=[2*self.size, -2*self.size, 0], group=1
-        #     , material="lego", rgba=None)
-        # )
         pattern = self.pattern
         for i in range(len(pattern)):
             for j in range(len(pattern[0])):
@@ -420,10 +405,13 @@ class GridObject(MujocoGeneratedObject):
             for i in range(len(pattern[0])):
                 for j in range(len(pattern[0][0])):
                     if(pattern[k][i][j]>0):
+                        mat = 'lego'
+                        if k < len(pattern)-1 and i > 0 and j > 0 and i < len(pattern[0]) -1 and j < len(pattern[0][0])-1 :
+                            mat = 'lego1'
                         main_body.append(
                         new_geom(
                             geom_type="box", size=[pattern[k][i][j]*self.size, pattern[k][i][j]*self.size, pattern[k][i][j]*self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.41+2*k*self.size], group=1,
-                            material="lego", rgba=None)
+                            material=mat, rgba=None)
                         )
 
         return main_body

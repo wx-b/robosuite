@@ -4,7 +4,7 @@ from RoboticsSuite.utils.mjcf_utils import xml_path_completion
 from RoboticsSuite.utils.mjcf_utils import array_to_string, string_to_array
 
 
-class TableArena(Arena):
+class LegoArena(Arena):
     """Workspace that contains an empty table."""
 
     def __init__(
