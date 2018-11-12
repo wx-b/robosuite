@@ -62,9 +62,9 @@ class TableTopTask(Task):
                 self.max_horizontal_radius, obj_mjcf.get_horizontal_radius()
             )
 
-    def place_objects(self):
+    def place_objects(self,offset=[0,0,0]):
         """Places objects randomly until no collisions or max iterations hit."""
         pos_arr, quat_arr = self.initializer.sample()
         for i in range(len(self.objects)):
-            self.objects[i].set("pos", array_to_string(pos_arr[i]))
+            self.objects[i].set("pos", array_to_string(pos_arr[i]+offset))
             self.objects[i].set("quat", array_to_string(quat_arr[i]))

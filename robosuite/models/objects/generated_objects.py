@@ -381,11 +381,12 @@ class GridObject(MujocoGeneratedObject):
     def __init__(
         self,
         size=0.01,
-        pattern=[[1,1,1,1,1,1,1],[1,1,0,1,1,1,1],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]]
-    ):
+        pattern=[[1,1,1,1,1,1,1],[1,1,0,1,1,1,1],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
+        offset =0,):
         super().__init__()
         self.size = size
         self.pattern = pattern
+        self.offset = offset
 
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size])
@@ -410,7 +411,7 @@ class GridObject(MujocoGeneratedObject):
                             mat = 'lego1'
                         main_body.append(
                         new_geom(
-                            geom_type="box", size=[pattern[k][i][j]*self.size,self.size, self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.4+self.size+2*k*self.size], group=1,
+                            geom_type="box", size=[pattern[k][i][j]*self.size,pattern[k][i][j]*self.size, self.size], pos=[self.offset+2*i*self.size-self.size*len(pattern), self.offset+2*j*self.size-self.size*len(pattern), 0.4+self.size+2*k*self.size], group=1,
                             material=mat, rgba=None)
                         )
 

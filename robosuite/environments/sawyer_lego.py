@@ -412,3 +412,68 @@ class SawyerLegoEasy(SawyerLego):
                     grid[z][offset_y+y][offset_x+x] = hole[z][y][x]
         grid = np.rot90(grid,random.randint(0,3),(1,2))
         return blocks[block],grid
+
+class SawyerLegoFit(SawyerLego):
+
+    def lego_sample(self):
+        """
+        Returns a randomly sampled block,hole
+        """
+        blocks = [[[1,1,1],[1,0,1]],[[1,1,1],[1,0,0]],[[1,1,0],[1,1,0]],[[1,1,0],[0,1,1]],[[1,1,1],[0,1,0]],[[1,1,1],[0,0,0]]]
+        holes = [
+                   [[[[0,0,0],[0,0.85,0]]] ],
+                   [[[[0,0,0],[0,1,1]]] ],
+                   [[[[0,0,1],[0,0,1]]] ],
+                   [[[[0,0,1],[1,0,0]]] ],
+                   [[[[0,0,0],[1,0,1]]] ],
+                   [[[[0,0,0],[1,1,1]]] ],
+                ]
+        block = random.randint(0,len(blocks)-1)
+        block = 0
+        # Generate hole
+        grid_x = 20
+        grid_z = 1
+        grid = np.ones((grid_z,grid_x,grid_x))
+
+        offset_x = random.randint(1,grid_x-4)
+        offset_y = random.randint(1,grid_x-3)
+        hole = random.choice(holes[block])
+
+        for z in range(len(hole)):
+            for y in range(len(hole[0])):
+                for x in range(len(hole[0][0])):
+                    grid[z][offset_y+y][offset_x+x] = hole[z][y][x]
+        grid = np.rot90(grid,random.randint(0,3),(1,2))
+        return blocks[block],grid
+
+    def _load_model(self):
+        """
+        Loads an xml model, puts it in self.model
+        """
+        super()._load_model()
+        self.mujoco_robot.set_base_xpos([0, 0, 0])
+
+        # load model for table top workspace
+        self.mujoco_arena = LegoArena(
+            table_full_size=self.table_full_size, table_friction=self.table_friction
+        )
+
+        # initialize objects of interest
+        ph,pg = self.lego_sample()
+
+        piece = HoleObject(size= 0.017, tolerance=0.95, pattern = ph)
+        grid = GridObject(size=0.017, pattern=pg,offset=-20*0.017)
+        self.mujoco_arena.table_body.append(grid.get_collision(name='grid',site=True))
+        self.mujoco_objects = OrderedDict([("cube", piece)])
+
+        # The sawyer robot has a pedestal, we want to align it with the table
+        self.mujoco_arena.set_origin([0.16 + self.table_full_size[0] / 2, 0, 0])
+
+        # task includes arena, robot, and objects of interest
+        self.model = TableTopTask(
+            self.mujoco_arena,
+            self.mujoco_robot,
+            self.mujoco_objects,
+            initializer=self.placement_initializer,
+        )
+        self.model.place_objects(offset=[0,0,+0.034])
