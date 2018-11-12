@@ -378,3 +378,37 @@ class SawyerLego(SawyerEnv):
             rgba[3] = 0.5
 
             self.sim.model.site_rgba[self.eef_site_id] = rgba
+
+
+class SawyerLegoEasy(SawyerLego):
+
+    def lego_sample(self):
+        """
+        Returns a randomly sampled block,hole
+        """
+        blocks = [[[1,1,1],[1,0,1]],[[1,1,1],[1,0,0]],[[1,1,0],[1,1,0]],[[1,1,0],[0,1,1]],[[1,1,1],[0,1,0]],[[1,1,1],[0,0,0]]]
+        holes = [
+                   [[[[0,0,0],[0,0.85,0]]] ],
+                   [[[[0,0,0],[0,1,1]]] ],
+                   [[[[0,0,1],[0,0,1]]] ],
+                   [[[[0,0,1],[1,0,0]]] ],
+                   [[[[0,0,0],[1,0,1]]] ],
+                   [[[[0,0,0],[1,1,1]]] ],
+                ]
+        block = random.randint(0,len(blocks)-1)
+        block = 0
+        # Generate hole
+        grid_x = 6
+        grid_z = 1
+        grid = np.ones((grid_z,grid_x,grid_x))
+
+        offset_x = random.randint(1,grid_x-4)
+        offset_y = random.randint(1,grid_x-3)
+        hole = random.choice(holes[block])
+
+        for z in range(len(hole)):
+            for y in range(len(hole[0])):
+                for x in range(len(hole[0][0])):
+                    grid[z][offset_y+y][offset_x+x] = hole[z][y][x]
+        grid = np.rot90(grid,random.randint(0,3),(1,2))
+        return blocks[block],grid

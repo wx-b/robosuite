@@ -410,7 +410,7 @@ class GridObject(MujocoGeneratedObject):
                             mat = 'lego1'
                         main_body.append(
                         new_geom(
-                            geom_type="box", size=[pattern[k][i][j]*self.size, pattern[k][i][j]*self.size, pattern[k][i][j]*self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.41+2*k*self.size], group=1,
+                            geom_type="box", size=[pattern[k][i][j]*self.size,self.size, self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.4+self.size+2*k*self.size], group=1,
                             material=mat, rgba=None)
                         )
 
