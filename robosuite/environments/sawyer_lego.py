@@ -396,7 +396,6 @@ class SawyerLegoEasy(SawyerLego):
                    [[[[0,0,0],[1,1,1]]] ],
                 ]
         block = random.randint(0,len(blocks)-1)
-        block = 0
         # Generate hole
         grid_x = 6
         grid_z = 1
@@ -429,7 +428,6 @@ class SawyerLegoFit(SawyerLego):
                    [[[[0,0,0],[1,1,1]]] ],
                 ]
         block = random.randint(0,len(blocks)-1)
-        block = 0
         # Generate hole
         grid_x = 20
         grid_z = 1
