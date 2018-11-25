@@ -353,6 +353,7 @@ class HoleObject(MujocoGeneratedObject):
             main_body.set("name", name)
 
         pattern = self.pattern
+        cnt = 0
         for i in range(len(pattern)):
             for j in range(len(pattern[0])):
                 if(pattern[i][j]):
@@ -361,7 +362,8 @@ class HoleObject(MujocoGeneratedObject):
                         geom_type="box", size=[self.size, self.size, self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.0], group=1,
                         material="lego1", rgba=None)
                     )
-        main_body[0].set('name','cube-0') #hack
+                    main_body[-1].set('name','block-'+str(cnt))
+                    cnt +=1
         if site:
             # add a site as well
             template = self.get_site_attrib_template()
@@ -387,7 +389,6 @@ class GridObject(MujocoGeneratedObject):
         self.size = size
         self.pattern = pattern
         self.offset = offset
-
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size])
 
@@ -411,12 +412,24 @@ class GridObject(MujocoGeneratedObject):
                             mat = 'lego1'
                         main_body.append(
                         new_geom(
-                            geom_type="box", size=[pattern[k][i][j]*self.size,pattern[k][i][j]*self.size, self.size], pos=[self.offset+2*i*self.size-self.size*len(pattern), self.offset+2*j*self.size-self.size*len(pattern), 0.4+self.size+2*k*self.size], group=1,
+                            geom_type="box", size=[pattern[k][i][j]*self.size,pattern[k][i][j]*self.size, self.size], pos=[self.offset+2*i*self.size-self.size*len(pattern[0]), self.offset+2*j*self.size-self.size*len(pattern[0][0]), 0.4+self.size+2*k*self.size], group=1,
                             material=mat, rgba=None)
                         )
 
         return main_body
+    def in_grid(self,point):
+        result = True
+        pattern = self.pattern
+        x,y,z = point
+        if not (x > self.offset-self.size*len(pattern[0]) and x < self.offset+self.size*len(pattern[0])):
+            result = False
+        if not (y > self.offset-self.size*len(pattern[0][0]) and y < self.offset+self.size*len(pattern[0][0])):
+            result = False
+        if not (z > 0.4 and z < 0.4+2*len(pattern)*self.size):
+            result = False
+        return result
 
+        # Check if point is within the grid
     def get_visual(self, name=None, site=None):
         return self.get_collision(name, site)
 

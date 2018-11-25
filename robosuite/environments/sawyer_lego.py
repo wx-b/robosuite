@@ -149,6 +149,7 @@ class SawyerLego(SawyerEnv):
                    [ [[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[1,1,1]]] ],
                 ]
         block = random.randint(0,len(blocks)-1)
+        self.block=blocks[block]
         # Generate hole
         grid_x = 6
         grid_z = 3
@@ -181,9 +182,9 @@ class SawyerLego(SawyerEnv):
         ph,pg = self.lego_sample()
 
         piece = HoleObject(size= 0.017, tolerance=0.90, pattern = ph)
-        grid = GridObject(size=0.017, pattern=pg)
-        self.mujoco_arena.table_body.append(grid.get_collision(name='grid',site=True))
-        self.mujoco_objects = OrderedDict([("cube", piece)])
+        self.grid = GridObject(size=0.017, pattern=pg)
+        self.mujoco_arena.table_body.append(self.grid.get_collision(name='grid',site=True))
+        self.mujoco_objects = OrderedDict([("block", piece)])
 
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.16 + self.table_full_size[0] / 2, 0, 0])
@@ -205,14 +206,14 @@ class SawyerLego(SawyerEnv):
         in a flatten array, which is how MuJoCo stores physical simulation data.
         """
         super()._get_reference()
-        self.cube_body_id = self.sim.model.body_name2id("cube")
+        self.block_body_id = self.sim.model.body_name2id("block")
         self.l_finger_geom_ids = [
             self.sim.model.geom_name2id(x) for x in self.gripper.left_finger_geoms
         ]
         self.r_finger_geom_ids = [
             self.sim.model.geom_name2id(x) for x in self.gripper.right_finger_geoms
         ]
-        self.cube_geom_id = self.sim.model.geom_name2id("cube-0")
+        # self.cube_geom_id = self.sim.model.geom_name2id("cube-0")
 
     def _reset_internal(self):
         """
@@ -252,33 +253,7 @@ class SawyerLego(SawyerEnv):
         # sparse completion reward
         if self._check_success():
             reward = 1.0
-
-        # use a shaping reward
-        if self.reward_shaping:
-
-            # reaching reward
-            cube_pos = self.sim.data.body_xpos[self.cube_body_id]
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            dist = np.linalg.norm(gripper_site_pos - cube_pos)
-            reaching_reward = 1 - np.tanh(10.0 * dist)
-            reward += reaching_reward
-
-            # grasping reward
-            touch_left_finger = False
-            touch_right_finger = False
-            for i in range(self.sim.data.ncon):
-                c = self.sim.data.contact[i]
-                if c.geom1 in self.l_finger_geom_ids and c.geom2 == self.cube_geom_id:
-                    touch_left_finger = True
-                if c.geom1 == self.cube_geom_id and c.geom2 in self.l_finger_geom_ids:
-                    touch_left_finger = True
-                if c.geom1 in self.r_finger_geom_ids and c.geom2 == self.cube_geom_id:
-                    touch_right_finger = True
-                if c.geom1 == self.cube_geom_id and c.geom2 in self.r_finger_geom_ids:
-                    touch_right_finger = True
-            if touch_left_finger and touch_right_finger:
-                reward += 0.25
-
+        print(reward)
         return reward
 
     def _get_observation(self):
@@ -311,18 +286,18 @@ class SawyerLego(SawyerEnv):
         # low-level object information
         if self.use_object_obs:
             # position and rotation of object
-            cube_pos = np.array(self.sim.data.body_xpos[self.cube_body_id])
-            cube_quat = convert_quat(
-                np.array(self.sim.data.body_xquat[self.cube_body_id]), to="xyzw"
+            block_pos = np.array(self.sim.data.body_xpos[self.block_body_id])
+            block_quat = convert_quat(
+                np.array(self.sim.data.body_xquat[self.block_body_id]), to="xyzw"
             )
-            di["cube_pos"] = cube_pos
-            di["cube_quat"] = cube_quat
+            di["block_pos"] = block_pos
+            di["block_quat"] = block_quat
 
             gripper_site_pos = np.array(self.sim.data.site_xpos[self.eef_site_id])
-            di["gripper_to_cube"] = gripper_site_pos - cube_pos
+            di["gripper_to_block"] = gripper_site_pos - block_pos
 
             di["object-state"] = np.concatenate(
-                [cube_pos, cube_quat, di["gripper_to_cube"]]
+                [block_pos, block_quat, di["gripper_to_block"]]
             )
 
         return di
@@ -347,12 +322,21 @@ class SawyerLego(SawyerEnv):
         """
         Returns True if task has been completed.
         """
-        cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
-        table_height = self.table_full_size[2]
+        # cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
 
-        # cube is higher than the table top above a margin
-        return cube_height > table_height + 0.04
+        # table_height = self.table_full_size[2]
 
+        # # cube is higher than the table top above a margin
+        # return cube_height > table_height + 0.04
+        cnt = 0
+        result = True
+        for i in range(len(self.block)):
+            for j in range(len(self.block[0])):
+                if(self.block[i][j]):
+                    if(not self.grid.in_grid(self.sim.data.geom_xpos[self.sim.model.geom_name2id("block-"+str(cnt))])):
+                        result = False
+                    cnt +=1
+        return result
     def _gripper_visualization(self):
         """
         Do any needed visualization here. Overrides superclass implementations.
