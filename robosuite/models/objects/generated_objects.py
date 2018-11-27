@@ -333,11 +333,13 @@ class HoleObject(MujocoGeneratedObject):
         self,
         size=0.01,
         tolerance = 0.98,
-        pattern = [[1,1,1],[1,0,1]]
+        pattern = [[1,1,1],[1,0,1]],
+        z_compress = 1.0
     ):
         super().__init__()
         self.size = tolerance*size
         self.pattern = pattern
+        self.z_compress = z_compress
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size])
 
@@ -359,7 +361,7 @@ class HoleObject(MujocoGeneratedObject):
                 if(pattern[i][j]):
                     main_body.append(
                     new_geom(
-                        geom_type="box", size=[self.size, self.size, self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.0], group=1,
+                        geom_type="box", size=[self.size, self.size, self.z_compress*self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.0], group=1,
                         material="lego1", rgba=None)
                     )
                     main_body[-1].set('name','block-'+str(cnt))
@@ -384,11 +386,13 @@ class GridObject(MujocoGeneratedObject):
         self,
         size=0.01,
         pattern=[[1,1,1,1,1,1,1],[1,1,0,1,1,1,1],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
-        offset =0,):
+        offset =0,
+        z_compress = 1.0):
         super().__init__()
         self.size = size
         self.pattern = pattern
         self.offset = offset
+        self.z_compress = z_compress
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size])
 
@@ -412,7 +416,7 @@ class GridObject(MujocoGeneratedObject):
                             mat = 'lego1'
                         main_body.append(
                         new_geom(
-                            geom_type="box", size=[pattern[k][i][j]*self.size,pattern[k][i][j]*self.size, self.size], pos=[self.offset+2*i*self.size-self.size*len(pattern[0]), self.offset+2*j*self.size-self.size*len(pattern[0][0]), 0.4+self.size+2*k*self.size], group=1,
+                            geom_type="box", size=[pattern[k][i][j]*self.size,pattern[k][i][j]*self.size, self.z_compress*self.size], pos=[self.offset+2*i*self.size-self.size*len(pattern[0]), self.offset+2*j*self.size-self.size*len(pattern[0][0]), 0.4+self.size+2*k*self.z_compress*self.size], group=1,
                             material=mat, rgba=None)
                         )
 
@@ -425,7 +429,7 @@ class GridObject(MujocoGeneratedObject):
             result = False
         if not (y > self.offset-self.size*len(pattern[0][0]) and y < self.offset+self.size*len(pattern[0][0])):
             result = False
-        if not (z > 0.4 and z < 0.4+2*len(pattern)*self.size):
+        if not (z > 0.4 and z < 0.4+2*len(pattern)*self.z_compress*self.size):
             result = False
         return result
 

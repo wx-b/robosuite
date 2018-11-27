@@ -148,7 +148,7 @@ class SawyerLego(SawyerEnv):
                    [ [[[1,1,1],[1,1,1]],[[1,0,1],[1,1,1]],[[0,0,0],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[1,0,1]]] ],
                    [ [[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[1,1,1]]] ],
                 ]
-        block = random.randint(0,len(blocks)-1)
+        block = randomlen(blocks)-1
         self.block=blocks[block]
         # Generate hole
         grid_x = 6
@@ -333,7 +333,7 @@ class SawyerLego(SawyerEnv):
         for i in range(len(self.block)):
             for j in range(len(self.block[0])):
                 if(self.block[i][j]):
-                    if(not self.grid.in_grid(self.sim.data.geom_xpos[self.sim.model.geom_name2id("block-"+str(cnt))])):
+                    if(not self.grid.in_grid(self.sim.data.geom_xpos[self.sim.model.geom_name2id("block-"+str(cnt))]-[0.16 + self.table_full_size[0] / 2, 0, 0.4])):
                         result = False
                     cnt +=1
         return result
@@ -345,7 +345,7 @@ class SawyerLego(SawyerEnv):
         # color the gripper site appropriately based on distance to cube
         if self.gripper_visualization:
             # get distance to cube
-            cube_site_id = self.sim.model.site_name2id("cube")
+            cube_site_id = self.sim.model.site_name2id("block")
             dist = np.sum(
                 np.square(
                     self.sim.data.site_xpos[cube_site_id]
@@ -380,6 +380,7 @@ class SawyerLegoEasy(SawyerLego):
                    [[[[0,0,0],[1,1,1]]] ],
                 ]
         block = random.randint(0,len(blocks)-1)
+        self.block=blocks[block]
         # Generate hole
         grid_x = 6
         grid_z = 1
@@ -412,6 +413,7 @@ class SawyerLegoFit(SawyerLego):
                    [[[[0,0,0],[1,1,1]]] ],
                 ]
         block = random.randint(0,len(blocks)-1)
+        self.block=blocks[block]
         # Generate hole
         grid_x = 20
         grid_z = 1
@@ -443,10 +445,10 @@ class SawyerLegoFit(SawyerLego):
         # initialize objects of interest
         ph,pg = self.lego_sample()
 
-        piece = HoleObject(size= 0.017, tolerance=0.95, pattern = ph)
-        grid = GridObject(size=0.017, pattern=pg,offset=-20*0.017)
-        self.mujoco_arena.table_body.append(grid.get_collision(name='grid',site=True))
-        self.mujoco_objects = OrderedDict([("cube", piece)])
+        piece = HoleObject(size= 0.017, tolerance=0.95, pattern = ph,z_compress=0.5)
+        self.grid = GridObject(size=0.017, pattern=pg,z_compress=0.5)
+        self.mujoco_arena.table_body.append(self.grid.get_collision(name='grid',site=True))
+        self.mujoco_objects = OrderedDict([("block", piece)])
 
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([0.16 + self.table_full_size[0] / 2, 0, 0])
