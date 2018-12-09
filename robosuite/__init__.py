@@ -2,6 +2,7 @@ import os
 
 from robosuite.environments.base import make
 from robosuite.environments.sawyer_lift import SawyerLift
+from robosuite.environments.sawyer_fit import SawyerFit
 from robosuite.environments.sawyer_lego import SawyerLego
 from robosuite.environments.sawyer_lego import SawyerLegoEasy
 from robosuite.environments.sawyer_lego import SawyerLegoFit

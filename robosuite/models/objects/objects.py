@@ -151,6 +151,12 @@ class MujocoXMLObject(MujocoXML, MujocoObject):
         )
         return string_to_array(horizontal_radius_site.get("pos"))[0]
 
+    def get_bounding_box(self):
+        horizontal_radius_site = self.worldbody.find(
+            "./body/site[@name='horizontal_radius_site']"
+        )
+        return string_to_array(horizontal_radius_site.get("pos"))
+
     def get_collision(self, name=None, site=False):
 
         collision = copy.deepcopy(self.worldbody.find("./body/body[@name='collision']"))

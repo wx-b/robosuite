@@ -19,6 +19,7 @@ from .xml_objects import (
 from .generated_objects import (
     PotWithHandlesObject,
     HoleObject,
+    BoundingObject,
     GridObject,
     BoxObject,
     CylinderObject,

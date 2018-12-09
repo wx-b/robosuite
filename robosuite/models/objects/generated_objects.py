@@ -324,6 +324,85 @@ def _get_randomized_range(val,
                              .format(str(val), str(provided_range)))
         return [val]
 
+class BoundingObject(MujocoGeneratedObject):
+    """
+    Generates bounding box hole object
+    """
+
+    def __init__(
+        self,
+        size=[0.1,0.1,0.05],
+        hole_size = [0.05,0.05,0.05],
+        tolerance = 1.05,
+        offset = [0.0,0.0,0.4]
+    ):
+        super().__init__()
+        self.size = size
+        self.hole_size = tolerance*np.asarray(hole_size)
+        self.offset=np.asarray(offset)
+    def get_bottom_offset(self):
+        return np.array([0, 0, 0])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.size])
+
+    def get_horizontal_radius(self):
+        return np.sqrt(2) * (self.size)
+
+    def get_collision(self, name=None, site=None):
+        main_body = new_body()
+        if name is not None:
+            main_body.set("name", name)
+        x = self.size[0]-self.hole_size[0]
+        y = self.size[1]-self.hole_size[1]
+        x1 = np.random.uniform(x/5,4*x/5)
+        x2 = x-x1
+        y1 = np.random.uniform(y/5,4*y/5)
+        y2 = y-y1
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[x1, self.size[1],self.size[2]],pos=self.offset+[self.size[0]-x1, 0.0, self.size[2]], group=1,
+            material="lego", rgba=None)
+        )
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[x2, self.size[1],self.size[2]],pos=self.offset+[-self.size[0]+x2, 0.0, self.size[2]], group=1,
+            material="lego", rgba=None)
+        )
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.size[0],y1,self.size[2]],pos=self.offset+[0.0,-self.size[1]+y1, self.size[2]], group=1,
+            material="lego", rgba=None)
+        )
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.size[0],y2,self.size[2]],pos=self.offset+[0.0,self.size[1]-y2, self.size[2]], group=1,
+            material="lego", rgba=None)
+        )
+        if site:
+            # add a site as well
+            template = self.get_site_attrib_template()
+            if name is not None:
+                template["name"] = name
+            main_body.append(ET.Element("site", attrib=template))
+        return main_body
+
+    def in_grid(self,point,size):
+        result = True
+        pattern = self.pattern
+        x,y,z = point
+        if not (x -size[0] > self.offset[0]-self.size[0] and x + size[0] < self.offset[0]+self.size[1]):
+            result = False
+        if not (y-size[1] > self.offset[1]-self.size[1] and y + size[1] < self.offset[1]+self.size[1]):
+            result = False
+        if not (z - size[2] > self.offset[2] and z + size[2] < self.offset[2]+self.size[2]):
+            result = False
+        return result
+
+    def get_visual(self, name=None, site=None):
+        return self.get_collision(name, site)
+
+
 class HoleObject(MujocoGeneratedObject):
     """
     Generates the Pot object with side handles (used in BaxterLift)
