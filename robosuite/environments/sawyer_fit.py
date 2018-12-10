@@ -3,9 +3,9 @@ import numpy as np
 import random
 from robosuite.utils.transform_utils import convert_quat
 from robosuite.environments.sawyer import SawyerEnv
-
+from robosuite.utils.mjcf_utils import xml_path_completion
 from robosuite.models.arenas import LegoArena
-from robosuite.models.objects import BreadObject, BoundingObject
+from robosuite.models.objects import MujocoXMLObject, BoundingObject
 from robosuite.models.robots import Sawyer
 from robosuite.models.tasks import TableTopTask, UniformRandomSampler
 
@@ -149,7 +149,7 @@ class SawyerFit(SawyerEnv):
 
         # initialize objects of interest
 
-        piece = BreadObject()
+        piece = MujocoXMLObject(xml_path_completion("objects/meshes/016_pear/google_16k/mesh.xml"))
         hole = piece.get_bounding_box()
         np.random.shuffle(hole)
         self.grid = BoundingObject(hole_size=hole)
