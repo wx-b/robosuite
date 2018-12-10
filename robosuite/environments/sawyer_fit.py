@@ -150,7 +150,9 @@ class SawyerFit(SawyerEnv):
         # initialize objects of interest
 
         piece = BreadObject()
-        self.grid = BoundingObject(hole_size=piece.get_bounding_box())
+        hole = piece.get_bounding_box()
+        np.random.shuffle(hole)
+        self.grid = BoundingObject(hole_size=hole)
         self.mujoco_arena.table_body.append(self.grid.get_collision(name='grid',site=True))
         self.mujoco_objects = OrderedDict([("block", piece)])
 

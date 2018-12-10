@@ -155,7 +155,13 @@ class MujocoXMLObject(MujocoXML, MujocoObject):
         horizontal_radius_site = self.worldbody.find(
             "./body/site[@name='horizontal_radius_site']"
         )
-        return string_to_array(horizontal_radius_site.get("pos"))
+        scale = self.asset.find("./mesh").attrib['scale']
+        #Only supports symmetric scaling
+        if scale:
+            scale = string_to_array(scale)
+        else:
+            scale = np.asarray([1.0,1.0,1.0])
+        return scale*string_to_array(horizontal_radius_site.get("pos"))
 
     def get_collision(self, name=None, site=False):
 

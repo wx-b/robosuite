@@ -331,15 +331,16 @@ class BoundingObject(MujocoGeneratedObject):
 
     def __init__(
         self,
-        size=[0.1,0.1,0.05],
+        size=[0.1,0.1],
         hole_size = [0.05,0.05,0.05],
-        tolerance = 1.05,
-        offset = [0.0,0.0,0.4]
+        tolerance = 1.03,
+        offset = [0.1,0.05,0.4]
     ):
         super().__init__()
         self.size = size
         self.hole_size = tolerance*np.asarray(hole_size)
         self.offset=np.asarray(offset)
+        self.size.append(hole_size[2])
     def get_bottom_offset(self):
         return np.array([0, 0, 0])
 
