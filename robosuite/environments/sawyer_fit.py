@@ -149,7 +149,7 @@ class SawyerFit(SawyerEnv):
 
         # initialize objects of interest
 
-        piece = MujocoXMLObject(xml_path_completion("objects/meshes/016_pear/google_16k/mesh.xml"))
+        piece = MujocoXMLObject(xml_path_completion("objects/meshes/ycb/016_pear/google_16k/mesh.xml"))
         hole = piece.get_bounding_box()
         np.random.shuffle(hole)
         self.grid = BoundingObject(hole_size=hole)
