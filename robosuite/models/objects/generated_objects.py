@@ -340,7 +340,6 @@ class BoundingObject(MujocoGeneratedObject):
         self.size = size
         self.hole_size = tolerance*np.asarray(hole_size)
         self.offset=np.asarray(offset)
-        self.size.append(hole_size[2])
     def get_bottom_offset(self):
         return np.array([0, 0, 0])
 
@@ -362,22 +361,22 @@ class BoundingObject(MujocoGeneratedObject):
         y2 = y-y1
         main_body.append(
         new_geom(
-            geom_type="box", size=[x1, self.size[1],self.size[2]],pos=self.offset+[self.size[0]-x1, 0.0, self.size[2]], group=1,
+            geom_type="box", size=[x1, self.size[1],self.hole_size[2]],pos=self.offset+[self.size[0]-x1, 0.0, self.hole_size[2]], group=1,
             material="lego", rgba=None)
         )
         main_body.append(
         new_geom(
-            geom_type="box", size=[x2, self.size[1],self.size[2]],pos=self.offset+[-self.size[0]+x2, 0.0, self.size[2]], group=1,
+            geom_type="box", size=[x2, self.size[1],self.hole_size[2]],pos=self.offset+[-self.size[0]+x2, 0.0, self.hole_size[2]], group=1,
             material="lego", rgba=None)
         )
         main_body.append(
         new_geom(
-            geom_type="box", size=[self.size[0],y1,self.size[2]],pos=self.offset+[0.0,-self.size[1]+y1, self.size[2]], group=1,
+            geom_type="box", size=[self.size[0],y1,self.hole_size[2]],pos=self.offset+[0.0,-self.size[1]+y1, self.hole_size[2]], group=1,
             material="lego", rgba=None)
         )
         main_body.append(
         new_geom(
-            geom_type="box", size=[self.size[0],y2,self.size[2]],pos=self.offset+[0.0,self.size[1]-y2, self.size[2]], group=1,
+            geom_type="box", size=[self.size[0],y2,self.hole_size[2]],pos=self.offset+[0.0,self.size[1]-y2, self.hole_size[2]], group=1,
             material="lego", rgba=None)
         )
         if site:
@@ -390,13 +389,14 @@ class BoundingObject(MujocoGeneratedObject):
 
     def in_grid(self,point,size):
         result = True
-        pattern = self.pattern
         x,y,z = point
-        if not (x -size[0] > self.offset[0]-self.size[0] and x + size[0] < self.offset[0]+self.size[1]):
+        if not (x -size[0] > self.offset[0]-self.size[0] and x + size[0] < self.offset[0]+self.size[0]):
             result = False
         if not (y-size[1] > self.offset[1]-self.size[1] and y + size[1] < self.offset[1]+self.size[1]):
             result = False
-        if not (z - size[2] > self.offset[2] and z + size[2] < self.offset[2]+self.size[2]):
+        if not (z - size[2] > self.offset[2] and z + size[2] < 1.1*(self.offset[2]+2*self.hole_size[2])):
+            #Hack for z tolerance
+            #print("z",self.offset[2],self.offset[2]+2*self.hole_size[2])
             result = False
         return result
 
