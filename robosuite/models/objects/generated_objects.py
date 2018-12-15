@@ -414,12 +414,13 @@ class HoleObject(MujocoGeneratedObject):
         size=0.01,
         tolerance = 0.98,
         pattern = [[1,1,1],[1,0,1]],
-        z_compress = 1.0
-    ):
+        z_compress = 1.0,
+        name = ''    ):
         super().__init__()
         self.size = tolerance*size
         self.pattern = pattern
         self.z_compress = z_compress
+        self.name = name
     def get_bottom_offset(self):
         return np.array([0, 0, -1 * self.size])
 
@@ -438,13 +439,16 @@ class HoleObject(MujocoGeneratedObject):
         cnt = 0
         for i in range(len(pattern)):
             for j in range(len(pattern[0])):
+                mat = 'lego1'
+                if self.name =='1':
+                    mat = 'lego'
                 if(pattern[i][j]):
                     main_body.append(
                     new_geom(
                         geom_type="box", size=[self.size, self.size, self.z_compress*self.size], pos=[2*i*self.size-self.size*len(pattern), 2*j*self.size-self.size*len(pattern), 0.0], group=1,
-                        material="lego1", rgba=None)
+                        material=mat, rgba=None)
                     )
-                    main_body[-1].set('name','block-'+str(cnt))
+                    main_body[-1].set('name','block'+self.name+'-'+str(cnt))
                     cnt +=1
         if site:
             # add a site as well
