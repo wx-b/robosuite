@@ -8,7 +8,7 @@ from robosuite.models.arenas import LegoArena
 from robosuite.models.objects import MujocoXMLObject, BoundingObject
 from robosuite.models.robots import Sawyer
 from robosuite.models.tasks import TableTopTask, UniformRandomSampler
-
+import xml.etree.ElementTree as ET
 
 class SawyerFit(SawyerEnv):
     """
@@ -149,11 +149,12 @@ class SawyerFit(SawyerEnv):
 
         # initialize objects of interest
 
-        piece = MujocoXMLObject(xml_path_completion("objects/meshes/ycb/016_pear/google_16k/mesh.xml"))
-        hole = piece.get_bounding_box()
-        np.random.shuffle(hole)
-        self.grid = BoundingObject(hole_size=hole)
+        piece = MujocoXMLObject(xml_path_completion("objects/meshes/ycb/004_sugar_box/google_16k/mesh.xml"))
+        self.obj_size = piece.get_bounding_box()
+        np.random.shuffle(self.obj_size)
+        self.grid = BoundingObject(hole_size=self.obj_size)
         self.mujoco_arena.table_body.append(self.grid.get_collision(name='grid',site=True))
+        # print(ET.tostring(self.mujoco_arena.table_body).decode())
         self.mujoco_objects = OrderedDict([("block", piece)])
 
         # The sawyer robot has a pedestal, we want to align it with the table
@@ -166,9 +167,8 @@ class SawyerFit(SawyerEnv):
             self.mujoco_objects,
             initializer=self.placement_initializer,
         )
-        # print(self.model.get_xml())
-        self.model.place_objects()
 
+        self.model.place_objects()
     def _get_reference(self):
         """
         Sets up references to important components. A reference is typically an
@@ -223,6 +223,7 @@ class SawyerFit(SawyerEnv):
         # sparse completion reward
         if self._check_success():
             reward = 1.0
+        print(reward)    
         return reward
 
     def _get_observation(self):
@@ -299,12 +300,8 @@ class SawyerFit(SawyerEnv):
         # return cube_height > table_height + 0.04
         cnt = 0
         result = True
-        # for i in range(len(self.block)):
-        #     for j in range(len(self.block[0])):
-        #         if(self.block[i][j]):
-        #             if(not self.grid.in_grid(self.sim.data.geom_xpos[self.sim.model.geom_name2id("block-"+str(cnt))]-[0.16 + self.table_full_size[0] / 2, 0, 0.4])):
-        #                 result = False
-        #             cnt +=1
+        if(not self.grid.in_grid(self.sim.data.body_xpos[self.sim.model.body_name2id("block")]-[0.16 + self.table_full_size[0] / 2, 0, 0.4],self.obj_size)):
+            result = False
         return result
     def _gripper_visualization(self):
         """
