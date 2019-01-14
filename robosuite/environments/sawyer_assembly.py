@@ -112,7 +112,7 @@ class SawyerAssembly(SawyerEnv):
         else:
             self.placement_initializer = UniformRandomSampler(
                 x_range=[-0.3, 0.1],
-                y_range=[-0.3, 0.3],
+                y_range=[-0.3, 0.2],
                 ensure_object_boundary_in_range=False,
                 z_rotation=True,
             )
@@ -140,7 +140,7 @@ class SawyerAssembly(SawyerEnv):
         Returns a randomly sampled block,hole
         """
         blocks = [[[1,1,1],[1,0,1]],[[1,1,1],[1,0,0]],[[1,1,0],[1,1,0]],[[1,1,0],[0,1,1]],[[1,1,1],[0,1,0]],[[1,1,1],[0,0,0]]]
-        hole = [[[1,1,1],[1,0,1]],[[1,1,1],[1,0,1]]]
+        hole = [[[0,0,0],[0,0,0],[0,0,0]],[[0,0,0],[0,0,0],[0,0,0]]]
 
         self.block=blocks[0]
         # Generate hole
@@ -157,8 +157,16 @@ class SawyerAssembly(SawyerEnv):
                     grid[z][offset_y+y][offset_x+x] = hole[z][y][x]
         grid = np.rot90(grid,random.randint(0,3),(1,2))
         # Generate Pieces
-        block1 = [[1,0,0],[1,1,1],[0,1,0], [0,1,0]]
-        block2 = [[0,1,1],[1,1,1],[0,1,0]]
+        block1 = [[[1,1,1],[1,1,1],[1,1,1]],
+                [[0,0,0],[0.9,.9,.9],[0,0,0]],
+                [[0,0,0],[.9,.9,.9],[0,0,0]],
+                    ]
+
+        block2 = [ [[1,1,1],[0,0,0],[1,1,1]],
+                [[1,1,1],[0,0,0],[1,1,1]],
+                [[1,1,1],[1,1,1],[1,1,1]],
+                [[0,0,0],[0,1.8,0],[0,0,0]]
+                    ]
         return block1, block2,grid
 
     def _load_model(self):
@@ -176,9 +184,9 @@ class SawyerAssembly(SawyerEnv):
         # initialize objects of interest
         h1,h2,pg = self.lego_sample()
 
-        h1 = HoleObject(size= 0.017, tolerance=0.90, pattern = h1,name='1')
-        h2 = HoleObject(size= 0.017, tolerance=0.90, pattern = h2,name="2")
-        self.grid = GridObject(size=0.017, pattern=pg,offset=0.2)
+        h1 = GridObject(size= 0.01, pattern = h1)
+        h2 = GridObject(size= 0.01, pattern = h2)
+        self.grid = GridObject(size=0.01, pattern=pg,offset=0.2)
         self.mujoco_arena.table_body.append(self.grid.get_collision(name='grid',site=True))
         self.mujoco_objects = OrderedDict([("block1", h1),("block2", h2)])
 
@@ -247,9 +255,9 @@ class SawyerAssembly(SawyerEnv):
         reward = 0.
 
         # sparse completion reward
-        if self._check_success():
-            reward = 1.0
-        print(reward)
+        # if self._check_success():
+        #     reward = 1.0
+        # print(reward)
         return reward
 
     def _get_observation(self):
