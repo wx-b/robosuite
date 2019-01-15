@@ -144,7 +144,7 @@ class SawyerAssembly(SawyerEnv):
 
         self.block=blocks[0]
         # Generate hole
-        grid_x = 6
+        grid_x = 8
         grid_z = 2
         grid = np.ones((grid_z,grid_x,grid_x))
 
@@ -165,7 +165,7 @@ class SawyerAssembly(SawyerEnv):
         block2 = [ [[1,1,1],[0,0,0],[1,1,1]],
                 [[1,1,1],[0,0,0],[1,1,1]],
                 [[1,1,1],[1,1,1],[1,1,1]],
-                [[0,0,0],[0,1.8,0],[0,0,0]]
+                [[0,0,0],[0,1,0],[0,0,0]]
                     ]
         return block1, block2,grid
 
@@ -184,9 +184,9 @@ class SawyerAssembly(SawyerEnv):
         # initialize objects of interest
         h1,h2,pg = self.lego_sample()
 
-        h1 = GridObject(size= 0.01, pattern = h1)
-        h2 = GridObject(size= 0.01, pattern = h2)
-        self.grid = GridObject(size=0.01, pattern=pg,offset=0.2)
+        h1 = GridObject(size= 0.017, pattern = h1)
+        h2 = GridObject(size= 0.017, pattern = h2)
+        self.grid = GridObject(size=0.0175, pattern=pg,offset=0.2)
         self.mujoco_arena.table_body.append(self.grid.get_collision(name='grid',site=True))
         self.mujoco_objects = OrderedDict([("block1", h1),("block2", h2)])
 
@@ -349,10 +349,10 @@ class SawyerAssembly(SawyerEnv):
         # color the gripper site appropriately based on distance to cube
         if self.gripper_visualization:
             # get distance to cube
-            cube_site_id = self.sim.model.site_name2id("block1")
+            cube_site_id = self.sim.model.body_name2id("block1")
             dist = np.sum(
                 np.square(
-                    self.sim.data.site_xpos[cube_site_id]
+                    self.sim.data.body_xpos[cube_site_id]
                     - self.sim.data.get_site_xpos("grip_site")
                 )
             )

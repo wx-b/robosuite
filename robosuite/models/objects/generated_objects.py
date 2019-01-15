@@ -501,7 +501,7 @@ class GridObject(MujocoGeneratedObject):
                         main_body.append(
                         new_geom(
                             geom_type="box", size=[pattern[k][i][j]*self.size,pattern[k][i][j]*self.size, self.z_compress*self.size], pos=[self.offset+2*i*self.size-self.size*len(pattern[0]), self.offset+2*j*self.size-self.size*len(pattern[0][0]), 0.4+self.size+2*k*self.z_compress*self.size], group=1,
-                            material=mat, rgba=None)
+                            material=mat, rgba=None, density='100')
                         )
 
         return main_body
