@@ -195,15 +195,26 @@ class MujocoEnv(metaclass=EnvMeta):
             raise ValueError("executing action in terminated episode")
 
         self.timestep += 1
-        self._pre_action(action)
+        # self._pre_action(action)
+        # end_time = self.cur_time + self.control_timestep
+        # while self.cur_time < end_time:
+        #     self.sim.step()
+        #     self.cur_time += self.model_timestep
+
+        ### ADDED, allows for higher-freq control than policy input ### 
         end_time = self.cur_time + self.control_timestep
+        policy_step = True
         while self.cur_time < end_time:
+            self._pre_action(action, policy_step)
             self.sim.step()
             self.cur_time += self.model_timestep
+            policy_step = False
+
+
         reward, done, info = self._post_action(action)
         return self._get_observation(), reward, done, info
 
-    def _pre_action(self, action):
+    def _pre_action(self, action, policy_step):
         """Do any preprocessing before taking an action."""
         self.sim.data.ctrl[:] = action
 

@@ -27,3 +27,4 @@ class Sawyer(Robot):
     @property
     def init_qpos(self):
         return np.array([0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161])
+        # return np.array([-0.23429241, -1.1364233,  0.336434  ,2.18, -0.16150611 , 0.31906261,  0])
