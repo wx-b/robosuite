@@ -212,7 +212,6 @@ class RaiseDropAndRelease(DirectReachAndGrab):
             self.has_released = True
 
         action = np.concatenate([delta_x, orientation_error, [gripper_action]])
-        print(action)
         return action
 
 if __name__ == "__main__":
