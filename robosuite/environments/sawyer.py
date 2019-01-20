@@ -332,10 +332,15 @@ class SawyerEnv(MujocoEnv):
         """
         Returns the DoF of the robot (with grippers).
         """
-        dof = self.mujoco_robot.dof
-        if self.has_gripper:
-            dof += self.gripper.dof
-        return dof
+
+        ### ADDED ###
+        dof = self.controller.control_dim + 1 
+        return dof 
+
+        # dof = self.mujoco_robot.dof
+        # if self.has_gripper:
+        #     dof += self.gripper.dof
+        # return dof
 
     def pose_in_base_from_name(self, name):
         """
