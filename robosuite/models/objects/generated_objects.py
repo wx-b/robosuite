@@ -461,6 +461,56 @@ class HoleObject(MujocoGeneratedObject):
     def get_visual(self, name=None, site=None):
         return self.get_collision(name, site)
 
+class Hole3dObject(MujocoGeneratedObject):
+    """
+    Generates the Pot object with side handles (used in BaxterLift)
+    """
+
+    def __init__(
+        self,
+        size=0.01,
+        pattern=[[1,1,1,1,1,1,1],[1,1,0,1,1,1,1],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[1,1,1,1,1,1,1]],
+        offset =0,
+        z_compress = 1.0):
+        super().__init__()
+        self.size = size
+        self.pattern = pattern
+        self.offset = offset
+        self.z_compress = z_compress
+    def get_bottom_offset(self):
+        return np.array([0, 0, 0])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.size*2*len(self.pattern)])
+
+    def get_horizontal_radius(self):
+        return np.sqrt(2) * (4*self.size)
+
+    def get_collision(self, name=None, site=None):
+        main_body = new_body()
+        if name is not None:
+            main_body.set("name", name)
+        pattern = self.pattern
+        for k in range(len(pattern)):
+            for i in range(len(pattern[0])):
+                for j in range(len(pattern[0][0])):
+                    if(pattern[k][i][j]>0):
+                        mat = 'lego'
+                        if k < len(pattern)-1 and i > 0 and j > 0 and i < len(pattern[0]) -1 and j < len(pattern[0][0])-1 :
+                            mat = 'lego1'
+                        main_body.append(
+                        new_geom(
+                            geom_type="box", size=[pattern[k][i][j]*self.size,pattern[k][i][j]*self.size, self.z_compress*self.size], pos=[self.offset+2*i*self.size-self.size*len(pattern[0]), self.offset+2*j*self.size-self.size*len(pattern[0][0]),self.size+2*k*self.z_compress*self.size], group=1,
+                            material=mat, rgba=None, density='100')
+                        )
+
+        return main_body
+
+        # Check if point is within the grid
+    def get_visual(self, name=None, site=None):
+        return self.get_collision(name, site)
+
+
 class GridObject(MujocoGeneratedObject):
     """
     Generates the Pot object with side handles (used in BaxterLift)

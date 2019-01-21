@@ -5,7 +5,7 @@ from robosuite.utils.transform_utils import convert_quat
 from robosuite.environments.sawyer import SawyerEnv
 
 from robosuite.models.arenas import LegoArena
-from robosuite.models.objects import HoleObject, GridObject
+from robosuite.models.objects import Hole3dObject, GridObject
 from robosuite.models.robots import Sawyer
 from robosuite.models.tasks import TableTopTask, UniformRandomSampler
 
@@ -111,7 +111,7 @@ class SawyerAssembly(SawyerEnv):
             self.placement_initializer = placement_initializer
         else:
             self.placement_initializer = UniformRandomSampler(
-                x_range=[-0.3, 0.1],
+                x_range=[-0.3, 0.2],
                 y_range=[-0.3, 0.2],
                 ensure_object_boundary_in_range=False,
                 z_rotation=True,
@@ -139,13 +139,30 @@ class SawyerAssembly(SawyerEnv):
         """
         Returns a randomly sampled block,hole
         """
-        blocks = [[[1,1,1],[1,0,1]],[[1,1,1],[1,0,0]],[[1,1,0],[1,1,0]],[[1,1,0],[0,1,1]],[[1,1,1],[0,1,0]],[[1,1,1],[0,0,0]]]
-        hole = [[[0,0,0],[0,0,0],[0,0,0]],[[0,0,0],[0,0,0],[0,0,0]]]
+        blocks = [[1,1,1],[1,0,1],[1,1,0],[1,0,0]]
+        hole_side = [[0,0,0],[0,0.95,0],[0,0,1],[0,1,1]]
+        hole = [[[0,0,0],[0,0,0],[0,0,0]]]
 
-        self.block=blocks[0]
+        # Pick out two sides of block1
+        pick = random.randint(0,len(blocks)-1)
+        side1 = blocks[pick]
+        hole1 = hole_side[pick]
+        pick = random.randint(0,len(blocks)-1)
+        side2 = blocks[pick]
+        hole2 = hole_side[pick]
+
+        block1 = [[[1,1,1],[1,1,1],[1,1,1]],
+                [[0,0,0],[0.9,.9,.9],[0,0,0]],
+                [[0,0,0],[.9,.9,.9],[0,0,0]],
+                    ]
+        block1[0][0] = side1
+        block1[0][2] = side2
+        hole[0][0] = hole1
+        hole[0][2] = hole2
+
         # Generate hole
         grid_x = 8
-        grid_z = 2
+        grid_z = 1
         grid = np.ones((grid_z,grid_x,grid_x))
 
         offset_x = random.randint(1,grid_x-4)
@@ -157,10 +174,6 @@ class SawyerAssembly(SawyerEnv):
                     grid[z][offset_y+y][offset_x+x] = hole[z][y][x]
         grid = np.rot90(grid,random.randint(0,3),(1,2))
         # Generate Pieces
-        block1 = [[[1,1,1],[1,1,1],[1,1,1]],
-                [[0,0,0],[0.9,.9,.9],[0,0,0]],
-                [[0,0,0],[.9,.9,.9],[0,0,0]],
-                    ]
 
         block2 = [ [[1,1,1],[0,0,0],[1,1,1]],
                 [[1,1,1],[0,0,0],[1,1,1]],
@@ -184,9 +197,9 @@ class SawyerAssembly(SawyerEnv):
         # initialize objects of interest
         h1,h2,pg = self.lego_sample()
 
-        h1 = GridObject(size= 0.017, pattern = h1)
-        h2 = GridObject(size= 0.017, pattern = h2)
-        self.grid = GridObject(size=0.0175, pattern=pg,offset=0.2)
+        h1 = Hole3dObject(size= 0.017, pattern = h1)
+        h2 = Hole3dObject(size= 0.017, pattern = h2)
+        self.grid = GridObject(size=0.0175, pattern=pg,offset=0.25)
         self.mujoco_arena.table_body.append(self.grid.get_collision(name='grid',site=True))
         self.mujoco_objects = OrderedDict([("block1", h1),("block2", h2)])
 
