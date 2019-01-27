@@ -1,5 +1,5 @@
 import numpy as np
-
+import random
 from robosuite.models.objects import MujocoGeneratedObject
 from robosuite.utils.mjcf_utils import new_body, new_geom, new_site
 from robosuite.utils.mjcf_utils import RED, GREEN, BLUE
@@ -789,3 +789,83 @@ class CapsuleObject(MujocoGeneratedObject):
     # returns a copy, Returns xml body node
     def get_visual(self, name=None, site=False):
         return self._get_visual(name=name, site=site, ob_type="capsule")
+
+class AnimalObject(MujocoGeneratedObject):
+    """
+    Generates bounding box hole object
+    """
+
+    def __init__(self):
+        super().__init__()
+        # generate random vector
+        self.body_x = random.uniform(0.02,0.035)
+        self.body_y = random.uniform(0.015,0.03)
+        self.body_z = random.uniform(0.01,0.035)
+        self.legs_x = random.uniform(0.005,0.01)
+        self.legs_z = random.uniform(0.01,0.035)
+        self.neck_x = random.uniform(0.005,0.01)
+        self.neck_z = random.uniform(0.005,0.01)
+        self.head_y = random.uniform(0.010,0.015)
+        self.head_z = random.uniform(0.005,0.01)
+    def get_bottom_offset(self):
+        return np.array([0, 0, -self.body_z-2*self.legs_z])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.body_z+2*self.neck_z+2*self.head_z])
+
+    def get_horizontal_radius(self):
+        return np.sqrt(2) * 0.4
+
+    def get_collision(self, name=None, site=None):
+        main_body = new_body()
+
+        if name is not None:
+            main_body.set("name", name)
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.body_x,self.body_y,self.body_z],pos=[0, 0, 0], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        #legs
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.legs_x,self.legs_x,self.legs_z],pos=[0.9*self.body_x-self.legs_x, 0.9*self.body_y-self.legs_x, -self.legs_z-self.body_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.legs_x,self.legs_x,self.legs_z],pos=[-0.9*self.body_x+self.legs_x, 0.9*self.body_y-self.legs_x, -self.legs_z-self.body_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.legs_x,self.legs_x,self.legs_z],pos=[0.9*self.body_x-self.legs_x, -0.9*self.body_y+self.legs_x, -self.legs_z-self.body_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.legs_x,self.legs_x,self.legs_z],pos=[-0.9*self.body_x+self.legs_x, -0.9*self.body_y+self.legs_x, -self.legs_z-self.body_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1), name='cube')
+        )
+        #neck
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.neck_x,self.neck_x,self.neck_z],pos=[self.body_x-self.neck_x, 0, self.neck_z+self.body_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        #head
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.head_y,self.neck_x*1.5,self.head_z],pos=[self.body_x-2*self.neck_x+self.head_y, 0, 2*self.neck_z+self.body_z+self.head_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        if site:
+            # add a site as well
+            template = self.get_site_attrib_template()
+            if name is not None:
+                template["name"] = name
+            main_body.append(ET.Element("site", attrib=template))
+        return main_body
+
+    def get_visual(self, name=None, site=None):
+        return self.get_collision(name, site)
