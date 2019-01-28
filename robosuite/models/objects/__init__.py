@@ -27,4 +27,7 @@ from .generated_objects import (
     BallObject,
     CapsuleObject,
     AnimalObject,
+    CarObject,
+    TrainObject,
+    BipedObject,
 )
