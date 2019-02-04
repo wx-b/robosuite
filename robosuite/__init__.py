@@ -9,6 +9,7 @@ from robosuite.environments.sawyer_lego import SawyerLegoEasy
 from robosuite.environments.sawyer_lego import SawyerLegoFit
 from robosuite.environments.sawyer_stack import SawyerStack
 from robosuite.environments.sawyer_pick_place import SawyerPickPlace
+from robosuite.environments.sawyer_clutter import SawyerClutter
 from robosuite.environments.sawyer_nut_assembly import SawyerNutAssembly
 
 from robosuite.environments.baxter_lift import BaxterLift

@@ -30,4 +30,7 @@ from .generated_objects import (
     CarObject,
     TrainObject,
     BipedObject,
+    DumbbellObject,
+    HammerObject,
+    GuitarObject,
 )

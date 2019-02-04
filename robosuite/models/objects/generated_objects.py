@@ -814,7 +814,7 @@ class AnimalObject(MujocoGeneratedObject):
         return np.array([0, 0, self.body_z+2*self.neck_z+2*self.head_z])
 
     def get_horizontal_radius(self):
-        return np.sqrt(2) * 0.4
+        return np.sqrt(self.body_x**2+self.body_y**2)
 
     def get_collision(self, name=None, site=None):
         main_body = new_body()
@@ -845,7 +845,7 @@ class AnimalObject(MujocoGeneratedObject):
         main_body.append(
         new_geom(
             geom_type="box", size=[self.legs_x,self.legs_x,self.legs_z],pos=[-0.9*self.body_x+self.legs_x, -0.9*self.body_y+self.legs_x, -self.legs_z-self.body_z], group=1,
-             rgba=np.append(np.random.uniform(size=3),1), name='cube')
+             rgba=np.append(np.random.uniform(size=3),1),)
         )
         #neck
         main_body.append(
@@ -878,14 +878,14 @@ class CarObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_x = random.uniform(0.02,0.035)*2
-        self.body_y = random.uniform(0.015,0.03)*2
-        self.body_z = random.uniform(0.02,self.body_x/2)
+        self.body_x = random.uniform(0.02,0.035)
+        self.body_y = random.uniform(0.015,0.03)
+        self.body_z = random.uniform(0.01,self.body_x/2)
         self.wheels_r = random.uniform(self.body_x/7,self.body_x/4)
-        self.wheels_z = random.uniform(0.004,0.008)
-        self.top_x = random.uniform(0.015,0.9*self.body_x)
-        self.top_y = random.uniform(0.012,0.9*self.body_y)
-        self.top_z = random.uniform(0.007,0.9*self.body_z)
+        self.wheels_z = random.uniform(0.002,0.004)
+        self.top_x = random.uniform(0.08,0.9*self.body_x)
+        self.top_y = random.uniform(0.007,0.9*self.body_y)
+        self.top_z = random.uniform(0.004,0.9*self.body_z)
     def get_bottom_offset(self):
         return np.array([0, 0, -self.body_z-self.wheels_r])
 
@@ -893,7 +893,7 @@ class CarObject(MujocoGeneratedObject):
         return np.array([0, 0, self.body_z+2*self.neck_z+2*self.head_z])
 
     def get_horizontal_radius(self):
-        return np.sqrt(2) * 0.4
+        return np.sqrt(self.body_x**2+self.body_y**2)
 
     def get_collision(self, name=None, site=None):
         main_body = new_body()
@@ -924,7 +924,7 @@ class CarObject(MujocoGeneratedObject):
         main_body.append(
         new_geom(
             geom_type="cylinder", size=[self.wheels_r,self.wheels_z],pos=[-self.body_x, -self.body_y+self.wheels_r, -self.body_z], group=1, zaxis='1 0 0',
-             rgba=np.append(np.random.uniform(size=3),1), name='cube')
+             rgba=np.append(np.random.uniform(size=3),1),)
         )
         #top
         main_body.append(
@@ -952,19 +952,19 @@ class TrainObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_x = random.uniform(0.02,0.035)*2
-        self.body_y = random.uniform(0.02,0.035)*2
-        self.body_z = random.uniform(0.02,self.body_x)
+        self.body_x = random.uniform(0.02,0.035)
+        self.body_y = random.uniform(0.02,0.035)
+        self.body_z = random.uniform(0.01,self.body_x)
         self.wheels_r = random.uniform(self.body_x/6,self.body_x/4)
-        self.wheels_z = random.uniform(0.004,0.008)
-        self.top_x = random.uniform(0.015,0.9*self.body_x)
+        self.wheels_z = random.uniform(0.002,0.006)
+        self.top_x = random.uniform(0.01,0.9*self.body_x)
         self.top_r = 0.99*self.body_x
         self.top_z = 0.99*self.body_y
         self.cabin_x = 0.99*self.body_x
         self.cabin_y = random.uniform(0.20,0.3)*self.body_y
         self.cabin_z = random.uniform(0.5,0.8)*self.top_r
-        self.chimney_r = random.uniform(0.008,0.015)
-        self.chimney_z = random.uniform(0.02,0.04)
+        self.chimney_r = random.uniform(0.004,0.01)
+        self.chimney_z = random.uniform(0.01,0.03)
     def get_bottom_offset(self):
         return np.array([0, 0, -self.body_z-self.wheels_r])
 
@@ -972,7 +972,7 @@ class TrainObject(MujocoGeneratedObject):
         return np.array([0, 0, self.body_z+2*self.neck_z+2*self.head_z])
 
     def get_horizontal_radius(self):
-        return np.sqrt(2) * 0.4
+        return np.sqrt(self.body_x**2+self.body_y**2)
 
     def get_collision(self, name=None, site=None):
         main_body = new_body()
@@ -1003,7 +1003,7 @@ class TrainObject(MujocoGeneratedObject):
         main_body.append(
         new_geom(
             geom_type="cylinder", size=[self.wheels_r,self.wheels_z],pos=[-self.body_x, -self.body_y+self.wheels_r, -self.body_z], group=1, zaxis='1 0 0',
-             rgba=np.append(np.random.uniform(size=3),1), name='cube')
+             rgba=np.append(np.random.uniform(size=3),1),)
         )
         #top
         main_body.append(
@@ -1058,7 +1058,7 @@ class BipedObject(MujocoGeneratedObject):
         return np.array([0, 0, self.body_z+2*self.head_z])
 
     def get_horizontal_radius(self):
-        return np.sqrt(2) * 0.4
+        return np.sqrt(self.body_x**2+self.body_y**2)
 
     def get_collision(self, name=None, site=None):
         main_body = new_body()
@@ -1074,7 +1074,7 @@ class BipedObject(MujocoGeneratedObject):
         main_body.append(
         new_geom(
             geom_type="box", size=[self.legs_x,self.body_y,self.legs_z],pos=[self.body_x-self.legs_x, 0, -self.legs_z-self.body_z], group=1,
-             rgba=np.append(np.random.uniform(size=3),1),name="cube")
+             rgba=np.append(np.random.uniform(size=3),1))
         )
         main_body.append(
         new_geom(
@@ -1097,6 +1097,174 @@ class BipedObject(MujocoGeneratedObject):
         main_body.append(
         new_geom(
             geom_type="box", size=[self.head_y,self.head_y,self.head_z],pos=[0, 0, self.body_z+self.head_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        if site:
+            # add a site as well
+            template = self.get_site_attrib_template()
+            if name is not None:
+                template["name"] = name
+            main_body.append(ET.Element("site", attrib=template))
+        return main_body
+
+    def get_visual(self, name=None, site=None):
+        return self.get_collision(name, site)
+
+
+class DumbbellObject(MujocoGeneratedObject):
+    """
+    Generates bounding box hole object
+    """
+
+    def __init__(self):
+        super().__init__()
+        # generate random vector
+        self.body_r = random.uniform(0.007,0.011)
+        self.body_z = random.uniform(0.015,0.025)
+        self.head_r = random.uniform(1.5*self.body_r,2*self.body_r)
+        self.head_z = random.uniform(0.005,0.01)
+    def get_bottom_offset(self):
+        return np.array([0, 0, -self.body_z-2*self.head_z])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.body_z+2*self.head_z])
+
+    def get_horizontal_radius(self):
+        return self.body_z+self.head_z
+
+    def get_collision(self, name=None, site=None):
+        main_body = new_body()
+
+        if name is not None:
+            main_body.set("name", name)
+        main_body.append(
+        new_geom(
+            geom_type="cylinder", size=[self.body_r,self.body_z],pos=[0, 0, 0], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        #head
+        main_body.append(
+        new_geom(
+            geom_type="cylinder", size=[self.head_r,self.head_z],pos=[0, 0, -self.head_z-self.body_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        main_body.append(
+        new_geom(
+            geom_type="cylinder", size=[self.head_r,self.head_z],pos=[0, 0, self.head_z+self.body_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )        
+
+        if site:
+            # add a site as well
+            template = self.get_site_attrib_template()
+            if name is not None:
+                template["name"] = name
+            main_body.append(ET.Element("site", attrib=template))
+        return main_body
+
+    def get_visual(self, name=None, site=None):
+        return self.get_collision(name, site)
+
+class HammerObject(MujocoGeneratedObject):
+    """
+    Generates bounding box hole object
+    """
+
+    def __init__(self):
+        super().__init__()
+        # generate random vector
+        self.body_r = random.uniform(0.007,0.011)
+        self.body_z = random.uniform(0.025,0.035)
+        self.head_r = random.uniform(1.5*self.body_r,3*self.body_r)
+        self.head_z = random.uniform(1.5*self.body_r,2*self.body_r)
+    def get_bottom_offset(self):
+        return np.array([0, 0, -self.body_z])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.body_z+2*self.head_z])
+
+    def get_horizontal_radius(self):
+        return self.body_r+self.head_r
+
+    def get_collision(self, name=None, site=None):
+        main_body = new_body()
+
+        if name is not None:
+            main_body.set("name", name)
+        main_body.append(
+        new_geom(
+            geom_type="cylinder", size=[self.body_r,self.body_z],pos=[0, 0, 0], group=1,
+             rgba=np.append(np.random.uniform(size=3),1))
+        )
+        #head
+        main_body.append(
+        new_geom(
+            geom_type="cylinder", size=[self.head_r,self.head_z],pos=[0, 0, self.head_r+self.body_z], group=1,
+             rgba=np.append(np.random.uniform(size=3),1),zaxis='1 0 0')
+        )
+    
+
+        if site:
+            # add a site as well
+            template = self.get_site_attrib_template()
+            if name is not None:
+                template["name"] = name
+            main_body.append(ET.Element("site", attrib=template))
+        return main_body
+
+    def get_visual(self, name=None, site=None):
+        return self.get_collision(name, site)
+
+
+class GuitarObject(MujocoGeneratedObject):
+    """
+    Generates bounding box hole object
+    """
+
+    def __init__(self):
+        super().__init__()
+        # generate random vector
+        self.body_r = random.uniform(0.018,0.025)/2
+        self.body_z = random.uniform(0.015,0.020)/2
+        self.head_r = random.uniform(1.5,2)*self.body_r
+        self.head_z = self.body_z
+        self.arm_x = random.uniform(0.008,0.010)/2
+        self.arm_y = random.uniform(1.4,1.8)*(self.body_r+self.head_r)
+        self.arm_z = 0.007/2
+    def get_bottom_offset(self):
+        return np.array([0, 0, -self.body_z])
+
+    def get_top_offset(self):
+        return np.array([0, 0, self.body_z+2*self.head_z])
+
+    def get_horizontal_radius(self):
+        return self.body_r+self.head_r
+
+    def get_collision(self, name=None, site=None):
+        main_body = new_body()
+        color = np.append(np.random.uniform(size=3),1)
+        if name is not None:
+            main_body.set("name", name)
+        main_body.append(
+        new_geom(
+            geom_type="cylinder", size=[self.body_r,self.body_z],pos=[0, self.head_r+0.5*self.body_r, 0], group=1,
+             rgba=color)
+        )
+        #head
+        main_body.append(
+        new_geom(
+            geom_type="cylinder", size=[self.head_r,self.head_z],pos=[0, 0, 0], group=1,
+             rgba=color)
+        )
+        main_body.append(
+        new_geom(
+            geom_type="cylinder", size=[self.head_r*0.5,self.head_z],pos=[0, 0, 0.001], group=1,
+             rgba=[0,0,0,1])
+        )
+        #arm
+        main_body.append(
+        new_geom(
+            geom_type="box", size=[self.arm_x,self.arm_y,self.arm_z],pos=[0, self.arm_y, self.body_z], group=1,
              rgba=np.append(np.random.uniform(size=3),1))
         )
         if site:
