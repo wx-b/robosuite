@@ -157,23 +157,26 @@ class PickPlaceTask(Task):
         """Places objects randomly until no collisions or max iterations hit."""
         placed_objects = []
         index = 0
-        z_level = np.array([0.0,0.0,0.0])
+        z_level = np.array([0.0,0.0,0.02])
+        max_top_offset = np.array([0.0,0.0,0.0])
         # place objects by rejection sampling
         for _, obj_mjcf in self.mujoco_objects.items():
             horizontal_radius = obj_mjcf.get_horizontal_radius()
             bottom_offset = obj_mjcf.get_bottom_offset()
+            top_offset = obj_mjcf.get_top_offset()
+
             success = False
             while not success:
 
                 for _ in range(5000):  # 5000 retries
-                    bin_x_half = self.bin_size[0] / 2 - horizontal_radius - 0.1
-                    bin_y_half = self.bin_size[1] / 2 - horizontal_radius - 0.1
+                    bin_x_half = self.bin_size[0] / 2 - horizontal_radius - 0.08
+                    bin_y_half = self.bin_size[1] / 2 - horizontal_radius - 0.08
                     object_x = np.random.uniform(high=bin_x_half, low=-bin_x_half)
                     object_y = np.random.uniform(high=bin_y_half, low=-bin_y_half)
 
                     # make sure objects do not overlap
                     object_xy = np.array([object_x, object_y, 0])
-                    pos = self.bin_offset - bottom_offset + object_xy - z_level
+                    pos = self.bin_offset - bottom_offset + object_xy + z_level
                     location_valid = True
                     for pos2, r_x, r_z in placed_objects:
                         dist_x = np.linalg.norm(pos[:2] - pos2[:2], np.inf)
@@ -191,6 +194,9 @@ class PickPlaceTask(Task):
                         quat = self.sample_quat()
                         self.objects[index].set("quat", array_to_string(quat))
                         success = True
+                        max_top_offset = np.maximum(max_top_offset,top_offset+bottom_offset)
                         break
-                z_level += bottom_offset
+                if not success:
+                    z_level += max_top_offset
+                    max_top_offset = np.array([0.0,0.0,0.0])
             index += 1

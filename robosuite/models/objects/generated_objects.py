@@ -798,7 +798,7 @@ class AnimalObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_x = random.uniform(0.02,0.035)
+        self.body_x = random.uniform(0.02,0.033)
         self.body_y = random.uniform(0.015,0.03)
         self.body_z = random.uniform(0.01,0.035)
         self.legs_x = random.uniform(0.005,0.01)
@@ -878,22 +878,22 @@ class CarObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_x = random.uniform(0.02,0.035)
+        self.body_x = random.uniform(0.02,0.033)
         self.body_y = random.uniform(0.015,0.03)
         self.body_z = random.uniform(0.01,self.body_x/2)
-        self.wheels_r = random.uniform(self.body_x/7,self.body_x/4)
+        self.wheels_r = random.uniform(self.body_x/5,self.body_x/3)
         self.wheels_z = random.uniform(0.002,0.004)
-        self.top_x = random.uniform(0.08,0.9*self.body_x)
+        self.top_x = random.uniform(0.008,0.9*self.body_x)
         self.top_y = random.uniform(0.007,0.9*self.body_y)
         self.top_z = random.uniform(0.004,0.9*self.body_z)
     def get_bottom_offset(self):
         return np.array([0, 0, -self.body_z-self.wheels_r])
 
     def get_top_offset(self):
-        return np.array([0, 0, self.body_z+2*self.neck_z+2*self.head_z])
+        return np.array([0, 0, self.body_z+2*self.top_z])
 
     def get_horizontal_radius(self):
-        return np.sqrt(self.body_x**2+self.body_y**2)
+        return np.sqrt(self.body_x**2+(self.body_y+2*self.wheels_z)**2)
 
     def get_collision(self, name=None, site=None):
         main_body = new_body()
@@ -952,8 +952,8 @@ class TrainObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_x = random.uniform(0.02,0.035)
-        self.body_y = random.uniform(0.02,0.035)
+        self.body_x = random.uniform(0.017,0.032)
+        self.body_y = random.uniform(0.017,0.032)
         self.body_z = random.uniform(0.01,self.body_x)
         self.wheels_r = random.uniform(self.body_x/6,self.body_x/4)
         self.wheels_z = random.uniform(0.002,0.006)
@@ -969,10 +969,10 @@ class TrainObject(MujocoGeneratedObject):
         return np.array([0, 0, -self.body_z-self.wheels_r])
 
     def get_top_offset(self):
-        return np.array([0, 0, self.body_z+2*self.neck_z+2*self.head_z])
+        return np.array([0, 0, self.body_z+2*self.chimney_z+self.top_r])
 
     def get_horizontal_radius(self):
-        return np.sqrt(self.body_x**2+self.body_y**2)
+        return np.sqrt(self.body_x**2+(self.body_y+2*self.wheels_z)**2)
 
     def get_collision(self, name=None, site=None):
         main_body = new_body()
@@ -1042,7 +1042,7 @@ class BipedObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_x = random.uniform(0.02,0.035)
+        self.body_x = random.uniform(0.02,0.033)
         self.body_y = random.uniform(0.007,0.015)
         self.body_z = random.uniform(0.02,0.05)
         self.legs_x = random.uniform(0.005,0.01)
@@ -1085,12 +1085,12 @@ class BipedObject(MujocoGeneratedObject):
         #hands
         main_body.append(
         new_geom(
-            geom_type="box", size=[self.hands_x,self.body_y,self.hands_z],pos=[self.body_x+self.hands_x, 0, -self.hands_z+self.body_z], group=1,
+            geom_type="box", size=[self.hands_x,2*self.body_y,self.hands_z],pos=[self.body_x+self.hands_x, self.body_y, -self.hands_z+self.body_z], group=1,
              rgba=np.append(np.random.uniform(size=3),1))
         )
         main_body.append(
         new_geom(
-            geom_type="box", size=[self.hands_x,self.body_y,self.hands_z],pos=[-self.body_x-self.hands_x, 0, -self.hands_z+self.body_z], group=1,
+            geom_type="box", size=[self.hands_x,2*self.body_y,self.hands_z],pos=[-self.body_x-self.hands_x, self.body_y, -self.hands_z+self.body_z], group=1,
              rgba=np.append(np.random.uniform(size=3),1))
         )
         #head
@@ -1119,9 +1119,9 @@ class DumbbellObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_r = random.uniform(0.007,0.011)
+        self.body_r = random.uniform(0.009,0.013)
         self.body_z = random.uniform(0.015,0.025)
-        self.head_r = random.uniform(1.5*self.body_r,2*self.body_r)
+        self.head_r = random.uniform(1.6*self.body_r,2*self.body_r)
         self.head_z = random.uniform(0.005,0.01)
     def get_bottom_offset(self):
         return np.array([0, 0, -self.body_z-2*self.head_z])
@@ -1173,9 +1173,9 @@ class HammerObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_r = random.uniform(0.007,0.011)
-        self.body_z = random.uniform(0.025,0.035)
-        self.head_r = random.uniform(1.5*self.body_r,3*self.body_r)
+        self.body_r = random.uniform(0.009,0.013)
+        self.body_z = random.uniform(0.027,0.037)
+        self.head_r = random.uniform(1.6*self.body_r,3*self.body_r)
         self.head_z = random.uniform(1.5*self.body_r,2*self.body_r)
     def get_bottom_offset(self):
         return np.array([0, 0, -self.body_z])
@@ -1199,7 +1199,7 @@ class HammerObject(MujocoGeneratedObject):
         #head
         main_body.append(
         new_geom(
-            geom_type="cylinder", size=[self.head_r,self.head_z],pos=[0, 0, self.head_r+self.body_z], group=1,
+            geom_type="cylinder", size=[self.head_r,self.head_z],pos=[0, 0, 0.95*self.head_r+self.body_z], group=1,
              rgba=np.append(np.random.uniform(size=3),1),zaxis='1 0 0')
         )
     
@@ -1224,12 +1224,12 @@ class GuitarObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_r = random.uniform(0.018,0.025)/2
-        self.body_z = random.uniform(0.015,0.020)/2
+        self.body_r = random.uniform(0.018,0.025)/1.7
+        self.body_z = random.uniform(0.017,0.025)/1.4
         self.head_r = random.uniform(1.5,2)*self.body_r
         self.head_z = self.body_z
         self.arm_x = random.uniform(0.008,0.010)/2
-        self.arm_y = random.uniform(1.4,1.8)*(self.body_r+self.head_r)
+        self.arm_y = random.uniform(1.2,1.6)*(self.body_r+self.head_r)
         self.arm_z = 0.007/2
     def get_bottom_offset(self):
         return np.array([0, 0, -self.body_z])
