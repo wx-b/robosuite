@@ -878,10 +878,10 @@ class CarObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_x = random.uniform(0.02,0.033)
+        self.body_x = random.uniform(0.02,0.031)
         self.body_y = random.uniform(0.015,0.03)
         self.body_z = random.uniform(0.01,self.body_x/2)
-        self.wheels_r = random.uniform(self.body_x/5,self.body_x/3)
+        self.wheels_r = random.uniform(self.body_x/4.0,self.body_x/3.0)
         self.wheels_z = random.uniform(0.002,0.004)
         self.top_x = random.uniform(0.008,0.9*self.body_x)
         self.top_y = random.uniform(0.007,0.9*self.body_y)
@@ -952,10 +952,10 @@ class TrainObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_x = random.uniform(0.017,0.032)
-        self.body_y = random.uniform(0.017,0.032)
-        self.body_z = random.uniform(0.01,self.body_x)
-        self.wheels_r = random.uniform(self.body_x/6,self.body_x/4)
+        self.body_x = random.uniform(0.017,0.031)
+        self.body_y = random.uniform(0.025,0.045)
+        self.body_z = random.uniform(0.01,0.025)
+        self.wheels_r = random.uniform(self.body_x/4.0,self.body_x/3.0)
         self.wheels_z = random.uniform(0.002,0.006)
         self.top_x = random.uniform(0.01,0.9*self.body_x)
         self.top_r = 0.99*self.body_x
@@ -1042,13 +1042,13 @@ class BipedObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_x = random.uniform(0.02,0.033)
-        self.body_y = random.uniform(0.007,0.015)
-        self.body_z = random.uniform(0.02,0.05)
+        self.body_x = random.uniform(0.02,0.031)
+        self.body_y = random.uniform(0.017,0.022)
+        self.body_z = random.uniform(0.015,0.03)
         self.legs_x = random.uniform(0.005,0.01)
-        self.legs_z = random.uniform(0.01,self.body_z)
+        self.legs_z = random.uniform(0.005,self.body_z)
         self.hands_x = random.uniform(0.005,0.01)
-        self.hands_z = random.uniform(0.01,0.5*self.legs_z)
+        self.hands_z = random.uniform(0.01,0.3*self.legs_z)
         self.head_y = self.body_y
         self.head_z = random.uniform(0.01,0.02)
     def get_bottom_offset(self):
@@ -1224,7 +1224,7 @@ class GuitarObject(MujocoGeneratedObject):
     def __init__(self):
         super().__init__()
         # generate random vector
-        self.body_r = random.uniform(0.018,0.025)/1.7
+        self.body_r = random.uniform(0.021,0.027)/1.7
         self.body_z = random.uniform(0.017,0.025)/1.4
         self.head_r = random.uniform(1.5,2)*self.body_r
         self.head_z = self.body_z

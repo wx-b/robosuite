@@ -205,7 +205,7 @@ class SawyerClutter(SawyerEnv):
         self.visual_objects = lst
 
         lst = []
-        for j in range(12):
+        for j in range(10):
             i = random.randint(0,len(self.ob_inits)-1)
             ob = self.ob_inits[i]()
             lst.append((str(self.item_names[i]) + str(j), ob))
