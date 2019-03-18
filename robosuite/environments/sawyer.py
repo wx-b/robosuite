@@ -109,7 +109,7 @@ class SawyerEnv(MujocoEnv):
         """
         super()._reset_internal()
         self.sim.data.qpos[self._ref_joint_pos_indexes] = self.mujoco_robot.init_qpos
-
+        
         if self.has_gripper:
             self.sim.data.qpos[
                 self._ref_joint_gripper_actuator_indexes
@@ -123,6 +123,7 @@ class SawyerEnv(MujocoEnv):
 
         # indices for joints in qpos, qvel
         self.robot_joints = list(self.mujoco_robot.joints)
+        #print(self.robot_joints)
         self._ref_joint_pos_indexes = [
             self.sim.model.get_joint_qpos_addr(x) for x in self.robot_joints
         ]
@@ -147,6 +148,10 @@ class SawyerEnv(MujocoEnv):
             ]
             self._ref_gripper_joint_vel_indexes = [
                 self.sim.model.get_joint_qvel_addr(x) for x in self.gripper_joints
+            ]
+
+            self._ref_gripper_joint_qpos_indexes = [
+                self.sim.model.get_joint_qpos_addr(x) for x in self.gripper_joints
             ]
 
         # indices for joint pos actuation, joint vel actuation, gripper actuation
@@ -320,6 +325,40 @@ class SawyerEnv(MujocoEnv):
         self.sim.data.qpos[self._ref_joint_pos_indexes] = jpos
         self.sim.forward()
 
+    def set_robot_gripper_position(self, pos):
+        self.sim.data.qpos[self._ref_gripper_joint_pos_indexes] = pos
+        self.sim.forward()
+
+    def rescale_gripper_joint_positions(self, jpos):
+        #low, high = self.action_spec
+        #print(low)
+        #jpos = np.clip(jpos, low, high)
+
+        # rescale normalized action to control ranges
+        ctrl_range = self.sim.model.jnt_range[self._ref_gripper_joint_qpos_indexes]
+        bias = 0.5 * (ctrl_range[:, 1] + ctrl_range[:, 0])
+        weight = 0.5 * (ctrl_range[:, 1] - ctrl_range[:, 0])
+
+        rescaled = bias + weight * jpos
+        return rescaled * 1./ 5.
+
+    def set_robot_pose(self, pose, cube_size=0.2):
+        #low, high = self.action_spec
+        #pose = np.clip(pose, low, high)
+        pose[-1] = np.clip(pose[-1], -1, 1)
+
+        #gripper = self.rescale_gripper_joint_positions(pose[-1])
+        gripper = self.gripper.format_action([pose[-1]])
+
+        pose = np.concatenate([pose[:-1], gripper])
+        rescaled = pose
+
+        self.sim.data.ctrl[:] = gripper
+        self.set_robot_joint_positions(rescaled[:-2])
+
+
+        #self.sim.forward()
+        
     @property
     def _right_hand_joint_cartesian_pose(self):
         """

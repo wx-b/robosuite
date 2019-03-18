@@ -9,7 +9,7 @@ import numpy as np
 import robosuite
 import robosuite.utils.transform_utils as T
 from robosuite.wrappers import Wrapper
-
+import pybullet as p
 
 class IKWrapper(Wrapper):
     env = None
@@ -102,16 +102,30 @@ class IKWrapper(Wrapper):
                 "control currently."
             )
 
-        # keep trying to reach the target in a closed-loop
-        for i in range(self.action_repeat):
-            ret = self.env.step(low_action)
-            velocities = self.controller.get_control()
-            if self.env.mujoco_robot.name == "sawyer":
-                low_action = np.concatenate([velocities, action[7:]])
-            else:
-                low_action = np.concatenate([velocities, action[14:]])
+        if self.done:
+            raise ValueError("executing action in terminated episode")
 
-        return ret
+        self.env.timestep += 1
+
+        low_action[-1] = np.clip(low_action[-1], -1, 1)
+        gripper = self.env.gripper.format_action([low_action[-1]])
+        ctrl_range = self.env.sim.model.actuator_ctrlrange
+
+        joint_actions = low_action[:-1]
+        joint_actions = np.clip(joint_actions, ctrl_range[:-2,0], ctrl_range[:-2,1])
+        self.env.sim.data.ctrl[:] = np.concatenate([joint_actions, gripper])
+
+        try:
+            self.env.sim.step()
+        except Exception as e:
+            print(e)
+            import os
+            os._exit(1)
+
+        self.env.cur_time += self.env.model_timestep
+
+        reward, done, info = self.env._post_action(action)
+        return self.env._get_observation(), reward, done, info
 
     def _make_input(self, action, old_quat):
         """
@@ -119,8 +133,14 @@ class IKWrapper(Wrapper):
         array. The first three elements are taken to be displacement in position, and a
         quaternion indicating the change in rotation with respect to @old_quat.
         """
+
+        act = T.mat2euler(T.quat2mat(action[3:7]))
+        act = np.clip(act, -np.pi/40, np.pi/40)
+        act = p.getQuaternionFromEuler(act)
+
+        rotation = T.quat2mat(T.quat_multiply(old_quat, act))
         return {
-            "dpos": action[:3],
+            "dpos": action[:3], #np.clip(action[:3], -0.05, 0.05),
             # IK controller takes an absolute orientation in robot base frame
-            "rotation": T.quat2mat(T.quat_multiply(old_quat, action[3:7])),
+            "rotation": rotation,
         }

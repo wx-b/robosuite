@@ -158,6 +158,7 @@ class SawyerLift(SawyerEnv):
             size_max=[0.022, 0.022, 0.022],  # [0.018, 0.018, 0.018])
             rgba=[1, 0, 0, 1],
         )
+        self.cube_size = cube.size[0]
         self.mujoco_objects = OrderedDict([("cube", cube)])
 
         # task includes arena, robot, and objects of interest
@@ -320,8 +321,24 @@ class SawyerLift(SawyerEnv):
         cube_height = self.sim.data.body_xpos[self.cube_body_id][2]
         table_height = self.table_full_size[2]
 
+        touch_left_finger, touch_right_finger = False, False
+        for i in range(self.sim.data.ncon):
+                c = self.sim.data.contact[i]
+                if c.geom1 in self.l_finger_geom_ids and c.geom2 == self.cube_geom_id:
+                    touch_left_finger = True
+                if c.geom1 == self.cube_geom_id and c.geom2 in self.l_finger_geom_ids:
+                    touch_left_finger = True
+                if c.geom1 in self.r_finger_geom_ids and c.geom2 == self.cube_geom_id:
+                    touch_right_finger = True
+                if c.geom1 == self.cube_geom_id and c.geom2 in self.r_finger_geom_ids:
+                    touch_right_finger = True
+        if touch_left_finger and touch_right_finger:
+            grasped = True
+        else:
+            grasped = False
+
         # cube is higher than the table top above a margin
-        return cube_height > table_height + 0.04
+        return grasped and (cube_height > table_height + 0.04)
 
     def _gripper_visualization(self):
         """

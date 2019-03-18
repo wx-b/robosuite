@@ -44,13 +44,13 @@ class SawyerIKController(Controller):
         self.setup_inverse_kinematics()
 
         # Should be in (0, 1], smaller values mean less sensitivity.
-        self.user_sensitivity = .3
+        self.user_sensitivity = 0.3
 
         self.sync_state()
 
     def get_control(self, dpos=None, rotation=None):
         """
-        Returns joint velocities to control the robot after the target end effector 
+        Returns joint velocities to control the robot after the target end effector
         position and orientation are updated from arguments @dpos and @rotation.
         If no arguments are provided, joint velocities will be computed based
         on the previously recorded target.
@@ -67,7 +67,8 @@ class SawyerIKController(Controller):
         """
 
         # Sync joint positions for IK.
-        self.sync_ik_robot(self.robot_jpos_getter())
+        #self.sync_state()
+        self.sync_ik_robot(self.robot_jpos_getter(), simulate=False)
 
         # Compute new target joint positions if arguments are provided
         if (dpos is not None) and (rotation is not None):
@@ -81,8 +82,7 @@ class SawyerIKController(Controller):
             self.robot_jpos_getter(), self.commanded_joint_positions
         )
         for i, delta in enumerate(deltas):
-            velocities[i] = -2. * delta  # -2. * delta
-        velocities = self.clip_joint_velocities(velocities)
+            velocities[i] = -2. * delta     # -2. * delta
 
         self.commanded_joint_velocities = velocities
         return velocities
@@ -94,13 +94,14 @@ class SawyerIKController(Controller):
         """
 
         # sync IK robot state to the current robot joint positions
-        self.sync_ik_robot(self.robot_jpos_getter())
+        self.sync_ik_robot(self.robot_jpos_getter(), simulate=False)
 
         # make sure target pose is up to date
         self.ik_robot_target_pos, self.ik_robot_target_orn = (
             self.ik_robot_eef_joint_cartesian_pose()
         )
 
+        
     def setup_inverse_kinematics(self):
         """
         This function is responsible for doing any setup for inverse kinematics.
@@ -120,11 +121,16 @@ class SawyerIKController(Controller):
         # load the urdfs
         self.ik_robot = p.loadURDF(self.robot_urdf, (0, 0, 0.9), useFixedBase=1)
 
+        self.box_urdf = pjoin(
+            self.bullet_data_path, "sawyer_description/urdf/boston_box.urdf"
+        )
+        p.loadURDF(self.box_urdf, (0.9,0,0.3))
+
         # Simulation will update as fast as it can in real time, instead of waiting for
         # step commands like in the non-realtime case.
         p.setRealTimeSimulation(1)
 
-    def sync_ik_robot(self, joint_positions, simulate=False, sync_last=True):
+    def sync_ik_robot(self, joint_positions, simulate=True, sync_last=True):
         """
         Force the internal robot model to match the provided joint angles.
 
@@ -153,6 +159,9 @@ class SawyerIKController(Controller):
                 )
             else:
                 p.resetJointState(self.ik_robot, i, joint_positions[i], 0)
+
+        if simulate:
+            p.stepSimulation()
 
     def ik_robot_eef_joint_cartesian_pose(self):
         """
@@ -254,10 +263,11 @@ class SawyerIKController(Controller):
         # from its rest configuration. The corresponding line in most demo
         # scripts is:
         #   `env.set_robot_joint_positions([0, -1.18, 0.00, 2.18, 0.00, 0.57, 1.5708])`
+
         rotation = rotation.dot(
             T.rotation_matrix(angle=-np.pi / 2, direction=[0., 0., 1.], point=None)[
                 :3, :3
-            ]
+                ]
         )
 
         self.ik_robot_target_orn = T.mat2quat(rotation)
