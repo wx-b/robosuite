@@ -279,7 +279,7 @@ class SawyerIKController(Controller):
 
         rest_poses = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
 
-        for bullet_i in range(100):
+        for bullet_i in range(50):
             arm_joint_pos = self.inverse_kinematics(
                 world_targets[0], world_targets[1], rest_poses=rest_poses
             )

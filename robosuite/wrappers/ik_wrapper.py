@@ -115,8 +115,15 @@ class IKWrapper(Wrapper):
         joint_actions = np.clip(joint_actions, ctrl_range[:-2,0], ctrl_range[:-2,1])
         self.env.sim.data.ctrl[:] = np.concatenate([joint_actions, gripper])
 
+        self.env.sim.data.qfrc_applied[
+            self.env._ref_joint_vel_indexes
+        ] = self.env.sim.data.qfrc_bias[self.env._ref_joint_vel_indexes]
+
         try:
-            self.env.sim.step()
+            end_time = self.env.cur_time + self.env.control_timestep
+            while self.cur_time < end_time:
+                self.env.sim.step()
+                self.env.cur_time += self.env.model_timestep
         except Exception as e:
             print(e)
             import os
