@@ -5,7 +5,7 @@ from robosuite.utils.transform_utils import convert_quat
 from robosuite.environments.sawyer import SawyerEnv
 
 from robosuite.models.arenas import TableArena
-from robosuite.models.objects import BoxObject
+from robosuite.models.objects import BoxObject, CarObject, TrainObject, GuitarObject
 from robosuite.models.robots import Sawyer
 from robosuite.models.tasks import TableTopTask, UniformRandomSampler
 
@@ -153,11 +153,7 @@ class SawyerLift(SawyerEnv):
         self.mujoco_arena.set_origin([0.16 + self.table_full_size[0] / 2, 0, 0])
 
         # initialize objects of interest
-        cube = BoxObject(
-            size_min=[0.020, 0.020, 0.020],  # [0.015, 0.015, 0.015],
-            size_max=[0.022, 0.022, 0.022],  # [0.018, 0.018, 0.018])
-            rgba=[1, 0, 0, 1],
-        )
+        cube = GuitarObject()
         self.mujoco_objects = OrderedDict([("cube", cube)])
 
         # task includes arena, robot, and objects of interest

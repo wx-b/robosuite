@@ -326,7 +326,7 @@ def _get_randomized_range(val,
 
 class BoundingObject(MujocoGeneratedObject):
     """
-    Generates bounding box hole object
+    Generates bounding box hole object for sawyer fit
     """
 
     def __init__(
@@ -388,6 +388,7 @@ class BoundingObject(MujocoGeneratedObject):
         return main_body
 
     def in_grid(self,point,size):
+        # checks if an object centered at point of dimensions size is within the hole
         result = True
         x,y,z = point
         if not (x -size[0] > self.offset[0]-self.size[0] and x + size[0] < self.offset[0]+self.size[0]):
@@ -406,7 +407,7 @@ class BoundingObject(MujocoGeneratedObject):
 
 class HoleObject(MujocoGeneratedObject):
     """
-    Generates the Pot object with side handles (used in BaxterLift)
+    Generates 2d lego brick
     """
 
     def __init__(
@@ -463,7 +464,7 @@ class HoleObject(MujocoGeneratedObject):
 
 class Hole3dObject(MujocoGeneratedObject):
     """
-    Generates the Pot object with side handles (used in BaxterLift)
+    Generates the 3d grid object for assembly task
     """
 
     def __init__(
@@ -513,7 +514,7 @@ class Hole3dObject(MujocoGeneratedObject):
 
 class GridObject(MujocoGeneratedObject):
     """
-    Generates the Pot object with side handles (used in BaxterLift)
+    Generates the hole object
     """
 
     def __init__(
@@ -556,6 +557,7 @@ class GridObject(MujocoGeneratedObject):
 
         return main_body
     def in_grid(self,point):
+        # checks if point is within the hole
         result = True
         pattern = self.pattern
         x,y,z = point

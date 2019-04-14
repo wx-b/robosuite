@@ -139,7 +139,9 @@ class SawyerLego(SawyerEnv):
         """
         Returns a randomly sampled block,hole
         """
+        #candidate blocks
         blocks = [[[1,1,1],[1,0,1]],[[1,1,1],[1,0,0]],[[1,1,0],[1,1,0]],[[1,1,0],[0,1,1]],[[1,1,1],[0,1,0]],[[1,1,1],[0,0,0]]]
+        # possible holes corresponding to each block above 
         holes = [
                    [ [[[1,1,1],[1,1,1]],[[0,0.85,0],[1,1,1]],[[0,0,0],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[0,0.85,0]]] ],
                    [ [[[1,1,1],[1,1,1]],[[0,1,1],[1,1,1]],[[0,0,0],[1,1,1]]], [[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]],[[0,0,1],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[0,1,1]]] ],
@@ -148,7 +150,8 @@ class SawyerLego(SawyerEnv):
                    [ [[[1,1,1],[1,1,1]],[[1,0,1],[1,1,1]],[[0,0,0],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[1,0,1]]] ],
                    [ [[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]],[[1,0,1],[1,1,1]]], [[[1,1,1],[1,1,1]],[[1,1,1],[1,1,1]],[[0,0,0],[1,1,1]]] ],
                 ]
-        block = randomlen(blocks)-1
+
+        block = random.randint(0,len(blocks)-1)
         self.block=blocks[block]
         # Generate hole
         grid_x = 6
@@ -157,8 +160,9 @@ class SawyerLego(SawyerEnv):
 
         offset_x = random.randint(1,grid_x-4)
         offset_y = random.randint(1,grid_x-3)
+        # pick hole config
         hole = random.choice(holes[block])
-
+        # rotate and place hole randomly in lego grid
         for z in range(len(hole)):
             for y in range(len(hole[0])):
                 for x in range(len(hole[0][0])):
@@ -178,7 +182,7 @@ class SawyerLego(SawyerEnv):
             table_full_size=self.table_full_size, table_friction=self.table_friction
         )
 
-        # initialize objects of interest
+        # sample hole and block
         ph,pg = self.lego_sample()
 
         piece = HoleObject(size= 0.017, tolerance=0.90, pattern = ph)
@@ -234,14 +238,7 @@ class SawyerLego(SawyerEnv):
         """
         Reward function for the task.
 
-        The dense reward has three components.
-
-            Reaching: in [0, 1], to encourage the arm to reach the cube
-            Grasping: in {0, 0.25}, non-zero if arm is grasping the cube
-            Lifting: in {0, 1}, non-zero if arm has lifted the cube
-
-        The sparse reward only consists of the lifting component.
-
+        Only completion reward implemented
         Args:
             action (np array): unused for this task
 
@@ -259,7 +256,7 @@ class SawyerLego(SawyerEnv):
     def _get_observation(self):
         """
         Returns an OrderedDict containing observations [(name_string, np.array), ...].
-
+        TODO: Add lego and hole low level information
         Important keys:
             robot-state: contains robot-centric information.
             object-state: requires @self.use_object_obs to be True.
@@ -330,6 +327,7 @@ class SawyerLego(SawyerEnv):
         # return cube_height > table_height + 0.04
         cnt = 0
         result = True
+        # check if each unit block of the piece is within the lego grid
         for i in range(len(self.block)):
             for j in range(len(self.block[0])):
                 if(self.block[i][j]):
@@ -365,7 +363,7 @@ class SawyerLego(SawyerEnv):
 
 
 class SawyerLegoEasy(SawyerLego):
-
+    # Flat lego grid pick and place
     def lego_sample(self):
         """
         Returns a randomly sampled block,hole
@@ -398,7 +396,7 @@ class SawyerLegoEasy(SawyerLego):
         return blocks[block],grid
 
 class SawyerLegoFit(SawyerLego):
-
+     # Flat grid low tolerance, push into hole
     def lego_sample(self):
         """
         Returns a randomly sampled block,hole
