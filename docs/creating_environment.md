@@ -1,5 +1,4 @@
 # How to build a custom environment
-
 We provide a variety of templating tools to build an environment in a modular way. Here we break down the creation of `SawyerLift` to demonstrate these functionalities. The code cited ([here](../robosuite/environments/sawyer_lift.py#L138)) can be found in `_load_model` methods of classes `SawyerEnv` (creates the robot) and `SawyerLift` (creates the table) plus the code of `TableTopTask`.
 
 # Modeling
@@ -51,17 +50,10 @@ from robosuite.models.objects import BoxObject
 from robosuite.utils.mjcf_utils import new_joint
 
 object_mjcf = BoxObject()
-<<<<<<< HEAD
-world.merge_asset(obj_mjcf)
-
-obj = obj_mjcf.get_collision(name=obj_name, site=True)
-obj.append(new_joint(name=obj_name, type="free"))
-=======
 world.merge_asset(object_mjcf)
 
 obj = object_mjcf.get_collision(name="box_object", site=True)
 obj.append(new_joint(name="box_object", type="free"))
->>>>>>> public/master
 obj.set("pos", [0, 0, 0.5])
 world.worldbody.append(obj)
 ```

@@ -2,15 +2,12 @@
 A convenience script to playback random demonstrations from
 a set of demonstrations stored in a hdf5 file.
 
-<<<<<<< HEAD
-=======
 Arguments:
     --folder (str): Path to demonstrations
     --use_actions (optional): If this flag is provided, the actions are played back 
         through the MuJoCo simulator, instead of loading the simulator states
         one by one.
 
->>>>>>> public/master
 Example:
     $ python playback_demonstrations_from_hdf5.py --folder ../models/assets/demonstrations/SawyerPickPlace/
 """
@@ -106,3 +103,4 @@ if __name__ == "__main__":
                 env.sim.forward()
                 env.render()
     f.close()
+

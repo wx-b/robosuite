@@ -132,3 +132,4 @@ This will replay the demonstrations by forcing the collected internal mujoco sim
 ```bash
 python playback_demonstrations_from_hdf5.py --folder PATH_TO_DEMO_FOLDER --use-actions
 ```
+

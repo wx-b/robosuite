@@ -22,7 +22,6 @@ class IKWrapper(Wrapper):
 
         Args:
             env (MujocoEnv instance): The environment to wrap.
-
             action_repeat (int): Determines the number of times low-level joint
                 control actions will be commanded per high-level end effector
                 action. Higher values will allow for more precise control of
