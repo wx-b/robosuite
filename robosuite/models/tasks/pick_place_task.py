@@ -60,7 +60,7 @@ class PickPlaceTask(Task):
             self.merge_asset(obj_mjcf)
             # Load object
             obj = obj_mjcf.get_collision(name=obj_name, site=True)
-            obj.append(new_joint(name=obj_name, type="free", damping="0.0007"))
+            obj.append(new_joint(name=obj_name, type="free", damping="0.0005"))
             self.objects.append(obj)
             self.worldbody.append(obj)
 
@@ -152,7 +152,7 @@ class PickPlaceTask(Task):
             pos = bin_center - bottom_offset
             self.visual_obj_mjcf[index].set("pos", array_to_string(pos))
             index += 1
-
+            
     def place_objects_clutterred(self):
         """Places objects randomly until no collisions or max iterations hit."""
         placed_objects = []

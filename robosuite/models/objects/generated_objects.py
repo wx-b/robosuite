@@ -303,7 +303,7 @@ def _get_size(size,
             size_min = default_min
         size = np.array([np.random.uniform(size_min[i], size_max[i])
                          for i in range(len(default_max))])
-    return size_max
+    return size
 
 
 def _get_randomized_range(val,

@@ -14,7 +14,7 @@ from robosuite.wrappers import Wrapper
 class IKWrapper(Wrapper):
     env = None
 
-    def __init__(self, env):
+    def __init__(self, env, action_repeat=1):
         """
         Initializes the inverse kinematics wrapper.
         This wrapper allows for controlling the robot through end effector
@@ -22,6 +22,11 @@ class IKWrapper(Wrapper):
 
         Args:
             env (MujocoEnv instance): The environment to wrap.
+
+            action_repeat (int): Determines the number of times low-level joint
+                control actions will be commanded per high-level end effector
+                action. Higher values will allow for more precise control of
+                the end effector to the commanded targets.
         """
         super().__init__(env)
         if self.env.mujoco_robot.name == "sawyer":
@@ -44,6 +49,8 @@ class IKWrapper(Wrapper):
                 "control currently."
             )
 
+        self.action_repeat = action_repeat
+
     def set_robot_joint_positions(self, positions):
         """
         Overrides the function to set the joint positions directly, since we need to notify
@@ -58,6 +65,11 @@ class IKWrapper(Wrapper):
         current robot joint positions.
         """
         return np.array(self.env._joint_positions)
+
+    def reset(self):
+        ret = super().reset()
+        self.controller.sync_state()
+        return ret
 
     def step(self, action):
         """
@@ -80,17 +92,27 @@ class IKWrapper(Wrapper):
         input_1 = self._make_input(action[:7], self.env._right_hand_quat)
         if self.env.mujoco_robot.name == "sawyer":
             velocities = self.controller.get_control(**input_1)
-            action = np.concatenate([velocities, action[7:]])
+            low_action = np.concatenate([velocities, action[7:]])
         elif self.env.mujoco_robot.name == "baxter":
             input_2 = self._make_input(action[7:14], self.env._left_hand_quat)
             velocities = self.controller.get_control(input_1, input_2)
-            action = np.concatenate([velocities, action[14:]])
+            low_action = np.concatenate([velocities, action[14:]])
         else:
             raise Exception(
                 "Only Sawyer and Baxter robot environments are supported for IK "
                 "control currently."
             )
-        return self.env.step(action)
+
+        # keep trying to reach the target in a closed-loop
+        for i in range(self.action_repeat):
+            ret = self.env.step(low_action)
+            velocities = self.controller.get_control()
+            if self.env.mujoco_robot.name == "sawyer":
+                low_action = np.concatenate([velocities, action[7:]])
+            else:
+                low_action = np.concatenate([velocities, action[14:]])
+
+        return ret
 
     def _make_input(self, action, old_quat):
         """

@@ -6,3 +6,9 @@ gym
 
 # Mac OS X only
 hidapi
+<<<<<<< HEAD
+=======
+
+# required for demonstration utils
+h5py
+>>>>>>> public/master
