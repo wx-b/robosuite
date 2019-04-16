@@ -16,7 +16,7 @@ from robosuite import make
 from robosuite.utils.ffmpeg_gif import save_gif
 
 
-def gen_gifs(args, f, env):
+def gen_gifs(args, f, env, target_length=None):
     demos = list(f["data"].keys())
     for key in tqdm.tqdm(demos):
         # read the model xml, using the metadata stored in the attribute for this episode
@@ -29,34 +29,35 @@ def gen_gifs(args, f, env):
         xml = postprocess_model_xml(model_xml)
         env.reset_from_xml_string(xml)
         env.sim.reset()
-        env.viewer.set_camera(0)
 
         # load the flattened mujoco states
         states = f["data/{}/states".format(key)].value
+        seq_length = steps2length(states.shape[0])
+        if target_length is not None and np.abs(seq_length - target_length) > 1:
+            continue
 
-        # load the initial state
-        env.sim.set_state_from_flattened(states[0])
-        env.sim.forward()
-
-        # load the actions and play them back open-loop
-        jvels = f["data/{}/joint_velocities".format(key)].value
-        grip_acts = f["data/{}/gripper_actuations".format(key)].value
-        actions = np.concatenate([jvels, grip_acts], axis=1)
-        num_actions = actions.shape[0]
-
+        # force the sequence of internal mujoco states one by one
         frames = []
-        for j, action in enumerate(actions):
-            obs, reward, done, info = env.step(action)
-            frame = obs["image"][::-1]
-            frames.append(frame)
-
-            if j < num_actions - 1:
-                # ensure that the actions deterministically lead to the same recorded states
-                state_playback = env.sim.get_state().flatten()
-                assert (np.all(np.equal(states[j + 1], state_playback)))
+        for i, state in enumerate(states):
+            if i % args.skip_frame == 0:
+                env.sim.set_state_from_flattened(state)
+                env.sim.forward()
+                obs = env._get_observation()
+                frame = obs["image"][::-1]
+                frames.append(frame)
 
         frames = np.stack(frames, axis=0)
-        save_gif(os.path.join(args.output_path, "seq_{}.gif".format(key)), frames)
+        fig_file_name = os.path.join(args.output_path, "seq_{}".format(key))
+        if target_length is not None:
+            fig_file_name += "_len_{}".format(target_length)
+        save_gif(fig_file_name + ".gif", frames, fps=15)
+        if target_length is not None:
+            return True
+    return False if target_length is not None else True
+
+
+def steps2length(steps):
+    return steps/(10*15)
 
 
 def plot_stats(args, f):
@@ -66,7 +67,7 @@ def plot_stats(args, f):
     lengths = []
     for key in tqdm.tqdm(demos):
         states = f["data/{}/states".format(key)].value
-        lengths.append(states.shape[0]/(10*15))
+        lengths.append(steps2length(states.shape[0]))
     lengths = np.stack(lengths)
     fig = plt.figure()
     plt.hist(lengths, bins=30)
@@ -89,7 +90,11 @@ if __name__ == "__main__":
     parser.add_argument("--skip_frame", type=int, default=1)
     parser.add_argument("--gen_gifs", type=bool, default=False)
     parser.add_argument("--plot_stats", type=bool, default=False)
+    parser.add_argument("--gif_target_length", type=int, default=-1)
     args = parser.parse_args()
+
+    if args.gif_target_length == -1:
+       args.gif_target_length = None
 
     # initialize an environment with offscreen renderer
     demo_file = os.path.join(args.demo_folder, "demo.hdf5")
@@ -106,7 +111,9 @@ if __name__ == "__main__":
     )
 
     if args.gen_gifs:
-        gen_gifs(args, f, env)
+        success = gen_gifs(args, f, env)
+        if not success:
+            raise ValueError("Could not plot gifs successfully!")
 
     if args.plot_stats:
         plot_stats(args, f)
