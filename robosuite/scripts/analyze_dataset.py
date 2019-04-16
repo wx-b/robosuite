@@ -6,8 +6,9 @@ import os
 import numpy as np
 import tqdm
 import matplotlib
-matplotlib.use("TkAgg")
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import seaborn
 
 import robosuite
 from robosuite.utils.mjcf_utils import postprocess_model_xml
@@ -60,16 +61,21 @@ def gen_gifs(args, f, env):
 
 def plot_stats(args, f):
     # plot histogram of lengths
+    seaborn.set()   # plot style
     demos = list(f["data"].keys())
     lengths = []
     for key in tqdm.tqdm(demos):
         states = f["data/{}/states".format(key)].value
-        lengths.append(states.shape[0])
+        lengths.append(states.shape[0]/(10*15))
     lengths = np.stack(lengths)
     fig = plt.figure()
-    plt.histogram(lengths)
-    plt.savefig(os.path.join(args.output_path, "length_hist.png"), fig)
-    fig.close()
+    plt.hist(lengths, bins=30)
+    plt.xlabel("Approx. Demo Length [sec]")
+    # plt.title("Peg Assembly")
+    # plt.xlim(5, 75)
+    # plt.ylim(0, 165)
+    fig.savefig(os.path.join(args.output_path, "length_hist.png"))
+    plt.close()
 
 
 if __name__ == "__main__":
