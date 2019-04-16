@@ -5,6 +5,9 @@ import random
 import os
 import numpy as np
 import tqdm
+import matplotlib
+matplotlib.use("TkAgg")
+import matplotlib.pyplot as plt
 
 import robosuite
 from robosuite.utils.mjcf_utils import postprocess_model_xml
@@ -12,31 +15,7 @@ from robosuite import make
 from robosuite.utils.ffmpeg_gif import save_gif
 
 
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--demo_folder", type=str,
-                        default=os.path.join(robosuite.models.assets_root, "demonstrations/SawyerNutAssembly"))
-    parser.add_argument("--output_path", type=str, default=".")
-    parser.add_argument("--height", type=int, default=512)
-    parser.add_argument("--width", type=int, default=512)
-    parser.add_argument("--skip_frame", type=int, default=1)
-    args = parser.parse_args()
-
-    # initialize an environment with offscreen renderer
-    demo_file = os.path.join(args.demo_folder, "demo.hdf5")
-    f = h5py.File(demo_file, "r")
-    env_name = f["data"].attrs["env"]
-    env = make(
-        env_name,
-        has_renderer=False,
-        ignore_done=True,
-        use_camera_obs=True,
-        use_object_obs=False,
-        camera_height=args.height,
-        camera_width=args.width,
-    )
-
+def gen_gifs(args, f, env):
     demos = list(f["data"].keys())
     for key in tqdm.tqdm(demos):
         # read the model xml, using the metadata stored in the attribute for this episode
@@ -77,5 +56,53 @@ if __name__ == "__main__":
 
         frames = np.stack(frames, axis=0)
         save_gif(os.path.join(args.output_path, "seq_{}.gif".format(key)), frames)
+
+
+def plot_stats(args, f):
+    # plot histogram of lengths
+    demos = list(f["data"].keys())
+    lengths = []
+    for key in tqdm.tqdm(demos):
+        states = f["data/{}/states".format(key)].value
+        lengths.append(states.shape[0])
+    lengths = np.stack(lengths)
+    fig = plt.figure()
+    plt.histogram(lengths)
+    plt.savefig(os.path.join(args.output_path, "length_hist.png"), fig)
+    fig.close()
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--demo_folder", type=str,
+                        default=os.path.join(robosuite.models.assets_root, "demonstrations/SawyerNutAssembly"))
+    parser.add_argument("--output_path", type=str, default=".")
+    parser.add_argument("--height", type=int, default=512)
+    parser.add_argument("--width", type=int, default=512)
+    parser.add_argument("--skip_frame", type=int, default=1)
+    parser.add_argument("--gen_gifs", type=bool, default=False)
+    parser.add_argument("--plot_stats", type=bool, default=False)
+    args = parser.parse_args()
+
+    # initialize an environment with offscreen renderer
+    demo_file = os.path.join(args.demo_folder, "demo.hdf5")
+    f = h5py.File(demo_file, "r")
+    env_name = f["data"].attrs["env"]
+    env = make(
+        env_name,
+        has_renderer=False,
+        ignore_done=True,
+        use_camera_obs=True,
+        use_object_obs=False,
+        camera_height=args.height,
+        camera_width=args.width,
+    )
+
+    if args.gen_gifs:
+        gen_gifs(args, f, env)
+
+    if args.plot_stats:
+        plot_stats(args, f)
 
     print("Done")
