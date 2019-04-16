@@ -47,7 +47,7 @@ def encode_gif(images, fps=4):
            '-s', '%dx%d' % (images[0].shape[1], images[0].shape[0]),
            '-pix_fmt', 'rgb24',
            '-i', '-',
-           '-filter_complex', '[0:v]split[x][z];[z]palettegen[y];[x][y]paletteuse',
+           '-filter_complex', '[0:v]split[x][z];[z]palettegen[y];[x]fifo[x];[x][y]paletteuse',
            '-r', '%.02f' % fps,
            '-f', 'gif',
            '-']
@@ -63,7 +63,7 @@ def encode_gif(images, fps=4):
 
 
 def main():
-    images_shape = (12, 64, 64, 3)  # num_frames, height, width, channels
+    images_shape = (128, 64, 64, 3)  # num_frames, height, width, channels
     images = np.random.randint(256, size=images_shape).astype(np.uint8)
 
     save_gif('output_save.gif', images)
