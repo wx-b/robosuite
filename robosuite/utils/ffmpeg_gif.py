@@ -26,8 +26,7 @@ def save_gif(gif_fname, images, fps=4):
            '-s', '%dx%d' % (images[0].shape[1], images[0].shape[0]),
            '-pix_fmt', 'rgb24',
            '-i', '-',
-           '-filter_complex', '[0:v]split[x][z];[z]palettegen[y];[x][y]paletteuse',
-           '-r', '%.02f' % fps,
+           '-filter_complex', '[0:v]split[x][z];[z]palettegen[y];[x]fifo[x];[x][y]paletteuse',
            '%s' % gif_fname]
     proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     for image in images:
