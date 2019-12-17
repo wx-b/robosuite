@@ -8,7 +8,7 @@ import tqdm
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import seaborn
+#import seaborn
 
 import robosuite
 from robosuite.utils.mjcf_utils import postprocess_model_xml
@@ -33,12 +33,13 @@ def render(args, f, env):
         # load the flattened mujoco states
         states = f["data/{}/states".format(key)].value
         seq_length = steps2length(states.shape[0])
-        if args.target_length is not None and np.abs(seq_length - args.target_length) > 1:
+        n_steps = states.shape[0]
+        if args.target_length is not None and n_steps > args.target_length:
             continue
 
         # force the sequence of internal mujoco states one by one
-        frames,  = []
-        for i, state in enumerate(states):
+        frames  = []
+        for i, state in enumerate(states[:20]):
             if i % args.skip_frame == 0:
                 env.sim.set_state_from_flattened(state)
                 env.sim.forward()
@@ -47,17 +48,20 @@ def render(args, f, env):
                 frames.append(frame)
 
         frames = np.stack(frames, axis=0)
+        actions = np.concatenate((f["data/{}/right_dpos".format(key)].value, f["data/{}/right_dquat".format(key)].value, f["data/{}/gripper_actuations".format(key)].value), axis=-1)
 
-        pad_mask = np.ones((seq_length,)) if seq_length == args.target_length \
-                        else np.concatenate((np.ones((seq_length,)), np.zeros((args.target_length - seq_length,))))
+        pad_mask = np.ones((seq_length,)) if n_steps == args.target_length \
+                        else np.concatenate((np.ones((n_steps,)), np.zeros((args.target_length - n_steps,))))
 
+        import pdb; pdb.set_trace()
         h5_path = os.path.join(args.output_path, "seq_{}.h5".format(key))
         with h5py.File(h5_path, 'w') as F:
             F['traj_per_file'] = 1
             F["traj0/images"] = frames
-            F["traj0/actions"] = f["data/{}/actions".format(key)].value
+            F["traj0/actions"] = actions
             F["traj0/states"] = f["data/{}/states".format(key)].value
             F["traj0/pad_mask"] = pad_mask
+            F["traj0/joint_velocities"] = f["data/{}/joint_velocities".format(key)].value
 
 
 def steps2length(steps):
@@ -89,8 +93,8 @@ if __name__ == "__main__":
     parser.add_argument("--demo_folder", type=str,
                         default=os.path.join(robosuite.models.assets_root, "demonstrations/SawyerNutAssembly"))
     parser.add_argument("--output_path", type=str, default=".")
-    parser.add_argument("--height", type=int, default=512)
-    parser.add_argument("--width", type=int, default=512)
+    parser.add_argument("--height", type=int, default=64)
+    parser.add_argument("--width", type=int, default=64)
     parser.add_argument("--skip_frame", type=int, default=1)
     parser.add_argument("--gen_dataset", type=bool, default=False)
     parser.add_argument("--plot_stats", type=bool, default=False)
@@ -113,6 +117,8 @@ if __name__ == "__main__":
         camera_height=args.height,
         camera_width=args.width,
     )
+    if not os.path.exists(args.output_path):
+        os.makedirs(args.output_path)
 
     if args.gen_dataset:
         render(args, f, env)

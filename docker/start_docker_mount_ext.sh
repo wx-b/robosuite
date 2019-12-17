@@ -1,7 +1,7 @@
 # instructions for running this the first time:
 # pull the docker image from docker hub: run ` docker pull febert/recplan:latest `
 
-nvidia-docker run  -v $RECPLAN_DATA_DIR/:/workspace/recplan_data \
+docker run  -v $RECPLAN_DATA_DIR/:/workspace/recplan_data \
                    -v $RECPLAN_EXP_DIR/:/workspace/experiments \
 		   -v $ROBOSUITE_DIR/:/mount/robosuite \
                    -v /raid/:/raid \
