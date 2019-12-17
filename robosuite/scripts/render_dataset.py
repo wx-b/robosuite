@@ -30,16 +30,24 @@ def render(args, f, env):
         env.reset_from_xml_string(xml)
         env.sim.reset()
 
-        # load the flattened mujoco states
-        states = f["data/{}/states".format(key)].value
-        seq_length = steps2length(states.shape[0])
+        # load + subsample data
+        states, _ = FixedFreqSubsampler(n_skip=args.skip_frame)(f["data/{}/states".format(key)].value)
+        d_pos, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=SumAggregator()) \
+                    (f["data/{}/right_dpos".format(key)].value, aggregate=True)
+        d_quat, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=QuaternionAggregator()) \
+                     (f["data/{}/right_dquat".format(key)].value, aggregate=True)
+        gripper_actuation, _ = FixedFreqSubsampler(n_skip=args.skip_frame)(f["data/{}/gripper_actuations".format(key)].value)
+        joint_velocities, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=SumAggregator()) \
+                                (f["data/{}/joint_velocities".format(key)].value, aggregate=True)
+        import pdb; pdb.set_trace()
+
         n_steps = states.shape[0]
         if args.target_length is not None and n_steps > args.target_length:
             continue
 
         # force the sequence of internal mujoco states one by one
-        frames  = []
-        for i, state in enumerate(states[:20]):
+        frames = []
+        for i, state in enumerate(states):
             if i % args.skip_frame == 0:
                 env.sim.set_state_from_flattened(state)
                 env.sim.forward()
@@ -48,20 +56,19 @@ def render(args, f, env):
                 frames.append(frame)
 
         frames = np.stack(frames, axis=0)
-        actions = np.concatenate((f["data/{}/right_dpos".format(key)].value, f["data/{}/right_dquat".format(key)].value, f["data/{}/gripper_actuations".format(key)].value), axis=-1)
+        actions = np.concatenate((d_pos, d_quat, gripper_actuation), axis=-1)
 
-        pad_mask = np.ones((seq_length,)) if n_steps == args.target_length \
+        pad_mask = np.ones((n_steps,)) if n_steps == args.target_length \
                         else np.concatenate((np.ones((n_steps,)), np.zeros((args.target_length - n_steps,))))
 
-        import pdb; pdb.set_trace()
         h5_path = os.path.join(args.output_path, "seq_{}.h5".format(key))
         with h5py.File(h5_path, 'w') as F:
             F['traj_per_file'] = 1
             F["traj0/images"] = frames
             F["traj0/actions"] = actions
-            F["traj0/states"] = f["data/{}/states".format(key)].value
+            F["traj0/states"] = states
             F["traj0/pad_mask"] = pad_mask
-            F["traj0/joint_velocities"] = f["data/{}/joint_velocities".format(key)].value
+            F["traj0/joint_velocities"] = joint_velocities
 
 
 def steps2length(steps):
@@ -87,6 +94,68 @@ def plot_stats(args, f):
     plt.close()
 
 
+class DataSubsampler:
+    def __init__(self, aggregator):
+        self._aggregator = aggregator
+
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError("This function needs to be implemented by sub-classes!")
+
+
+class FixedFreqSubsampler(DataSubsampler):
+    """Subsamples input array's first dimension by skipping given number of frames."""
+    def __init__(self, n_skip, aggregator=None):
+        super().__init__(aggregator)
+        self._n_skip = n_skip
+
+    def __call__(self, val, idxs=None, aggregate=False):
+        """Subsamples with idxs if given, aggregates with aggregator if aggregate=True."""
+        if self._n_skip == 0:
+            return val, None
+
+        if idxs is None:
+            seq_len = val.shape[0]
+            idxs = np.arange(0, seq_len - 1, self._n_skip + 1)
+
+        if aggregate:
+            assert self._aggregator is not None     # no aggregator given!
+            return self._aggregator(val, idxs), idxs
+        else:
+            return val[idxs], idxs
+
+
+class Aggregator:
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError("This function needs to be implemented by sub-classes!")
+
+
+class SumAggregator(Aggregator):
+    def __call__(self, val, idxs):
+        return np.add.reduceat(val, idxs, axis=0)
+
+
+class QuaternionAggregator(Aggregator):
+    def __call__(self, val, idxs):
+        # quaternions get aggregated by multiplying in order
+        aggregated = []
+        for i in range(len(idxs - 1)):
+            idx, next_idx = idxs[i], idxs[i+1]
+            agg_val = val[idx]
+            for ii in range(idx+1, next_idx):
+                agg_val = self.quaternion_multiply(agg_val, val[ii])
+            aggregated.append(agg_val)
+        return np.asarray(aggregated)
+
+    @staticmethod
+    def quaternion_multiply(Q0, Q1):
+        w0, x0, y0, z0 = Q0
+        w1, x1, y1, z1 = Q1
+        return np.array([-x1 * x0 - y1 * y0 - z1 * z0 + w1 * w0,
+                         x1 * w0 + y1 * z0 - z1 * y0 + w1 * x0,
+                         -x1 * z0 + y1 * w0 + z1 * x0 + w1 * y0,
+                         x1 * y0 - y1 * x0 + z1 * w0 + w1 * z0], dtype=np.float64)
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -95,7 +164,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_path", type=str, default=".")
     parser.add_argument("--height", type=int, default=64)
     parser.add_argument("--width", type=int, default=64)
-    parser.add_argument("--skip_frame", type=int, default=1)
+    parser.add_argument("--skip_frame", type=int, default=0)
     parser.add_argument("--gen_dataset", type=bool, default=False)
     parser.add_argument("--plot_stats", type=bool, default=False)
     parser.add_argument("--target_length", type=int, default=-1)
