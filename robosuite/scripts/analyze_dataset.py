@@ -19,6 +19,12 @@ from robosuite.utils.ffmpeg_gif import save_gif
 def gen_gifs(args, f, env, target_length=None):
     demos = list(f["data"].keys())
     for key in tqdm.tqdm(demos):
+        # load the flattened mujoco states
+        states = f["data/{}/states".format(key)].value
+        seq_length = steps2length(states.shape[0])
+        if target_length is not None and np.abs(seq_length - target_length) > 1:
+            continue
+
         # read the model xml, using the metadata stored in the attribute for this episode
         model_file = f["data/{}".format(key)].attrs["model_file"]
         model_path = os.path.join(args.demo_folder, "models", model_file)
@@ -30,17 +36,11 @@ def gen_gifs(args, f, env, target_length=None):
         env.reset_from_xml_string(xml)
         env.sim.reset()
 
-        # load the flattened mujoco states
-        states = f["data/{}/states".format(key)].value
-        seq_length = steps2length(states.shape[0])
-        if target_length is not None and np.abs(seq_length - target_length) > 1:
-            continue
-
         # force the sequence of internal mujoco states one by one
         frames = []
-        for i, state in enumerate(states):
+        for i in tqdm.tqdm(range(states.shape[0])):
             if i % args.skip_frame == 0:
-                env.sim.set_state_from_flattened(state)
+                env.sim.set_state_from_flattened(states[i])
                 env.sim.forward()
                 obs = env._get_observation()
                 frame = obs["image"][::-1]
@@ -85,8 +85,8 @@ if __name__ == "__main__":
     parser.add_argument("--demo_folder", type=str,
                         default=os.path.join(robosuite.models.assets_root, "demonstrations/SawyerNutAssembly"))
     parser.add_argument("--output_path", type=str, default=".")
-    parser.add_argument("--height", type=int, default=512)
-    parser.add_argument("--width", type=int, default=512)
+    parser.add_argument("--height", type=int, default=256)
+    parser.add_argument("--width", type=int, default=256)
     parser.add_argument("--skip_frame", type=int, default=1)
     parser.add_argument("--gen_gifs", type=bool, default=False)
     parser.add_argument("--plot_stats", type=bool, default=False)
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     )
 
     if args.gen_gifs:
-        success = gen_gifs(args, f, env)
+        success = gen_gifs(args, f, env, target_length=args.gif_target_length)
         if not success:
             raise ValueError("Could not plot gifs successfully!")
 
