@@ -39,7 +39,6 @@ def render(args, f, env):
         gripper_actuation, _ = FixedFreqSubsampler(n_skip=args.skip_frame)(f["data/{}/gripper_actuations".format(key)].value)
         joint_velocities, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=SumAggregator()) \
                                 (f["data/{}/joint_velocities".format(key)].value, aggregate=True)
-        import pdb; pdb.set_trace()
 
         n_steps = states.shape[0]
         if args.target_length is not None and n_steps > args.target_length:
@@ -48,12 +47,11 @@ def render(args, f, env):
         # force the sequence of internal mujoco states one by one
         frames = []
         for i, state in enumerate(states):
-            if i % args.skip_frame == 0:
-                env.sim.set_state_from_flattened(state)
-                env.sim.forward()
-                obs = env._get_observation()
-                frame = obs["image"][::-1]
-                frames.append(frame)
+            env.sim.set_state_from_flattened(state)
+            env.sim.forward()
+            obs = env._get_observation()
+            frame = obs["image"][::-1]
+            frames.append(frame)
 
         frames = np.stack(frames, axis=0)
         actions = np.concatenate((d_pos, d_quat, gripper_actuation), axis=-1)
@@ -77,12 +75,11 @@ def steps2length(steps):
 
 def plot_stats(args, f):
     # plot histogram of lengths
-    seaborn.set()   # plot style
     demos = list(f["data"].keys())
     lengths = []
     for key in tqdm.tqdm(demos):
         states = f["data/{}/states".format(key)].value
-        lengths.append(steps2length(states.shape[0]))
+        lengths.append(states.shape[0])
     lengths = np.stack(lengths)
     fig = plt.figure()
     plt.hist(lengths, bins=30)
@@ -137,8 +134,8 @@ class SumAggregator(Aggregator):
 class QuaternionAggregator(Aggregator):
     def __call__(self, val, idxs):
         # quaternions get aggregated by multiplying in order
-        aggregated = []
-        for i in range(len(idxs - 1)):
+        aggregated = [val[0]]
+        for i in range(len(idxs)-1):
             idx, next_idx = idxs[i], idxs[i+1]
             agg_val = val[idx]
             for ii in range(idx+1, next_idx):
