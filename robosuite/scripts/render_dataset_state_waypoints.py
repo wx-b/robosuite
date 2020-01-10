@@ -45,17 +45,39 @@ def render(args, f, env):
         if args.target_length is not None and n_steps > args.target_length:
             continue
 
-        # force the sequence of internal mujoco states one by one
+
         frames = []
+        achieved_states = []
+        delta_actions = []
+
+        env.sim.set_state_from_flattened(state[0])
+        env.sim.forward()
+
+        obs = env._get_observation()
+        frame = obs["image"][::-1]
+        frames.append(frame)
+
+        states = states[1:]
         for i, state in enumerate(states):
-            env.sim.set_state_from_flattened(state)
-            env.sim.forward()
             obs = env._get_observation()
             frame = obs["image"][::-1]
             frames.append(frame)
 
+            d_quat = np.array([0., 0., 0., 1.])
+
+            des_eefpos =
+            d_pos = current_eefpos - des_eefpos
+
+            actions = np.concatenate((d_pos, d_quat, gripper_actuation), axis=-1)
+            delta_actions.append(actions)
+
+            n_substeps = 10
+            # for s in range(n_substeps):
+                # action =
+                # env.step(action)
+
         frames = np.stack(frames, axis=0)
-        actions = np.concatenate((d_pos, d_quat, gripper_actuation), axis=-1)
+        actions =
 
         pad_mask = np.ones((n_steps,)) if n_steps == args.target_length \
                         else np.concatenate((np.ones((n_steps,)), np.zeros((args.target_length - n_steps,))))
@@ -64,25 +86,28 @@ def render(args, f, env):
         with h5py.File(h5_path, 'w') as F:
             F['traj_per_file'] = 1
             F["traj0/images"] = frames
-            F["traj0/actions"] = actions
-            F["traj0/states"] = states
+            F["traj0/actions"] = delta_actions
+            F["traj0/states"] = achieved_states
             F["traj0/pad_mask"] = pad_mask
             F["traj0/joint_velocities"] = joint_velocities
 
-        xml_path = os.path.join(args.output_path, "seq_{}.h5".format(key))
-        env.model.save_model(xml)
+        xml_path = os.path.join(args.output_path, "seq_{}.xml".format(key))
+        env.model.save_model(xml_path)
 
 
 def steps2length(steps):
     return steps/(10*15)
 
 
-def plot_stats(args, f):
+def plot_stats(args, file):
     # plot histogram of lengths
-    demos = list(f["data"].keys())
+    demos = list(file["data"].keys())
+
+    used_keys = list(file["data/demo_1"].keys())
+    import pdb; pdb.set_trace()
     lengths = []
     for key in tqdm.tqdm(demos):
-        states = f["data/{}/states".format(key)].value
+        states = file["data/{}/states".format(key)].value
         lengths.append(states.shape[0])
     lengths = np.stack(lengths)
     fig = plt.figure()
@@ -177,6 +202,7 @@ if __name__ == "__main__":
     # initialize an environment with offscreen renderer
     demo_file = os.path.join(args.demo_folder, "demo.hdf5")
     f = h5py.File(demo_file, "r")
+
     env_name = f["data"].attrs["env"]
     env = make(
         env_name,
