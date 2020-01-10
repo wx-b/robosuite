@@ -3,6 +3,7 @@ from mujoco_py import MjSim, MjRenderContextOffscreen
 from mujoco_py import load_model_from_xml
 
 from robosuite.utils import SimulationError, XMLError, MujocoPyRenderer
+from robosuite.wrappers.ik_wrapper import IKWrapper
 
 REGISTERED_ENVS = {}
 
@@ -20,6 +21,17 @@ def make(env_name, *args, **kwargs):
             )
         )
     return REGISTERED_ENVS[env_name](*args, **kwargs)
+
+
+def make_invkin_env(env_name, *args, **kwargs):
+    """Try to get the equivalent functionality of gym.make in a sloppy way."""
+    if env_name not in REGISTERED_ENVS:
+        raise Exception(
+            "Environment {} not found. Make sure it is a registered environment among: {}".format(
+                env_name, ", ".join(REGISTERED_ENVS)
+            )
+        )
+    return IKWrapper(REGISTERED_ENVS[env_name](*args, **kwargs))
 
 
 class EnvMeta(type):

@@ -104,6 +104,7 @@ def quat_inverse(quaternion):
     """
     return quat_conjugate(quaternion) / np.dot(quaternion, quaternion)
 
+_EPS = 1e-4
 
 def quat_slerp(quat0, quat1, fraction, spin=0, shortestpath=True):
     """Return spherical linear interpolation between two quaternions.

@@ -14,6 +14,7 @@ import robosuite
 from robosuite.utils.mjcf_utils import postprocess_model_xml
 from robosuite import make
 from robosuite.utils.ffmpeg_gif import save_gif
+from robosuite.utils.transform_utils import mat2pose, quat_multiply, quat_conjugate
 
 
 def render(args, f, env):
@@ -54,6 +55,9 @@ def render(args, f, env):
             frame = obs["image"][::-1]
             frames.append(frame)
 
+            # des_pos, des_quat = mat2pose(env._right_hand_pose)
+            # print(des_pos)
+
         frames = np.stack(frames, axis=0)
         actions = np.concatenate((d_pos, d_quat, gripper_actuation), axis=-1)
 
@@ -70,7 +74,10 @@ def render(args, f, env):
             F["traj0/joint_velocities"] = joint_velocities
 
         xml_path = os.path.join(args.output_path, "seq_{}.h5".format(key))
-        env.model.save_model(xml)
+        env.model.save_model(xml_path)
+
+        fig_file_name = os.path.join(args.output_path, "seq_{}".format(key))
+        save_gif(fig_file_name + ".gif", frames, fps=15)
 
 
 def steps2length(steps):

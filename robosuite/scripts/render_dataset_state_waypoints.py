@@ -15,6 +15,42 @@ from robosuite.utils.mjcf_utils import postprocess_model_xml
 from robosuite import make
 from robosuite.utils.ffmpeg_gif import save_gif
 
+from robosuite.utils.transform_utils import mat2pose, quat_multiply, quat_conjugate
+from robosuite.environments.base import make_invkin_env
+
+from robosuite.utils.transform_utils import quat_slerp
+
+def compute_fwd_kinematics(des_state, orig_state):
+    env.sim.set_state_from_flattened(des_state)
+    env.sim.forward()
+    des_state_pose = env._right_hand_pose
+
+    # reset to orig state
+    env.sim.set_state_from_flattened(orig_state)
+    env.sim.forward()
+
+    return des_state_pose
+
+
+def compute_pose_difference(des_pose, current_pose):
+    """
+    :param des_pose:
+    :param current_pose:
+    :return:
+
+    compute diff transform so that
+
+    current_pose * diff  = des_pose
+    diff = des_pose * inv(current_pose)
+    """
+
+    des_pos, des_quat = mat2pose(des_pose)
+    curr_pos, curr_quat = mat2pose(current_pose)
+
+    dpos = des_pos - curr_pos
+    diff = quat_multiply(des_quat, quat_conjugate(curr_quat))
+    return dpos, diff
+
 
 def render(args, f, env):
     demos = list(f["data"].keys())
@@ -33,10 +69,10 @@ def render(args, f, env):
 
         # load + subsample data
         states, _ = FixedFreqSubsampler(n_skip=args.skip_frame)(f["data/{}/states".format(key)].value)
-        d_pos, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=SumAggregator()) \
-                    (f["data/{}/right_dpos".format(key)].value, aggregate=True)
-        d_quat, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=QuaternionAggregator()) \
-                     (f["data/{}/right_dquat".format(key)].value, aggregate=True)
+        # d_pos, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=SumAggregator()) \
+        #             (f["data/{}/right_dpos".format(key)].value, aggregate=True)
+        # d_quat, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=QuaternionAggregator()) \
+        #              (f["data/{}/right_dquat".format(key)].value, aggregate=True)
         gripper_actuation, _ = FixedFreqSubsampler(n_skip=args.skip_frame)(f["data/{}/gripper_actuations".format(key)].value)
         joint_velocities, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=SumAggregator()) \
                                 (f["data/{}/joint_velocities".format(key)].value, aggregate=True)
@@ -50,7 +86,7 @@ def render(args, f, env):
         achieved_states = []
         delta_actions = []
 
-        env.sim.set_state_from_flattened(state[0])
+        env.sim.set_state_from_flattened(states[0])
         env.sim.forward()
 
         obs = env._get_observation()
@@ -58,26 +94,46 @@ def render(args, f, env):
         frames.append(frame)
 
         states = states[1:]
+
+        current_eefpose = env._right_hand_pose
+        _, first_quat = mat2pose(current_eefpose)
+
+        print('total number of steps after downsampling', states.shape[0])
         for i, state in enumerate(states):
             obs = env._get_observation()
             frame = obs["image"][::-1]
             frames.append(frame)
 
-            d_quat = np.array([0., 0., 0., 1.])
+            current_eefpose = env._right_hand_pose
+            _, curr_quat = mat2pose(current_eefpose)
+            des_eefpose = compute_fwd_kinematics(state, env.sim.get_state().flatten())
+            _, des_quat = mat2pose(des_eefpose)
 
-            des_eefpos =
-            d_pos = current_eefpos - des_eefpos
+            d_pos, d_quat = compute_pose_difference(des_eefpose, current_eefpose)
 
-            actions = np.concatenate((d_pos, d_quat, gripper_actuation), axis=-1)
-            delta_actions.append(actions)
+            print('curr eefpos {}, des_eefpos {}, dpos {}, d_quat {}'.format(mat2pose(current_eefpose)[0],
+                                                                  mat2pose(des_eefpose)[0],
+                                                                  d_pos, d_quat))
+            # print("inv kin. error: ", env.controller._get_current_error())
+
+            ## debug:
+            zero_quat = np.array([0, 0, 0, 1.])
 
             n_substeps = 10
-            # for s in range(n_substeps):
-                # action =
-                # env.step(action)
+            delta_actions.append(np.concatenate((d_pos, d_quat, gripper_actuation[i]), axis=-1))
+            for s in range(n_substeps):
+                env.step(np.concatenate((d_pos/n_substeps, zero_quat, gripper_actuation[i]), axis=-1))
+                # env.step(np.concatenate((d_pos/n_substeps, quat_slerp(zero_quat, d_quat, s/n_substeps), gripper_actuation[i]), axis=-1))
+                # env.step(np.concatenate((d_pos/n_substeps, quat_slerp(curr_quat, des_quat, s/n_substeps), gripper_actuation[i]), axis=-1))
+
+            print('step ', i)
+
+            #todo debug:
+            if i == 20:
+                break
 
         frames = np.stack(frames, axis=0)
-        actions =
+        delta_actions = np.stack(delta_actions, axis=-1)
 
         pad_mask = np.ones((n_steps,)) if n_steps == args.target_length \
                         else np.concatenate((np.ones((n_steps,)), np.zeros((args.target_length - n_steps,))))
@@ -93,6 +149,11 @@ def render(args, f, env):
 
         xml_path = os.path.join(args.output_path, "seq_{}.xml".format(key))
         env.model.save_model(xml_path)
+
+        fig_file_name = os.path.join(args.output_path, "seq_{}".format(key))
+        save_gif(fig_file_name + ".gif", frames, fps=15)
+
+        import pdb; pdb.set_trace()
 
 
 def steps2length(steps):
@@ -204,7 +265,8 @@ if __name__ == "__main__":
     f = h5py.File(demo_file, "r")
 
     env_name = f["data"].attrs["env"]
-    env = make(
+
+    env = make_invkin_env(
         env_name,
         has_renderer=False,
         ignore_done=True,
@@ -224,6 +286,9 @@ if __name__ == "__main__":
 
     print("Done")
     f.close()
+
+
+
 
 
 
