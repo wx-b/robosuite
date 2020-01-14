@@ -41,14 +41,14 @@ def compute_pose_difference(des_pose, current_pose):
     compute diff transform so that
 
     current_pose * diff  = des_pose
-    diff = des_pose * inv(current_pose)
+    diff = inv(current_pose) * des_pose
     """
 
     des_pos, des_quat = mat2pose(des_pose)
     curr_pos, curr_quat = mat2pose(current_pose)
 
     dpos = des_pos - curr_pos
-    diff = quat_multiply(des_quat, quat_conjugate(curr_quat))
+    diff = quat_multiply(quat_conjugate(curr_quat), des_quat)
     return dpos, diff
 
 
@@ -105,10 +105,7 @@ def render(args, f, env):
             frames.append(frame)
 
             current_eefpose = env._right_hand_pose
-            _, curr_quat = mat2pose(current_eefpose)
             des_eefpose = compute_fwd_kinematics(state, env.sim.get_state().flatten())
-            _, des_quat = mat2pose(des_eefpose)
-
             d_pos, d_quat = compute_pose_difference(des_eefpose, current_eefpose)
 
             print('curr eefpos {}, des_eefpos {}, dpos {}, d_quat {}'.format(mat2pose(current_eefpose)[0],
@@ -122,15 +119,20 @@ def render(args, f, env):
             n_substeps = 10
             delta_actions.append(np.concatenate((d_pos, d_quat, gripper_actuation[i]), axis=-1))
             for s in range(n_substeps):
-                env.step(np.concatenate((d_pos/n_substeps, zero_quat, gripper_actuation[i]), axis=-1))
-                # env.step(np.concatenate((d_pos/n_substeps, quat_slerp(zero_quat, d_quat, s/n_substeps), gripper_actuation[i]), axis=-1))
+                # obs = env._get_observation()
+                # frame = obs["image"][::-1]
+                # frames.append(frame)
+
+                # env.step(np.concatenate((d_pos/n_substeps, zero_quat, gripper_actuation[i]), axis=-1))
+                env.step(np.concatenate((d_pos/n_substeps, quat_slerp(zero_quat, d_quat, 1/n_substeps), gripper_actuation[i]), axis=-1))
                 # env.step(np.concatenate((d_pos/n_substeps, quat_slerp(curr_quat, des_quat, s/n_substeps), gripper_actuation[i]), axis=-1))
+
 
             print('step ', i)
 
-            #todo debug:
-            if i == 20:
-                break
+            # #todo debug:
+            # if i == 20:
+            #     break
 
         frames = np.stack(frames, axis=0)
         delta_actions = np.stack(delta_actions, axis=-1)
@@ -152,8 +154,6 @@ def render(args, f, env):
 
         fig_file_name = os.path.join(args.output_path, "seq_{}".format(key))
         save_gif(fig_file_name + ".gif", frames, fps=15)
-
-        import pdb; pdb.set_trace()
 
 
 def steps2length(steps):
