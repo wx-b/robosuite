@@ -60,15 +60,6 @@ def render(args, f, env):
             env.step(np.concatenate((d_pos[i], d_quat[i], gripper_actuation[i]), axis=-1))
             print('steptime', time.time() - t1)
 
-            print('step ', i)
-            # n_substeps = 1
-            # for s in range(n_substeps):
-            #     env.step(np.concatenate((d_pos/n_substeps, quat_slerp(zero_quat, d_quat, 1/n_substeps), gripper_actuation[i]), axis=-1))
-
-            # # # todo
-            # if i > 500:
-            #     break
-
         frames = np.stack(frames, axis=0)
         actions = np.concatenate((d_pos, d_quat, gripper_actuation), axis=-1)
 
@@ -93,24 +84,6 @@ def render(args, f, env):
 
 def steps2length(steps):
     return steps/(10*15)
-
-
-def plot_stats(args, f):
-    # plot histogram of lengths
-    demos = list(f["data"].keys())
-    lengths = []
-    for key in tqdm.tqdm(demos):
-        states = f["data/{}/states".format(key)].value
-        lengths.append(states.shape[0])
-    lengths = np.stack(lengths)
-    fig = plt.figure()
-    plt.hist(lengths, bins=30)
-    plt.xlabel("Approx. Demo Length [sec]")
-    # plt.title("Peg Assembly")
-    # plt.xlim(5, 75)
-    # plt.ylim(0, 165)
-    fig.savefig(os.path.join(args.output_path, "length_hist.png"))
-    plt.close()
 
 
 
@@ -150,9 +123,6 @@ if __name__ == "__main__":
 
     if args.gen_dataset:
         render(args, f, env)
-
-    if args.plot_stats:
-        plot_stats(args, f)
 
     print("Done")
     f.close()
