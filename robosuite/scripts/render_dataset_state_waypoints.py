@@ -52,6 +52,24 @@ def compute_pose_difference(des_pose, current_pose):
     return dpos, diff
 
 
+def get_final_obj_pos(final_state):
+    """
+    gets final object position.
+    Careful: changes the simulator state!!
+    :param final_state:
+    :return:
+    """
+
+    env.sim.set_state_from_flattened(final_state)
+    env.sim.forward()
+
+    obs = env._get_observation()
+    objpos = obs[env.obj_to_use + "_pos"]
+
+    return objpos
+
+
+
 def render(args, f, env):
     demos = list(f["data"].keys())
     for key in tqdm.tqdm(demos):
@@ -86,6 +104,8 @@ def render(args, f, env):
         achieved_states = []
         delta_actions = []
 
+        final_obj_pos = get_final_obj_pos(states[-1])
+
         env.sim.set_state_from_flattened(states[0])
         env.sim.forward()
 
@@ -95,12 +115,10 @@ def render(args, f, env):
 
         states = states[1:]
 
-        current_eefpose = env._right_hand_pose
-        _, first_quat = mat2pose(current_eefpose)
-
         print('total number of steps after downsampling', states.shape[0])
         for i, state in enumerate(states):
             obs = env._get_observation()
+            import pdb; pdb.set_trace()
             frame = obs["image"][::-1]
             frames.append(frame)
 
@@ -111,7 +129,6 @@ def render(args, f, env):
             print('curr eefpos {}, des_eefpos {}, dpos {}, d_quat {}'.format(mat2pose(current_eefpose)[0],
                                                                   mat2pose(des_eefpose)[0],
                                                                   d_pos, d_quat))
-            # print("inv kin. error: ", env.controller._get_current_error())
 
             ## debug:
             zero_quat = np.array([0, 0, 0, 1.])
@@ -119,20 +136,14 @@ def render(args, f, env):
             n_substeps = 10
             delta_actions.append(np.concatenate((d_pos, d_quat, gripper_actuation[i]), axis=-1))
             for s in range(n_substeps):
-                # obs = env._get_observation()
-                # frame = obs["image"][::-1]
-                # frames.append(frame)
-
-                # env.step(np.concatenate((d_pos/n_substeps, zero_quat, gripper_actuation[i]), axis=-1))
                 env.step(np.concatenate((d_pos/n_substeps, quat_slerp(zero_quat, d_quat, 1/n_substeps), gripper_actuation[i]), axis=-1))
-                # env.step(np.concatenate((d_pos/n_substeps, quat_slerp(curr_quat, des_quat, s/n_substeps), gripper_actuation[i]), axis=-1))
-
 
             print('step ', i)
+            curr_obj_pos = obs[env.obj_to_use + "_pos"]
+            print('dist to final ', np.linalg.norm(curr_obj_pos - final_obj_pos))
 
-            # #todo debug:
-            # if i == 20:
-            #     break
+            if i == 10:
+                break
 
         frames = np.stack(frames, axis=0)
         delta_actions = np.stack(delta_actions, axis=-1)
@@ -265,13 +276,14 @@ if __name__ == "__main__":
     f = h5py.File(demo_file, "r")
 
     env_name = f["data"].attrs["env"]
+    print('using env: ', env_name)
 
     env = make_invkin_env(
         env_name,
         has_renderer=False,
         ignore_done=True,
         use_camera_obs=True,
-        use_object_obs=False,
+        use_object_obs=True, ##
         camera_height=args.height,
         camera_width=args.width,
     )

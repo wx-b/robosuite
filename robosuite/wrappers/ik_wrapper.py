@@ -9,6 +9,7 @@ import numpy as np
 import robosuite
 import robosuite.utils.transform_utils as T
 from robosuite.wrappers import Wrapper
+import time
 
 
 class IKWrapper(Wrapper):
@@ -87,6 +88,7 @@ class IKWrapper(Wrapper):
                 right hand. Indices 7-13 indicate the left hand, and the rest (*) are the gripper
                 inputs (first right, then left).
         """
+        t1 = time.time()
 
         input_1 = self._make_input(action[:7], self.env._right_hand_quat)
         if self.env.mujoco_robot.name == "sawyer":
@@ -102,6 +104,9 @@ class IKWrapper(Wrapper):
                 "control currently."
             )
 
+        # print('time for inv kin', time.time() - t1)
+        t2 = time.time()
+
         # keep trying to reach the target in a closed-loop
         for i in range(self.action_repeat):
             ret = self.env.step(low_action)
@@ -110,6 +115,7 @@ class IKWrapper(Wrapper):
                 low_action = np.concatenate([velocities, action[7:]])
             else:
                 low_action = np.concatenate([velocities, action[14:]])
+        # print('time for sim', time.time() - t2)
 
         return ret
 
