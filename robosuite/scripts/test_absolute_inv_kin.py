@@ -9,7 +9,6 @@ def compute_inv_kin(pos, rotation):
     bullet_data_path = os.path.join(robosuite.models.assets_root, "bullet_data")
     ik_controller = SawyerIKController(bullet_data_path, lambda : [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161])
 
-
     # convert from target pose in base frame to target pose in bullet world frame
     world_targets = ik_controller.bullet_base_pose_to_world_pose((pos, rotation))
     rest_poses = [0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161]
@@ -38,16 +37,10 @@ def render_traj_from_states():
         camera_width=64,
     )
 
-    # eef_pose = np.array([
-    #     [5.57672847e-01, -3.75483733e-02,  9.82644815e-01, -9.99996896e-01, -2.21727214e-03,  1.13446425e-03, -7.32291109e-05],
-    #     [5.61621856e-01,  2.88248548e-02,  1.05441987e+00, -9.99980409e-01,  3.48495165e-03, -5.12371593e-03, -8.85872802e-04]
-    # ])
     eef_pose = np.array([
-        [5.57672847e-01, -3.75483733e-02,  0, -9.99996896e-01, -2.21727214e-03,  1.13446425e-03, -7.32291109e-05],
-        [5.61621856e-01,  2.88248548e-02,  0, -9.99980409e-01,  3.48495165e-03, -5.12371593e-03, -8.85872802e-04]
+        [5.57672847e-01, -3.75483733e-02,  9.82644815e-01, -9.99996896e-01, -2.21727214e-03,  1.13446425e-03, -7.32291109e-05],
+        [5.61621856e-01,  2.88248548e-02,  1.05441987e+00, -9.99980409e-01,  3.48495165e-03, -5.12371593e-03, -8.85872802e-04]
     ])
-
-    import pdb; pdb.set_trace()
 
     for i in range(eef_pose.shape[0]):
 
