@@ -65,6 +65,10 @@ def get_final_obj_pos(final_state):
 
     obs = env._get_observation()
     objpos = obs[env.obj_to_use + "_pos"]
+    objpos_ = env.sim.data.body_xpos[env.obj_body_id[env.obj_to_use]]
+
+    print('get final obj pos', objpos)
+    print('get final obj pos_', objpos_)
 
     return objpos
 
@@ -118,7 +122,6 @@ def render(args, f, env):
         print('total number of steps after downsampling', states.shape[0])
         for i, state in enumerate(states):
             obs = env._get_observation()
-            import pdb; pdb.set_trace()
             frame = obs["image"][::-1]
             frames.append(frame)
 

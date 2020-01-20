@@ -31,53 +31,75 @@ def render(args, f, env):
         env.reset_from_xml_string(xml)
         env.sim.reset()
 
-
         # load + subsample data
         states, _ = FixedFreqSubsampler(n_skip=args.skip_frame)(f["data/{}/states".format(key)].value)
-        d_pos, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=SumAggregator()) \
-                    (f["data/{}/right_dpos".format(key)].value, aggregate=True)
-        d_quat, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=QuaternionAggregator()) \
-                     (f["data/{}/right_dquat".format(key)].value, aggregate=True)
+        # d_pos, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=SumAggregator()) \
+        #             (f["data/{}/right_dpos".format(key)].value, aggregate=True)
+        # d_quat, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=QuaternionAggregator()) \
+        #              (f["data/{}/right_dquat".format(key)].value, aggregate=True)
         gripper_actuation, _ = FixedFreqSubsampler(n_skip=args.skip_frame)(f["data/{}/gripper_actuations".format(key)].value)
         joint_velocities, _ = FixedFreqSubsampler(n_skip=args.skip_frame, aggregator=SumAggregator()) \
                                 (f["data/{}/joint_velocities".format(key)].value, aggregate=True)
 
         n_steps = states.shape[0]
         if args.target_length is not None and n_steps > args.target_length:
+            print('traj {} too long'.format(key))
             continue
 
         # force the sequence of internal mujoco states one by one
         frames = []
+        joint_pos = []
+        gripper_pos = []
+        object_pose = []
+
         for i, state in enumerate(states):
             env.sim.set_state_from_flattened(state)
             env.sim.forward()
             obs = env._get_observation()
-            frame = obs["image"][::-1]
-            frames.append(frame)
 
-            # des_pos, des_quat = mat2pose(env._right_hand_pose)
-            # print(des_pos)
+            if args.store_images:
+                frame = obs["image"][::-1]
+                frames.append(frame)
 
-        frames = np.stack(frames, axis=0)
-        actions = np.concatenate((d_pos, d_quat, gripper_actuation), axis=-1)
+            joint_pos.append(obs['joint_pos'])
+            gripper_pos.append(obs["gripper_qpos"])
+            object_pose.append(np.concatenate([obs[env.obj_to_use + "_pos"], obs[env.obj_to_use + "_quat"]], 0))
+
+            print(i)
+
+            if i == 10:
+                break
 
         pad_mask = np.ones((n_steps,)) if n_steps == args.target_length \
                         else np.concatenate((np.ones((n_steps,)), np.zeros((args.target_length - n_steps,))))
 
         h5_path = os.path.join(args.output_path, "seq_{}.h5".format(key))
+
+        joint_object_pose = np.concatenate([np.stack(joint_pos, 0), np.stack(gripper_pos, 0), np.stack(object_pose, 0)], -1)
+
         with h5py.File(h5_path, 'w') as F:
             F['traj_per_file'] = 1
-            F["traj0/images"] = frames
-            F["traj0/actions"] = actions
-            F["traj0/states"] = states
+            if args.store_images:
+                frames = np.stack(frames, axis=0)
+                F["traj0/images"] = frames
+            F["traj0/actions"] = joint_velocities
+            F["traj0/full_states"] = states
+            F["traj0/states"] = joint_object_pose
             F["traj0/pad_mask"] = pad_mask
             F["traj0/joint_velocities"] = joint_velocities
+            F["traj0/model_file"] = "seq_{}.xml".format(key)
+            F["env_name"] = f["data"].attrs["env"]
 
-        xml_path = os.path.join(args.output_path, "seq_{}.h5".format(key))
+        import pdb; pdb.set_trace()
+
+        xml_path = os.path.join(args.output_path, "seq_{}.xml".format(key))
         env.model.save_model(xml_path)
 
-        fig_file_name = os.path.join(args.output_path, "seq_{}".format(key))
-        save_gif(fig_file_name + ".gif", frames, fps=15)
+        if args.store_images:
+            fig_file_name = os.path.join(args.output_path, "seq_{}".format(key))
+            save_gif(fig_file_name + ".gif", frames, fps=15)
+
+        print('saved traj', key)
 
 
 def steps2length(steps):
@@ -176,6 +198,7 @@ if __name__ == "__main__":
     parser.add_argument("--gen_dataset", type=bool, default=False)
     parser.add_argument("--plot_stats", type=bool, default=False)
     parser.add_argument("--target_length", type=int, default=-1)
+    parser.add_argument("--store_images", type=int, default=0)
     args = parser.parse_args()
 
     if args.target_length == -1:
@@ -189,8 +212,8 @@ if __name__ == "__main__":
         env_name,
         has_renderer=False,
         ignore_done=True,
-        use_camera_obs=True,
-        use_object_obs=False,
+        use_camera_obs=args.store_images,
+        use_object_obs=True,
         camera_height=args.height,
         camera_width=args.width,
     )
