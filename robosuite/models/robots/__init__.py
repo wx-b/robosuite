@@ -1,3 +1,2 @@
-from .robot import Robot
-from .sawyer_robot import Sawyer
-from .baxter_robot import Baxter
+from .robot_model import RobotModel, create_robot
+from .manipulators import *

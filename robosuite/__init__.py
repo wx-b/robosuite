@@ -1,15 +1,22 @@
-import os
-
 from robosuite.environments.base import make
-from robosuite.environments.sawyer_lift import SawyerLift
-from robosuite.environments.sawyer_stack import SawyerStack
-from robosuite.environments.sawyer_pick_place import SawyerPickPlace
-from robosuite.environments.sawyer_nut_assembly import SawyerNutAssembly
 
-from robosuite.environments.baxter_lift import BaxterLift
-from robosuite.environments.baxter_peg_in_hole import BaxterPegInHole
+# Manipulation environments
+from robosuite.environments.manipulation.lift import Lift
+from robosuite.environments.manipulation.stack import Stack
+from robosuite.environments.manipulation.nut_assembly import NutAssembly
+from robosuite.environments.manipulation.pick_place import PickPlace
+from robosuite.environments.manipulation.door import Door
+from robosuite.environments.manipulation.wipe import Wipe
+from robosuite.environments.manipulation.two_arm_lift import TwoArmLift
+from robosuite.environments.manipulation.two_arm_peg_in_hole import TwoArmPegInHole
+from robosuite.environments.manipulation.two_arm_handover import TwoArmHandover
 
-__version__ = "0.1.0"
+from robosuite.environments import ALL_ENVIRONMENTS
+from robosuite.controllers import ALL_CONTROLLERS, load_controller_config
+from robosuite.robots import ALL_ROBOTS
+from robosuite.models.grippers import ALL_GRIPPERS
+
+__version__ = "1.3.1"
 __logo__ = """
       ;     /        ,--.
      ["]   ["]  ,<  |__**|

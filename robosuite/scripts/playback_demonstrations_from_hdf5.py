@@ -4,17 +4,21 @@ a set of demonstrations stored in a hdf5 file.
 
 Arguments:
     --folder (str): Path to demonstrations
-    --use_actions (optional): If this flag is provided, the actions are played back 
+    --use-actions (optional): If this flag is provided, the actions are played back
         through the MuJoCo simulator, instead of loading the simulator states
         one by one.
+    --visualize-gripper (optional): If set, will visualize the gripper site
 
 Example:
     $ python playback_demonstrations_from_hdf5.py --folder ../models/assets/demonstrations/SawyerPickPlace/
 """
-import os
-import h5py
+
 import argparse
+import json
+import os
 import random
+
+import h5py
 import numpy as np
 
 import robosuite
@@ -25,13 +29,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--folder",
         type=str,
-        default=os.path.join(
-            robosuite.models.assets_root, "demonstrations/SawyerNutAssembly"
-        ),
-    )
+        help="Path to your demonstration folder that contains the demo.hdf5 file, e.g.: "
+        "'path_to_assets_dir/demonstrations/YOUR_DEMONSTRATION'",
+    ),
     parser.add_argument(
-        "--use-actions", 
-        action='store_true',
+        "--use-actions",
+        action="store_true",
     )
     args = parser.parse_args()
 
@@ -39,15 +42,16 @@ if __name__ == "__main__":
     hdf5_path = os.path.join(demo_path, "demo.hdf5")
     f = h5py.File(hdf5_path, "r")
     env_name = f["data"].attrs["env"]
+    env_info = json.loads(f["data"].attrs["env_info"])
 
     env = robosuite.make(
-        env_name,
+        **env_info,
         has_renderer=True,
+        has_offscreen_renderer=False,
         ignore_done=True,
         use_camera_obs=False,
-        gripper_visualization=True,
         reward_shaping=True,
-        control_freq=100,
+        control_freq=20,
     )
 
     # list of all demonstrations episodes
@@ -60,10 +64,7 @@ if __name__ == "__main__":
         ep = random.choice(demos)
 
         # read the model xml, using the metadata stored in the attribute for this episode
-        model_file = f["data/{}".format(ep)].attrs["model_file"]
-        model_path = os.path.join(demo_path, "models", model_file)
-        with open(model_path, "r") as model_f:
-            model_xml = model_f.read()
+        model_xml = f["data/{}".format(ep)].attrs["model_file"]
 
         env.reset()
         xml = postprocess_model_xml(model_xml)
@@ -72,7 +73,7 @@ if __name__ == "__main__":
         env.viewer.set_camera(0)
 
         # load the flattened mujoco states
-        states = f["data/{}/states".format(ep)].value
+        states = f["data/{}/states".format(ep)][()]
 
         if args.use_actions:
 
@@ -81,9 +82,7 @@ if __name__ == "__main__":
             env.sim.forward()
 
             # load the actions and play them back open-loop
-            jvels = f["data/{}/joint_velocities".format(ep)].value
-            grip_acts = f["data/{}/gripper_actuations".format(ep)].value
-            actions = np.concatenate([jvels, grip_acts], axis=1)
+            actions = np.array(f["data/{}/actions".format(ep)][()])
             num_actions = actions.shape[0]
 
             for j, action in enumerate(actions):
@@ -93,7 +92,9 @@ if __name__ == "__main__":
                 if j < num_actions - 1:
                     # ensure that the actions deterministically lead to the same recorded states
                     state_playback = env.sim.get_state().flatten()
-                    assert(np.all(np.equal(states[j + 1], state_playback)))
+                    if not np.all(np.equal(states[j + 1], state_playback)):
+                        err = np.linalg.norm(states[j + 1] - state_playback)
+                        print(f"[warning] playback diverged by {err:.2f} for ep {ep} at step {j}")
 
         else:
 

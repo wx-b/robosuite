@@ -5,10 +5,11 @@ altering the start state distribution of training episodes for
 learning RL policies.
 """
 
-import random
 import os
-import h5py
+import random
 import time
+
+import h5py
 import numpy as np
 
 from robosuite.utils.mjcf_utils import postprocess_model_xml
@@ -16,7 +17,64 @@ from robosuite.wrappers import Wrapper
 
 
 class DemoSamplerWrapper(Wrapper):
-    env = None
+    """
+    Initializes a wrapper that provides support for resetting the environment
+    state to one from a demonstration. It also supports curriculums for
+    altering how often to sample from demonstration vs. sampling a reset
+    state from the environment.
+
+    Args:
+        env (MujocoEnv): The environment to wrap.
+
+        demo_path (str): The path to the folder containing the demonstrations.
+            There should be a `demo.hdf5` file and a folder named `models` with
+            all of the stored model xml files from the demonstrations.
+
+        need_xml (bool): If True, the mujoco model needs to be reloaded when
+            sampling a state from a demonstration. This could be because every
+            demonstration was taken under varied object properties, for example.
+            In this case, every sampled state comes with a corresponding xml to
+            be used for the environment reset.
+
+        num_traj (int): If provided, subsample @number demonstrations from the
+            provided set of demonstrations instead of using all of them.
+
+        sampling_schemes (list of str): A list of sampling schemes
+            to be used. The following strings are valid schemes:
+
+                `'random'`: sample a reset state directly from the wrapped environment
+
+                `'uniform'`: sample a state from a demonstration uniformly at random
+
+                `'forward'`: sample a state from a window that grows progressively from
+                    the start of demonstrations
+
+                `'reverse'`: sample a state from a window that grows progressively from
+                    the end of demonstrations
+
+        scheme_ratios (list of float --> np.array): A list of probability values to
+            assign to each member of @sampling_schemes. Must be non-negative and
+            sum to 1.
+
+        open_loop_increment_freq (int): How frequently to increase
+            the window size in open loop schemes ("forward" and "reverse"). The
+            window size will increase by @open_loop_window_increment every
+            @open_loop_increment_freq samples. Only samples that are generated
+            by open loop schemes contribute to this count.
+
+        open_loop_initial_window_width (int): The width of the initial sampling
+            window, in terms of number of demonstration time steps, for
+            open loop schemes.
+
+        open_loop_window_increment (int): The window size will increase by
+            @open_loop_window_increment every @open_loop_increment_freq samples.
+            This number is in terms of number of demonstration time steps.
+
+    Raises:
+        AssertionError: [Incompatible envs]
+        AssertionError: [Invalid sampling scheme]
+        AssertionError: [Invalid scheme ratio]
+    """
 
     def __init__(
         self,
@@ -24,69 +82,12 @@ class DemoSamplerWrapper(Wrapper):
         demo_path,
         need_xml=False,
         num_traj=-1,
-        sampling_schemes=["uniform", "random"],
-        scheme_ratios=[0.9, 0.1],
+        sampling_schemes=("uniform", "random"),
+        scheme_ratios=(0.9, 0.1),
         open_loop_increment_freq=100,
         open_loop_initial_window_width=25,
         open_loop_window_increment=25,
     ):
-        """
-        Initializes a wrapper that provides support for resetting the environment
-        state to one from a demonstration. It also supports curriculums for
-        altering how often to sample from demonstration vs. sampling a reset
-        state from the environment.
-
-        Args:
-            env (MujocoEnv instance): The environment to wrap.
-
-            demo_path (string): The path to the folder containing the demonstrations.
-                There should be a `demo.hdf5` file and a folder named `models` with 
-                all of the stored model xml files from the demonstrations.
-            
-            need_xml (bool): If True, the mujoco model needs to be reloaded when
-                sampling a state from a demonstration. This could be because every
-                demonstration was taken under varied object properties, for example.
-                In this case, every sampled state comes with a corresponding xml to
-                be used for the environment reset.
-
-            preload (bool): If True, fetch all demonstrations into memory at the
-                beginning. Otherwise, load demonstrations as they are needed lazily.
-
-            num_traj (int): If provided, subsample @number demonstrations from the 
-                provided set of demonstrations instead of using all of them.
-
-            sampling_schemes (list of strings): A list of sampling schemes
-                to be used. The following strings are valid schemes:
-
-                    "random" : sample a reset state directly from the wrapped environment
-
-                    "uniform" : sample a state from a demonstration uniformly at random
-
-                    "forward" : sample a state from a window that grows progressively from
-                        the start of demonstrations
-
-                    "reverse" : sample a state from a window that grows progressively from
-                        the end of demonstrations
-
-            scheme_ratios (list of floats): A list of probability values to
-                assign to each member of @sampling_schemes. Must be non-negative and
-                sum to 1.
-
-            open_loop_increment_freq (int): How frequently to increase
-                the window size in open loop schemes ("forward" and "reverse"). The
-                window size will increase by @open_loop_window_increment every
-                @open_loop_increment_freq samples. Only samples that are generated
-                by open loop schemes contribute to this count.
-
-            open_loop_initial_window_width (int): The width of the initial sampling
-                window, in terms of number of demonstration time steps, for
-                open loop schemes.
-
-            open_loop_window_increment (int): The window size will increase by
-                @open_loop_window_increment every @open_loop_increment_freq samples.
-                This number is in terms of number of demonstration time steps.
-        """
-
         super().__init__(env)
 
         self.demo_path = demo_path
@@ -130,7 +131,7 @@ class DemoSamplerWrapper(Wrapper):
         assert len(self.sampling_schemes) == len(self.scheme_ratios)
 
         # make sure the distribution lies in the probability simplex
-        assert np.all(self.scheme_ratios > 0.)
+        assert np.all(self.scheme_ratios > 0.0)
         assert sum(self.scheme_ratios) == 1.0
 
         # open loop configuration
@@ -143,7 +144,10 @@ class DemoSamplerWrapper(Wrapper):
     def reset(self):
         """
         Logic for sampling a state from the demonstration and resetting
-        the simulation to that state. 
+        the simulation to that state.
+
+        Returns:
+            OrderedDict: Environment observation space after reset occurs
         """
         state = self.sample()
         if state is None:
@@ -168,6 +172,10 @@ class DemoSamplerWrapper(Wrapper):
         """
         This is the core sampling method. Samples a state from a
         demonstration, in accordance with the configuration.
+
+        Returns:
+            None or np.array or 2-tuple: If np.array, is the state sampled from a demo file. If 2-tuple, additionally
+                includes the model xml file
         """
 
         # chooses a sampling scheme randomly based on the mixing ratios
@@ -196,13 +204,17 @@ class DemoSamplerWrapper(Wrapper):
 
         First uniformly sample a demonstration from the set of demonstrations.
         Then uniformly sample a state from the selected demonstration.
+
+        Returns:
+            np.array or 2-tuple: If np.array, is the state sampled from a demo file. If 2-tuple, additionally
+                includes the model xml file
         """
 
         # get a random episode index
         ep_ind = random.choice(self.demo_list)
 
         # select a flattened mujoco state uniformly from this episode
-        states = self.demo_file["data/{}/states".format(ep_ind)].value
+        states = self.demo_file["data/{}/states".format(ep_ind)][()]
         state = random.choice(states)
 
         if self.need_xml:
@@ -215,17 +227,21 @@ class DemoSamplerWrapper(Wrapper):
         """
         Sampling method.
 
-        Open loop reverse sampling from demonstrations. Starts by 
+        Open loop reverse sampling from demonstrations. Starts by
         sampling from states near the end of the demonstrations.
         Increases the window backwards as the number of calls to
         this sampling method increases at a fixed rate.
+
+        Returns:
+            np.array or 2-tuple: If np.array, is the state sampled from a demo file. If 2-tuple, additionally
+                includes the model xml file
         """
 
         # get a random episode index
         ep_ind = random.choice(self.demo_list)
 
         # sample uniformly in a window that grows backwards from the end of the demos
-        states = self.demo_file["data/{}/states".format(ep_ind)].value
+        states = self.demo_file["data/{}/states".format(ep_ind)][()]
         eps_len = states.shape[0]
         index = np.random.randint(max(eps_len - self.open_loop_window_size, 0), eps_len)
         state = states[index]
@@ -252,13 +268,17 @@ class DemoSamplerWrapper(Wrapper):
         sampling from states near the beginning of the demonstrations.
         Increases the window forwards as the number of calls to
         this sampling method increases at a fixed rate.
+
+        Returns:
+            np.array or 2-tuple: If np.array, is the state sampled from a demo file. If 2-tuple, additionally
+                includes the model xml file
         """
 
         # get a random episode index
         ep_ind = random.choice(self.demo_list)
 
         # sample uniformly in a window that grows forwards from the beginning of the demos
-        states = self.demo_file["data/{}/states".format(ep_ind)].value
+        states = self.demo_file["data/{}/states".format(ep_ind)][()]
         eps_len = states.shape[0]
         index = np.random.randint(0, min(self.open_loop_window_size, eps_len))
         state = states[index]
@@ -281,6 +301,12 @@ class DemoSamplerWrapper(Wrapper):
         """
         Helper method to retrieve the corresponding model xml string
         for the passed episode index.
+
+        Args:
+            ep_ind (int): Episode index to pull from demo file
+
+        Returns:
+            str: model xml as a string
         """
 
         # read the model xml, using the metadata stored in the attribute for this episode
